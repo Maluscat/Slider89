@@ -1,0 +1,55 @@
+.slider89 {
+  display: inline-block;
+}
+.slider89 .slider {
+  position: relative;
+  padding: 0;
+  background-color: hsl(0, 0%, 19%);
+  font-family: monospace;
+  font-size: 18px;
+  font-weight: bold;
+  height: 25px;
+}
+.slider89 .slider_knob {
+  position: absolute;
+  cursor: pointer;
+  left: 0;
+  height: 25px;
+  width: 14px;
+  background-color: hsl(0, 0%, 27%);
+  z-index: 1;
+}
+.slider89 .slider_tooltip {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  padding: 1px 3px 0;
+  color: hsl(0, 0%, 45%);
+  height: 100%;
+  cursor: default;
+  opacity: 1;
+  transition: .2s ease-out;
+}
+.slider89 .slider_tooltip.left {
+  left: 0;
+}
+.slider89 .slider_tooltip.right {
+  right: 0;
+}
+.slider89 .slider_tooltip.hidden {
+  opacity: 0;
+}
+
+.slider_header {
+  color: hsl(0, 0%, 70%);
+  font-family: 'Calibri', serif;
+  font-size: 20px;
+  display: block;
+}
+
+.noselect {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
