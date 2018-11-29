@@ -55,7 +55,7 @@ Slider89.prototype.setTask = function(target, task) {
 Slider89.prototype.newValues = function(newValues = {}) {
   let prevAbsWidth = this.absWidth;
   this.absWidth = newValues.absWidth != null ? newValues.absWidth : this.absWidth;
-  this.value = newValues.value != null ? newValues.value : ((newValues.max || this.max) - (newValues.min || this.min)) * this.value / (this.max - this.min) || this.value;
+  this.value = newValues.value != null ? newValues.value : ((newValues.max || this.max) - (newValues.min || this.min)) * this.value / (this.max - this.min);
   this.min = newValues.min != null ? newValues.min : this.min;
   this.max = newValues.max != null ? newValues.max : this.max;
   this.comma = newValues.comma != null ? newValues.comma : this.comma;
@@ -74,6 +74,12 @@ Slider89.prototype.newValues = function(newValues = {}) {
   }
   if (newValues.task) {
     this.setTask(newValues.task);
+  }
+
+  if (this.value > this.max) {
+    this.value = this.max;
+  } else if (this.value < this.min) {
+    this.value = this.min;
   }
 
   this.element.children[0].style.width = this.width + 'px';
