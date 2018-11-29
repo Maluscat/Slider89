@@ -5,14 +5,11 @@ function Slider89(target, values = {}) {
   this.max = values.max != null ? values.max : slider89.max;
   this.value = values.value != null ? values.value : slider89.value;
   this.comma = values.comma != null ? values.comma : slider89.comma;
-  this.width = this.computeWidth(values) || this.computeWidth(slider89)
+  this.width = values.width ? this.computeWidth(values.width) : this.computeWidth(slider89.width)
   this.caption = values.caption || slider89.caption;
   this.trimComma = values.trimComma != null ? values.trimComma : slider89.trimComma;
   this.tipDuration = values.tipDuration != null ? values.tipDuration : slider89.tipDuration;
   this.classList = values.classList || slider89.classList;
-  if (this.width == 'auto') {
-    this.width
-  }
   if (values.task) {
     this.setTask(this, values.task);
   } else if (slider89.task) {
@@ -43,8 +40,8 @@ function Slider89(target, values = {}) {
   }
 }
 
-Slider89.prototype.computeWidth = function(method) {
-  return method.width == 'auto' ? this.max - this.min + 14 : method.width + 14 * !this.absWidth;
+Slider89.prototype.computeWidth = function(methodWidth) {
+  return methodWidth == 'auto' ? this.max - this.min + 14 : methodWidth + 14 * !this.absWidth;
 }
 
 Slider89.prototype.setTask = function(target, task) {
@@ -56,12 +53,13 @@ Slider89.prototype.setTask = function(target, task) {
 }
 
 Slider89.prototype.newValues = function(newValues = {}) {
+  let prevAbsWidth = this.absWidth;
   this.absWidth = newValues.absWidth != null ? newValues.absWidth : this.absWidth;
-  this.value = newValues.value ? newValues.value : ((newValues.max || this.max) - (newValues.min || this.min)) * this.value / (this.max - this.min) || this.value;
-  this.min = newValues.min || this.min;
-  this.max = newValues.max || this.max;
-  this.comma = newValues.comma || this.comma;
-  this.width = this.computeWidth(newValues) || this.width;
+  this.value = newValues.value != null ? newValues.value : ((newValues.max || this.max) - (newValues.min || this.min)) * this.value / (this.max - this.min) || this.value;
+  this.min = newValues.min != null ? newValues.min : this.min;
+  this.max = newValues.max != null ? newValues.max : this.max;
+  this.comma = newValues.comma != null ? newValues.comma : this.comma;
+  this.width = newValues.width ? this.computeWidth(newValues.width) : (!prevAbsWidth ? this.computeWidth(this.width - 14) : this.computeWidth(this.width));
   if (newValues.caption) {
     this.caption = newValues.caption;
     this.element.children[1].innerHTML = this.caption;
@@ -78,9 +76,9 @@ Slider89.prototype.newValues = function(newValues = {}) {
     this.setTask(newValues.task);
   }
 
-  if (newValues.width && newValues.width != 'auto') {
-    this.element.children[0].style.width = this.width + 'px';
-  }
+  this.element.children[0].style.width = this.width + 'px';
+
+  this.element.children[0].children[0].style.transform = 'translateX(' + (this.width - 14 * !this.absWidth) * (this.value - this.min) / (this.max - this.min) + 'px)';
 }
 
 //Build the slider inside the specified target element and return it as element
