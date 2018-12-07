@@ -3,17 +3,22 @@ function Slider89(target, values = {}) {
   this.absWidth = values.absWidth != null ? values.absWidth : slider89.absWidth;
   this.min = values.min != null ? values.min : slider89.min;
   this.max = values.max != null ? values.max : slider89.max;
-  this.value = values.value != null ? values.value : slider89.value;
   this.comma = values.comma != null ? values.comma : slider89.comma;
+  this.value = values.value != null ? Number(values.value.toFixed(this.comma)) : Number(slider89.value.toFixed(this.comma));
   this.width = values.width ? this.computeWidth(values.width) : this.computeWidth(slider89.width)
   this.caption = values.caption || slider89.caption;
   this.trimComma = values.trimComma != null ? values.trimComma : slider89.trimComma;
   this.tipDuration = values.tipDuration != null ? values.tipDuration : slider89.tipDuration;
   this.classList = values.classList || slider89.classList;
-  if (values.task) {
-    this.setTask(this, values.task);
+  if (values.task && this.checkTask(values.task)) {
+    this.task = values.task;
   } else if (slider89.task) {
     this.task = slider89.task;
+  }
+  if (values.taskMouseUp && this.checkTask(values.taskMouseUp)) {
+    this.taskMouseUp = values.taskMouseUp
+  } else if (slider89.taskMouseUp) {
+    this.taskMouseUp = slider89.taskMouseUp;
   }
 
   this.taskLock = false;
@@ -23,20 +28,26 @@ function Slider89(target, values = {}) {
   this.element = this.buildElement(target, values.replaceNode != null ? values.replaceNode : slider89.replaceNode);
 
   //Write 'this' into a carrier-variable and attach the needed event listeners
-  let obj = this
+  let obj = this;
   this.element.children[0].addEventListener('mousedown', function(e) {
     document.body.classList.add('noselect');
     obj.executeSlider(e.x);
     window.addEventListener('mousemove', obj.mouseMove);
-  });
-  //On mouse up, removet the mouse move listener which was added on mouse down
-  window.addEventListener('mouseup', function() {
-    document.body.classList.remove('noselect');
-    window.removeEventListener('mousemove', obj.mouseMove);
+    window.addEventListener('mouseup', obj.mouseUp);
   });
   //The function executed by the mousemove listener. Needs to be here in order to reach 'obj'
   this.mouseMove = function(e) {
     obj.executeSlider(e.x)
+  }
+  //The function executed by the mouseup listener
+  //On mouse up, remove the mouse move listener which was added on mouse down and remove itself until added again by mousedown
+  this.mouseUp = function() {
+    document.body.classList.remove('noselect');
+    window.removeEventListener('mousemove', obj.mouseMove);
+    if (obj.taskMouseUp != null) {
+      (obj.taskMouseUp)();
+    }
+    window.removeEventListener('mouseup', obj.mouseUp);
   }
 }
 
@@ -44,18 +55,19 @@ Slider89.prototype.computeWidth = function(methodWidth) {
   return methodWidth == 'auto' ? this.max - this.min + 14 : methodWidth + 14 * !this.absWidth;
 }
 
-Slider89.prototype.setTask = function(target, task) {
+Slider89.prototype.checkTask = function(task) {
   if (typeof task == 'function') {
-    target.task = task;
+    return task;
   } else if (typeof task != 'function') {
     console.error('Slider89 error: specified task \'' + task + '\' is not a function.\nContinuing without a task.');
+    return false;
   }
 }
 
 Slider89.prototype.newValues = function(newValues = {}) {
   let prevAbsWidth = this.absWidth;
   this.absWidth = newValues.absWidth != null ? newValues.absWidth : this.absWidth;
-  this.value = newValues.value != null ? newValues.value : ((newValues.max || this.max) - (newValues.min || this.min)) * this.value / (this.max - this.min);
+  this.value = newValues.value != null ? newValues.value : Number((((newValues.max || this.max) - (newValues.min || this.min)) * this.value / (this.max - this.min)).toFixed(newValues.comma || this.comma));
   this.min = newValues.min != null ? newValues.min : this.min;
   this.max = newValues.max != null ? newValues.max : this.max;
   this.comma = newValues.comma != null ? newValues.comma : this.comma;
@@ -72,8 +84,11 @@ Slider89.prototype.newValues = function(newValues = {}) {
       this.element.classList.add(this.classList[i]);
     }
   }
-  if (newValues.task) {
-    this.setTask(newValues.task);
+  if (newValues.task && this.checkTask(newValues.task)) {
+    this.task = newValues.task;
+  }
+  if (newValues.taskMouseUp && this.checkTask(newValues.taskMouseUp)) {
+    this.taskMouseUp = newValues.taskMouseUp;
   }
 
   if (this.value > this.max) {
@@ -185,6 +200,7 @@ var slider89 = {
     if (defValues.tipDuration != null) this.tipDuration = defValues.tipDuration;
     if (defValues.classList) this.classList = defValues.classList;
     if (defValues.replaceNode != null) this.replaceNode = defValues.replaceNode;
-    if (defValues.task) Slider89.prototype.setTask(this, defValues.task);
+    if (defValues.task && Slider89.prototype.checkTask(defValues.task)) this.task = defValues.task;
+    if (defValues.taskMouseUp && Slider89.prototype.checkTask(defValues.taskMouseUp)) this.taskMouseUp = defValues.taskMouseUp;
   }
 }
