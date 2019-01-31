@@ -3,12 +3,12 @@ function Slider89(target, values = {}) {
   this.absWidth = values.absWidth != null ? values.absWidth : slider89.absWidth;
   this.min = values.min != null ? values.min : slider89.min;
   this.max = values.max != null ? values.max : slider89.max;
-  this.comma = values.comma != null ? values.comma : slider89.comma;
+  this.comma = values.comma != null && values.comma >= 0 ? values.comma : slider89.comma;
   this.value = values.value != null ? Number(values.value.toFixed(this.comma)) : Number(slider89.value.toFixed(this.comma));
-  this.width = values.width ? this.computeWidth(values.width) : this.computeWidth(slider89.width);
+  this.width = values.width != null ? this.computeWidth(values.width) : this.computeWidth(slider89.width);
   this.caption = values.caption || slider89.caption;
   this.trimComma = values.trimComma != null ? values.trimComma : slider89.trimComma;
-  this.tipDuration = values.tipDuration != null ? values.tipDuration : slider89.tipDuration;
+  this.tipDuration = values.tipDuration != null && (values.tipDuration > 0 || values.tipDuration == false) ? values.tipDuration : slider89.tipDuration;
   this.classList = values.classList || slider89.classList;
   this.structure = values.structure || slider89.structure;
   if (values.task && this.checkTask(values.task)) {
@@ -30,7 +30,7 @@ function Slider89(target, values = {}) {
   if (this.tipDuration == false) this.element.wrapper.children[1].classList.remove('hidden');
 
   //Write 'this' into a carrier-variable and attach the needed event listeners
-  let obj = this;
+  const obj = this;
   this.element.wrapper.addEventListener('mousedown', function(e) {
     document.body.classList.add('noselect');
     obj.executeSlider(e.x);
@@ -54,12 +54,7 @@ function Slider89(target, values = {}) {
 }
 
 Slider89.prototype.parseHTML = function(structure) {
-  const html = {
-    wrapper: document.createElement('div'),
-    knob: document.createElement('div'),
-    tooltip: document.createElement('div'),
-    caption: document.createElement('div')
-  };
+  const html = {};
   const attribs = {
     wrapper: {
       class: 'slider slider89_wrapper',
@@ -76,19 +71,26 @@ Slider89.prototype.parseHTML = function(structure) {
       class: 'slider_header slider89_header'
     }
   };
-  structure = structure.slice(1, structure.length - 1);
-  const tags = structure.split('><');
-  let tagNames = new Array(tags.length);
+  const wrappers = structure.match(/<\/(\w+)/g);
+  const wrapStops = [];
+  wrapStops[0] = ['container'];
+  let hasClosed = 0;
+  const tags = structure.split(/>\s*</);
+  tags[0] = tags[0].replace(/\s*</, '');
+  tags[tags.length-1] = tags[tags.length-1].replace(/>\s*/, '');
+  const tagNames = new Array(tags.length);
   for (var i = 0; i < tags.length; i++) {
     tagNames[i] = tags[i].indexOf(' ') != -1 ? tags[i].slice(0, tags[i].indexOf(' ')) : tags[i];
     if (tags[i][0] != '/') {
-      const tagName = tags[i].indexOf(' ') != -1 ? tags[i].slice(0, tags[i].indexOf(' ')) : tags[i];
-      if (!html[tagName]) html[tagName] = document.createElement(tags[i].match(/\s(\w+)\s/)[1] || 'div');
-      const tag = {
-        html: html[tagName],
-        attrib: attribs[tagName]
-      };
-      const attribNames = tag.attrib ? Object.keys(tag.attrib) : null;
+      if (attribs[tagNames[i]] != null) {
+        var thisNode = document.createElement('div');
+        var defAttribs = attribs[tagNames[i]];
+        var attribNames = Object.keys(defAttribs);
+      } else {
+        var thisNode = document.createElement(tags[i].match(/\s(\w+)\s/) ? tags[i].match(/\s(\w+)\s/)[1] : 'div');
+        var defAttribs = null;
+      }
+      html[tagNames[i]] = thisNode;
       const inner = tags[i].match(/\s"(.*)"/);
       const attributes = tags[i].match(/\s!?(\w+)\((\w+.?\s*\d*\w*(,\s*\w+.?\s*\d*\w*)*)\)/g);
       if (attributes != null) {
@@ -96,40 +98,47 @@ Slider89.prototype.parseHTML = function(structure) {
           const thisName = attributes[n].slice((attributes[n].indexOf('!') != -1) + 1, attributes[n].indexOf('('));
           let thisValue = thisName != 'style' ? attributes[n].slice(attributes[n].indexOf('(') + 1, -1).replace(/,\s*/g, ' ') : attributes[n].slice(attributes[n].indexOf('(') + 1, -1).replace(/,\s*/g, '; ');
           if (thisName == 'style' && thisValue[thisValue.length - 1] != ';') thisValue += ';';
-          tag.html.setAttribute(thisName, thisValue);
+          thisNode.setAttribute(thisName, thisValue);
         }
-        if (attribNames) {
+        if (defAttribs) {
           for (var n = 0; n < attribNames.length; n++) {
-            if (new RegExp('^[^!]?' + attribNames[n]).test(attributes.join('').slice(1)) && tag.attrib[attribNames[n]]) {
-              tag.html.setAttribute(attribNames[n], tag.html.getAttribute(attribNames[n]) + ' ' + tag.attrib[attribNames[n]]);
-            } else if (attributes.join('').slice(1).indexOf(attribNames[n]) == -1 && tag.attrib[attribNames[n]]) {
-              tag.html.setAttribute(attribNames[n], tag.attrib[attribNames[n]]);
+            if (new RegExp('^[^!]?' + attribNames[n]).test(attributes.join('').slice(1)) && defAttribs[attribNames[n]]) {
+              thisNode.setAttribute(attribNames[n], thisNode.getAttribute(attribNames[n]) + ' ' + defAttribs[attribNames[n]]);
+            } else if (attributes.join('').slice(1).indexOf(attribNames[n]) == -1 && defAttribs[attribNames[n]]) {
+              thisNode.setAttribute(attribNames[n], defAttribs[attribNames[n]]);
             }
           }
         }
-      } else {
-        if (attribNames) {
-          for (var n = 0; n < attribNames.length; n++) {
-            tag.html.setAttribute(attribNames[n], tag.attrib[attribNames[n]]);
-          }
+      } else if (defAttribs) {
+        for (var n = 0; n < attribNames.length; n++) {
+          thisNode.setAttribute(attribNames[n], defAttribs[attribNames[n]]);
         }
       }
-      if (inner) tag.html.innerHTML = inner[1];
+      if (inner) thisNode.innerHTML = inner[1];
+      if (wrappers && wrappers.indexOf('</' + tagNames[i]) != -1) {
+        wrapStops[wrapStops.length - 1].push(wrapStops[wrapStops.length-2] && wrapStops[wrapStops.length-2][2] ? wrapStops[wrapStops.length-2][2] + hasClosed : 0, i + 1);
+        wrapStops.push([tagNames[i]]);
+        hasClosed = 0;
+      }
+    } else {
+      if (wrappers && wrappers.indexOf('<' + tagNames[i]) != -1) {
+        if (!hasClosed) {
+          wrapStops[wrapStops.length - 1].push(wrapStops[wrapStops.length-2][2] + hasClosed, i + hasClosed);
+          if (i != tags.length - 1) wrapStops.push(['container']);
+        }
+        let thisIndex;
+        hasClosed++;
+      }
     }
   }
 
   html.container = document.createElement('div');
   html.container.classList.add('slider89');
 
-  for (var i = 0; i < tagNames.indexOf('wrapper'); i++) {
-    html.container.appendChild(html[tagNames[i]]);
-  }
-  for (var i = tagNames.indexOf('wrapper') + 1; i < tagNames.indexOf('/wrapper'); i++) {
-    html.wrapper.appendChild(html[tagNames[i]]);
-  }
-  html.container.appendChild(html.wrapper);
-  for (var i = tagNames.indexOf('/wrapper') + 1; i < tagNames.length; i++) {
-    html.container.appendChild(html[tagNames[i]]);
+  for (var i = 0; i < wrapStops.length; i++) {
+    for (var n = wrapStops[i][1]; n < wrapStops[i][2]; n++) {
+      html[wrapStops[i][0]].appendChild(html[tagNames[n]]);
+    }
   }
 
   html.caption.innerHTML = this.caption;
@@ -151,7 +160,7 @@ Slider89.prototype.checkTask = function(task) {
 }
 
 Slider89.prototype.newValues = function(newValues = {}) {
-  let prevAbsWidth = this.absWidth;
+  const prevAbsWidth = this.absWidth;
   this.absWidth = newValues.absWidth != null ? newValues.absWidth : this.absWidth;
   this.value = newValues.value != null ? newValues.value : Number((((newValues.max || this.max) - (newValues.min || this.min)) * this.value / (this.max - this.min)).toFixed(newValues.comma || this.comma));
   this.min = newValues.min != null ? newValues.min : this.min;
@@ -163,7 +172,7 @@ Slider89.prototype.newValues = function(newValues = {}) {
     this.element.caption.innerHTML = this.caption;
   }
   this.trimComma = newValues.trimComma != null ? newValues.trimComma : this.trimComma;
-  this.tipDuration = newValues.tipDuration != null ? newValues.tipDuration : this.tipDuration;
+  this.tipDuration = newValues.tipDuration != null && (values.tipDuration > 0 || values.tipDuration == false) ? newValues.tipDuration : this.tipDuration;
   if (newValues.classList) {
     this.classList = newValues.classList;
     for (var i = 0; i < this.classList.length; i++) {
@@ -203,9 +212,9 @@ Slider89.prototype.buildElement = function(target, replace) {
 }
 
 Slider89.prototype.executeSlider = function(clickedX) {
-  let node = this.element.wrapper;
-  let rect = node.getBoundingClientRect();
-  let tip = node.children[1];
+  const rect = this.element.wrapper.getBoundingClientRect();
+  const tip = this.element.tooltip;
+  const knob = this.element.knob;
   let finalValue;
   let distance = clickedX - rect.left - 7;
   if (distance < 0) {
@@ -223,7 +232,7 @@ Slider89.prototype.executeSlider = function(clickedX) {
     }, this.tipDuration);
   }
   //translate the slider knob
-  node.children[0].style.transform = 'translateX(' + distance + 'px)';
+  knob.style.transform = 'translateX(' + distance + 'px)';
   //compute the final value
   finalValue = (this.max - this.min) * distance / (rect.width - 14) + this.min;
   //limit the amount of figures after comma accordingly to the value
@@ -274,11 +283,11 @@ var slider89 = {
     if (defValues.min != null) this.min = defValues.min;
     if (defValues.max != null) this.max = defValues.max;
     if (defValues.value != null) this.value = defValues.value;
-    if (defValues.comma != null) this.comma = defValues.comma;
+    if (defValues.comma != null && defValues.comma >= 0) this.comma = defValues.comma;
     if (defValues.width != null) this.width = defValues.width;
     if (defValues.caption) this.caption = defValues.caption;
     if (defValues.trimComma != null) this.trimComma = defValues.trimComma;
-    if (defValues.tipDuration != null) this.tipDuration = defValues.tipDuration;
+    if (defValues.tipDuration != null && (defValues.tipDuration > 0 || defValues.tipDuration == false)) this.tipDuration = defValues.tipDuration;
     if (defValues.classList) this.classList = defValues.classList;
     if (defValues.structure) this.structure = defValues.structure;
     if (defValues.replaceNode != null) this.replaceNode = defValues.replaceNode;
