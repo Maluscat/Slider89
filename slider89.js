@@ -7,6 +7,7 @@ function Slider89(target, values = {}) {
   this.value = values.value != null ? Number(values.value.toFixed(this.comma)) : Number(slider89.value.toFixed(this.comma));
   this.width = values.width != null ? this.computeWidth(values.width) : this.computeWidth(slider89.width);
   this.caption = values.caption || slider89.caption;
+  this.thumbCount = values.thumbCount || slider89.thumbCount;
   this.trimComma = values.trimComma != null ? values.trimComma : slider89.trimComma;
   this.tipDuration = values.tipDuration != null && (values.tipDuration > 0 || values.tipDuration == false) ? values.tipDuration : slider89.tipDuration;
   this.classList = values.classList || slider89.classList;
@@ -24,6 +25,7 @@ function Slider89(target, values = {}) {
 
   this.taskLock = false;
   this.tipTimer;
+  this.lockedThumb;
 
   //Call buildElement parsing the target (element for the slider to be created in / to be replaced with) to build the slider
   this.element = this.buildElement(target, values.replaceNode != null ? values.replaceNode : slider89.replaceNode);
@@ -46,9 +48,8 @@ function Slider89(target, values = {}) {
   this.mouseUp = function() {
     document.body.classList.remove('noselect');
     window.removeEventListener('mousemove', obj.mouseMove);
-    if (obj.taskMouseUp != null) {
-      (obj.taskMouseUp)();
-    }
+    if (obj.taskMouseUp != null) (obj.taskMouseUp)();
+    obj.lockedThumb = null;
     window.removeEventListener('mouseup', obj.mouseUp);
   }
 }
@@ -75,24 +76,26 @@ Slider89.prototype.parseHTML = function(structure) {
   const wrapStops = [];
   wrapStops[0] = ['container'];
   let hasClosed = 0;
+  let knobIndex;
   const tags = structure.split(/>\s*</);
   tags[0] = tags[0].replace(/\s*</, '');
   tags[tags.length-1] = tags[tags.length-1].replace(/>\s*/, '');
-  const tagNames = new Array(tags.length);
-  for (var i = 0; i < tags.length; i++) {
-    tagNames[i] = tags[i].indexOf(' ') != -1 ? tags[i].slice(0, tags[i].indexOf(' ')) : tags[i];
-    if (tags[i][0] != '/') {
+  const tagNames = new Array(tags.length + this.thumbCount - 1);
+  for (var i = 0; i < tags.length + this.thumbCount - 1; tagNames[i] && tagNames[i] == 'knob' ? i += this.thumbCount : i++) {
+    const t = knobIndex && i > knobIndex ? this.thumbCount - 1 : 0;
+    tagNames[i] = tags[i-t].indexOf(' ') != -1 ? tags[i-t].slice(0, tags[i-t].indexOf(' ')) : tags[i-t];
+    if (tags[i-t][0] != '/') {
       if (attribs[tagNames[i]] != null) {
         var thisNode = document.createElement('div');
         var defAttribs = attribs[tagNames[i]];
         var attribNames = Object.keys(defAttribs);
       } else {
-        var thisNode = document.createElement(tags[i].match(/\s(\w+)\s/) ? tags[i].match(/\s(\w+)\s/)[1] : 'div');
+        var thisNode = document.createElement(tags[i-t].match(/\s(\w+)\s/) ? tags[i-t].match(/\s(\w+)\s/)[1] : 'div');
         var defAttribs = null;
       }
       html[tagNames[i]] = thisNode;
-      const inner = tags[i].match(/\s"(.*)"/);
-      const attributes = tags[i].match(/\s!?(\w+)\((\w+.?\s*\d*\w*(,\s*\w+.?\s*\d*\w*)*)\)/g);
+      const inner = tags[i-t].match(/\s"(.*)"/);
+      const attributes = tags[i-t].match(/\s!?(\w+)\((\w+.?\s*\d*\w*(,\s*\w+.?\s*\d*\w*)*)\)/g);
       if (attributes != null) {
         for (var n = 0; n < attributes.length; n++) {
           const thisName = attributes[n].slice((attributes[n].indexOf('!') != -1) + 1, attributes[n].indexOf('('));
@@ -114,21 +117,26 @@ Slider89.prototype.parseHTML = function(structure) {
           thisNode.setAttribute(attribNames[n], defAttribs[attribNames[n]]);
         }
       }
+      if (tagNames[i] == 'knob' && this.thumbCount > 1) {
+        for (var n = 2; n < this.thumbCount + 1; n++) {
+          html['knob' + n] = thisNode.cloneNode();
+          tagNames[i + n - 1] = 'knob' + n;
+        }
+        knobIndex = i;
+      }
       if (inner) thisNode.innerHTML = inner[1];
       if (wrappers && wrappers.indexOf('</' + tagNames[i]) != -1) {
         wrapStops[wrapStops.length - 1].push(wrapStops[wrapStops.length-2] && wrapStops[wrapStops.length-2][2] ? wrapStops[wrapStops.length-2][2] + hasClosed : 0, i + 1);
         wrapStops.push([tagNames[i]]);
         hasClosed = 0;
       }
-    } else {
-      if (wrappers && wrappers.indexOf('<' + tagNames[i]) != -1) {
-        if (!hasClosed) {
-          wrapStops[wrapStops.length - 1].push(wrapStops[wrapStops.length-2][2] + hasClosed, i + hasClosed);
-          if (i != tags.length - 1) wrapStops.push(['container']);
-        }
-        let thisIndex;
-        hasClosed++;
+    } else if (wrappers && wrappers.indexOf('<' + tagNames[i]) != -1) {
+      if (!hasClosed) {
+        wrapStops[wrapStops.length - 1].push(wrapStops[wrapStops.length-2][2] + hasClosed, i + hasClosed);
+        if (i != tags.length - 1) wrapStops.push(['container']);
       }
+      let thisIndex;
+      hasClosed++;
     }
   }
 
@@ -149,6 +157,7 @@ Slider89.prototype.parseHTML = function(structure) {
 Slider89.prototype.computeWidth = function(methodWidth) {
   return methodWidth == 'auto' ? this.max - this.min + 14 : methodWidth + 14 * !this.absWidth;
 }
+
 
 Slider89.prototype.checkTask = function(task) {
   if (typeof task == 'function') {
@@ -171,6 +180,7 @@ Slider89.prototype.newValues = function(newValues = {}) {
     this.caption = newValues.caption;
     this.element.caption.innerHTML = this.caption;
   }
+  this.thumbCount = newValues.thumbCount || this.thumbCount;
   this.trimComma = newValues.trimComma != null ? newValues.trimComma : this.trimComma;
   this.tipDuration = newValues.tipDuration != null && (values.tipDuration > 0 || values.tipDuration == false) ? newValues.tipDuration : this.tipDuration;
   if (newValues.classList) {
@@ -214,7 +224,10 @@ Slider89.prototype.buildElement = function(target, replace) {
 Slider89.prototype.executeSlider = function(clickedX) {
   const rect = this.element.wrapper.getBoundingClientRect();
   const tip = this.element.tooltip;
-  const knob = this.element.knob;
+  const knobs = new Array(this.thumbCount);
+  for (var i = 0; i < this.thumbCount; i++) {
+    knobs[i] = this.element['knob' + (i ? (i+1) : '')];
+  }
   let finalValue;
   let distance = clickedX - rect.left - 7;
   if (distance < 0) {
@@ -231,8 +244,22 @@ Slider89.prototype.executeSlider = function(clickedX) {
       tip.classList.add('hidden');
     }, this.tipDuration);
   }
-  //translate the slider knob
-  knob.style.transform = 'translateX(' + distance + 'px)';
+  if (!this.lockedThumb) {
+    var nearestKnob;
+    let smallestDistance;
+    for (var i = 0; i < knobs.length; i++) {
+      const style = knobs[i].getAttribute('style');
+      let translate = style.slice(style.indexOf('translateX(') + 'translateX('.length);
+      translate = parseInt(translate.slice(0, -3));
+      if (i == 0 || Math.abs(distance - translate) < smallestDistance) {
+        smallestDistance = Math.abs(distance - translate);
+        nearestKnob = knobs[i];
+      }
+    }
+    //translate the slider knob
+    nearestKnob.style.transform = 'translateX(' + distance + 'px)';
+    this.lockedThumb = nearestKnob;
+  } else this.lockedThumb.style.transform = 'translateX(' + distance + 'px)';
   //compute the final value
   finalValue = (this.max - this.min) * distance / (rect.width - 14) + this.min;
   //limit the amount of figures after comma accordingly to the value
@@ -273,6 +300,7 @@ var slider89 = {
   comma: 0,
   width: 'auto',
   caption: '',
+  thumbCount: 1,
   trimComma: true,
   tipDuration: 250,
   classList: [],
@@ -286,6 +314,7 @@ var slider89 = {
     if (defValues.comma != null && defValues.comma >= 0) this.comma = defValues.comma;
     if (defValues.width != null) this.width = defValues.width;
     if (defValues.caption) this.caption = defValues.caption;
+    if (defValues.thumbCount) this.thumbCount = defValues.thumbCount;
     if (defValues.trimComma != null) this.trimComma = defValues.trimComma;
     if (defValues.tipDuration != null && (defValues.tipDuration > 0 || defValues.tipDuration == false)) this.tipDuration = defValues.tipDuration;
     if (defValues.classList) this.classList = defValues.classList;
