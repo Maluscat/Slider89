@@ -98,7 +98,6 @@ Slider89.prototype.parseHTML = function(structure) {
     multiTag: new RegExp('<:(' + re.name + ')' + re.tag + re.content + '(' + re.attribs + ')\\s*?>((?:[\\s\\S](?!<:' + re.name + '(?:\\s+' + re.name + ')*(?:\\s+".+?")*' + re.attribs + '\\s*?>[\\d\\D]*?<\\[\\w-]+\\s*>))*?)<\\/\\1\\s*>', 'g')
   };
 
-  console.log(rgx);
   let lastWrapper = new Array();
   let parentLock = false;
   while(rgx.multiTag.test(structure)) {
@@ -131,7 +130,6 @@ Slider89.prototype.parseHTML = function(structure) {
 
   if (/\S+/g.test(structure)) {
     structure = structure.trim();
-    console.log(structure);
     const names = new Array();
     let leftover = false;
     if (rgx.general.test(structure)) {
