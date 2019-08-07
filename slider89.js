@@ -4,10 +4,11 @@ function Slider89(target, values = {}) {
   this.min = values.min != null ? values.min : slider89.min;
   this.max = values.max != null ? values.max : slider89.max;
   this.comma = values.comma != null && values.comma >= 0 ? values.comma : slider89.comma;
-  this.value = values.value != null ? Number(values.value.toFixed(this.comma)) : Number(slider89.value.toFixed(this.comma));
+  this.thumbCount = values.thumbCount >= 1 ? values.thumbCount : slider89.thumbCount;
+  this.value = this.checkValue(values.value, this.comma, this.thumbCount) || slider89.value;
   this.width = values.width != null ? this.computeWidth(values.width) : this.computeWidth(slider89.width);
   this.caption = values.caption || slider89.caption;
-  this.thumbCount = values.thumbCount || slider89.thumbCount;
+  this.extensible = this.checkExtensible(values.extensible) || slider89.extensible;
   this.trimComma = values.trimComma != null ? values.trimComma : slider89.trimComma;
   this.tipDuration = values.tipDuration != null && (values.tipDuration > 0 || values.tipDuration == false) ? values.tipDuration : slider89.tipDuration;
   this.classList = values.classList || slider89.classList;
@@ -55,15 +56,15 @@ function Slider89(target, values = {}) {
 }
 
 Slider89.prototype.parseHTML = function(structure) {
+  const that = this;
   const html = {};
   const attribs = {
     wrapper: {
       class: 'slider slider89_wrapper',
-      style: 'width: ' + this.width + 'px'
+      style: 'width: ' + this.width + 'px;'
     },
     knob: {
-      class: 'slider_knob slider89_knob',
-      style: 'transform: translateX(' + (this.width - 14) * (this.value - this.min) / (this.max - this.min) + 'px)'
+      class: 'slider_knob slider89_knob'
     },
     tooltip: {
       class: 'slider_tooltip slider89_tooltip right hidden noselect'
@@ -72,115 +73,270 @@ Slider89.prototype.parseHTML = function(structure) {
       class: 'slider_header slider89_header'
     }
   };
-  const wrappers = structure.match(/<\/(\w+)/g);
-  const wrapStops = [];
-  wrapStops[0] = ['container'];
-  let hasClosed = 0;
-  let knobIndex;
-  const tags = structure.split(/>\s*</);
-  tags[0] = tags[0].replace(/\s*</, '');
-  tags[tags.length-1] = tags[tags.length-1].replace(/>\s*/, '');
-  const tagNames = new Array(tags.length + this.thumbCount - 1);
-  for (var i = 0; i < tags.length + this.thumbCount - 1; tagNames[i] && tagNames[i] == 'knob' ? i += this.thumbCount : i++) {
-    const t = knobIndex && i > knobIndex ? this.thumbCount - 1 : 0;
-    tagNames[i] = tags[i-t].indexOf(' ') != -1 ? tags[i-t].slice(0, tags[i-t].indexOf(' ')) : tags[i-t];
-    if (tags[i-t][0] != '/') {
-      if (attribs[tagNames[i]] != null) {
-        var thisNode = document.createElement('div');
-        var defAttribs = attribs[tagNames[i]];
-        var attribNames = Object.keys(defAttribs);
-      } else {
-        var thisNode = document.createElement(tags[i-t].match(/\s(\w+)\s/) ? tags[i-t].match(/\s(\w+)\s/)[1] : 'div');
-        var defAttribs = null;
+  if (this.thumbCount > 1) {
+    attribs.knob.style = new Array(this.thumbCount);
+    for (let i = 0; i < this.thumbCount; i++) attribs.knob.style[i] = 'transform: translateX(' + (this.width - 14) * (this.value[i] - this.min) / (this.max - this.min) + 'px);';
+  } else {
+    attribs.knob.style = 'transform: translateX(' + (this.width - 14) * (this.value - this.min) / (this.max - this.min) + 'px);';
+  }
+
+  const re = {
+    attr: {
+      name: '!?[\\w-]+',
+      value: '[^()]*?'
+    },
+    name: '[\\w-]+'
+  };
+  re.content = '(?:\\s+"(.+?)")*';
+  re.tag = '(?:\\s+(' + re.name + '))*';
+  re.attribs = '(?:\\s+' + re.attr.name + '\\(' + re.attr.value + '\\))*';
+  re.general = '<[:/]?(' + re.name + ').*?>';
+  const rgx = {
+    general: new RegExp('<([:/]?)(' + re.name + ').*?>|<(' + re.name + ').*?', 'g'),
+    attributes: new RegExp('\\s+(' + re.attr.name + ')\\((' + re.attr.value + ')\\)\\s*?', 'g'),
+    singleTag: new RegExp('<(' + re.name + ')' + re.tag + re.content + '(' + re.attribs + ')\\s*?>', 'g'),
+    multiTag: new RegExp('<:(' + re.name + ')' + re.tag + re.content + '(' + re.attribs + ')\\s*?>((?:[\\s\\S](?!<:' + re.name + '(?:\\s+' + re.name + ')*(?:\\s+".+?")*' + re.attribs + '\\s*?>[\\d\\D]*?<\\[\\w-]+\\s*>))*?)<\\/\\1\\s*>', 'g')
+  };
+
+  console.log(rgx);
+  let lastWrapper = new Array();
+  let parentLock = false;
+  while(rgx.multiTag.test(structure)) {
+    structure = structure.replace(rgx.multiTag, function(match, name, tag, inner, attributes, content) {
+      const elem = assembleElement(name, tag, attributes, null);
+      content = parseSingleTags(content, elem);
+      if (inner) elem.textContent = inner;
+      if (parentLock) {
+        lastWrapper.forEach(function(el) {
+          elem.appendChild(el);
+        });
+        lastWrapper = new Array();
+        parentLock = false;
       }
-      html[tagNames[i]] = thisNode;
-      const inner = tags[i-t].match(/\s"(.*)"/);
-      const attributes = tags[i-t].match(/\s!?(\w+)\((\w+.?\s*\d*\w*(,\s*\w+.?\s*\d*\w*)*)\)/g);
-      if (attributes != null) {
-        for (var n = 0; n < attributes.length; n++) {
-          const thisName = attributes[n].slice((attributes[n].indexOf('!') != -1) + 1, attributes[n].indexOf('('));
-          let thisValue = thisName != 'style' ? attributes[n].slice(attributes[n].indexOf('(') + 1, -1).replace(/,\s*/g, ' ') : attributes[n].slice(attributes[n].indexOf('(') + 1, -1).replace(/,\s*/g, '; ');
-          if (thisName == 'style' && thisValue[thisValue.length - 1] != ';') thisValue += ';';
-          thisNode.setAttribute(thisName, thisValue);
-        }
-        if (defAttribs) {
-          for (var n = 0; n < attribNames.length; n++) {
-            if (new RegExp('^[^!]?' + attribNames[n]).test(attributes.join('').slice(1)) && defAttribs[attribNames[n]]) {
-              thisNode.setAttribute(attribNames[n], thisNode.getAttribute(attribNames[n]) + ' ' + defAttribs[attribNames[n]]);
-            } else if (attributes.join('').slice(1).indexOf(attribNames[n]) == -1 && defAttribs[attribNames[n]]) {
-              thisNode.setAttribute(attribNames[n], defAttribs[attribNames[n]]);
-            }
-          }
-        }
-      } else if (defAttribs) {
-        for (var n = 0; n < attribNames.length; n++) {
-          thisNode.setAttribute(attribNames[n], defAttribs[attribNames[n]]);
-        }
-      }
-      if (tagNames[i] == 'knob' && this.thumbCount > 1) {
-        for (var n = 2; n < this.thumbCount + 1; n++) {
-          html['knob' + n] = thisNode.cloneNode();
-          tagNames[i + n - 1] = 'knob' + n;
-        }
-        knobIndex = i;
-      }
-      if (inner) thisNode.innerHTML = inner[1];
-      if (wrappers && wrappers.indexOf('</' + tagNames[i]) != -1) {
-        wrapStops[wrapStops.length - 1].push(wrapStops[wrapStops.length-2] && wrapStops[wrapStops.length-2][2] ? wrapStops[wrapStops.length-2][2] + hasClosed : 0, i + 1);
-        wrapStops.push([tagNames[i]]);
-        hasClosed = 0;
-      }
-    } else if (wrappers && wrappers.indexOf('<' + tagNames[i]) != -1) {
-      if (!hasClosed) {
-        wrapStops[wrapStops.length - 1].push(wrapStops[wrapStops.length-2][2] + hasClosed, i + hasClosed);
-        if (i != tags.length - 1) wrapStops.push(['container']);
-      }
-      let thisIndex;
-      hasClosed++;
-    }
+      lastWrapper.push(elem);
+      html[name] = elem;
+      return content;
+    });
+    parentLock = true;
   }
 
   html.container = document.createElement('div');
   html.container.classList.add('slider89');
+  structure = parseSingleTags(structure, html.container);
+  lastWrapper.forEach(function(el) {
+    html.container.appendChild(el);
+  });
+  if (this.caption) html.caption.textContent = this.caption;
+  if (this.value) html.tooltip.textContent = this.value;
 
-  for (var i = 0; i < wrapStops.length; i++) {
-    for (var n = wrapStops[i][1]; n < wrapStops[i][2]; n++) {
-      html[wrapStops[i][0]].appendChild(html[tagNames[n]]);
-    }
+  if (/\S+/g.test(structure)) {
+    structure = structure.trim();
+    console.log(structure);
+    const names = new Array();
+    let leftover = false;
+    if (rgx.general.test(structure)) {
+      structure.replace(rgx.general, function(match, amplifier, name, name2) {
+        let nameObj = {};
+        nameObj.name = name || name2;
+        if (amplifier == ':') nameObj.isWrapper = true;
+        if (amplifier == '/') nameObj.isClosing = true;
+        if (name2) nameObj.noEnd = true;
+        names.push(nameObj);
+      });
+    } else leftover = true;
+    console.error(
+      'Slider89 error: %s been declared wrongly and could not be parsed. %s\nSee the documentation at https://hallo89.net/slider89#structure for more info.\nSlider creation process stopped.',
+      names.length > 1 ? 'several ‘structure’ elements have' : 'a ‘structure’ element has',
+      (function() {
+        let info = '';
+        if (leftover) {
+          info += 'Leftover structure:\n> "' + structure + '"';
+        } else {
+          info = 'Found errors:\n';
+          for (let i = 0; i < names.length; i++) {
+            info += '- "' + names[i].name + '"';
+            if (names[i].isClosing) info += ' => Closing tag finding no beginning';
+            if (names[i].isWrapper) info += ' => Opening tag finding no end';
+            if (names[i].noEnd) info += ' => Missing ending character (‘>’)';
+            info += i != names.length - 1 ? ',\n' : '.';
+          }
+        }
+        return info;
+      })()
+    );
+    return;
   }
 
-  html.caption.innerHTML = this.caption;
-  html.tooltip.innerHTML = this.value;
   return html;
-};
+
+  function parseSingleTags(str, parent) {
+    return str.replace(rgx.singleTag, function(match, name, tag, inner, attributes) {
+      const elem = assembleElement(name, tag, attributes, inner);
+      if (Array.isArray(elem)) {
+        for (let i = 0; i < elem.length; i++) {
+          parent.appendChild(elem[i]);
+        }
+      } else parent.appendChild(elem);
+      html[name] = elem;
+      return '';
+    });
+  }
+  function assembleElement(name, tag, attributes, content) {
+    let elem = document.createElement(tag || 'div');
+    if (content) elem.textContent = content;
+    const hasAttribs = !!attribs[name];
+    const multiThumbs = name == 'knob' && that.thumbCount > 1;
+    if (multiThumbs) {
+      var attrArray = [];
+    }
+    if (attributes) {
+      attributes.replace(rgx.attributes, function(attrib, attribName, value) {
+        if (hasAttribs && attribs[name][attribName] && attribName[0] != '!') {
+          if (Array.isArray(attribs[name][attribName])) {
+            attrArray.push(attribName);
+          } else value += ' ' + attribs[name][attribName];
+        } else if (attribName[0] == '!') {
+          attribName = attribName.slice(1);
+        }
+        elem.setAttribute(attribName, value || '');
+      });
+    }
+    if (hasAttribs) {
+      const keys = Object.keys(attribs[name]);
+      for (let i = 0; i < keys.length; i++) {
+        if (!elem.getAttribute(keys[i])) {
+          if (Array.isArray(attribs[name][keys[i]])) {
+            attrArray.push(keys[i]);
+          } else elem.setAttribute(keys[i], attribs[name][keys[i]]);
+        }
+      }
+    }
+    if (multiThumbs) {
+      const thumbs = new Array(that.thumbCount);
+      for (let i = 0; i < that.thumbCount; i++) {
+        thumbs[i] = elem.cloneNode(true);
+        if (attrArray) {
+          for (let n = 0; n < attrArray.length; n++) {
+            const domAttr = elem.getAttribute(attrArray[n]);
+            if (domAttr) {
+              thumbs[i].setAttribute(attrArray[n], domAttr + ' ' + attribs[name][attrArray[n]][i]);
+            } else thumbs[i].setAttribute(attrArray[n], attribs[name][attrArray[n]][i]);
+          }
+        }
+      }
+      return thumbs;
+    }
+    return elem;
+  }
+}
 
 Slider89.prototype.computeWidth = function(methodWidth) {
   return methodWidth == 'auto' ? this.max - this.min + 14 : methodWidth + 14 * !this.absWidth;
 }
 
+Slider89.prototype.checkValue = function(value, comma, thumbCount) {
+  if (value != null) {
+    if (typeof value == 'object') {
+      if (thumbCount == 1) {
+        const keys = Object.keys(value);
+        if (keys.length > 1) console.warn("Slider89 warning: ‘value’ is an object with multiple (" + keys.length + ") attributes although the slider uses only one thumb. Consider allocating a single number to ‘value’.\nSetting value to the " + (value['default'] != null ? "‘default’ attribute, '" + value['default'] : "first attribute, '" + value[keys[0]]) + "'.");
+        value = Number((value['default'] != null ? value['default'] : value[keys[0]]).toFixed(comma));
+      } else {
+        const thisDefault = value['default'] != null ? Number(value['default'].toFixed(comma)) : 0;
+        const static = value;
+        value = new Array(thumbCount);
+        for (let i = 0; i < thumbCount; i++) {
+          value[i] = static[i] != null ? Number(static[i].toFixed(comma)) : thisDefault;
+        }
+      }
+      return value;
+    } else if (typeof value == 'number' || typeof value == 'boolean') { //if value is not an object
+      if (thumbCount != 1) {
+        const static = Number(Number(value).toFixed(comma)); //extra Number check to convert a potential boolean
+        value = new Array(thumbCount);
+        for (let i = 0; i < thumbCount; i++) {
+          value[i] = static;
+        }
+        return value;
+      } else return Number(Number(value).toFixed(comma));
+    } else { //if value is neither an object nor a number or boolean
+      console.error("Slider89 error: value has been declared wrongly, it must either be an object, an array or a number (currently " + typeof value + ").\nUsing the default of '0' instead");
+      return 0;
+    }
+  } else return 0; //if value is not given
+}
+
+Slider89.prototype.checkExtensible = function(extensible) {
+  if (extensible == false) {
+    return false;
+  } else if (extensible != null && extensible.singleClick == null) {
+    return true;
+  } else if (extensible != null && extensible.singleClick == false) {
+    return { singleClick: false };
+  } else if (extensible != null && extensible.singleClick != null && extensible.singleClick.cursor == null) {
+    return { singleClick: true };
+  } else if (extensible != null && extensible.singleClick != null && extensible.singleClick.cursor != null && typeof extensible.singleClick.cursor != 'string') {
+    return { singleClick: { cursor: 'auto' } };
+  } else {
+    return extensible;
+  }
+}
 
 Slider89.prototype.checkTask = function(task) {
   if (typeof task == 'function') {
     return task;
-  } else if (typeof task != 'function') {
-    console.error('Slider89 error: specified task \'' + task + '\' is not a function.\nContinuing without a task.');
+  } else {
+    console.error("Slider89 error: specified ‘task’ '" + task + "' is not a function (currently " + typeof task + ").\nContinuing without a task.");
     return false;
   }
 }
 
 Slider89.prototype.newValues = function(newValues = {}) {
   const prevAbsWidth = this.absWidth;
+  const prevThumbCount = this.thumbCount;
   this.absWidth = newValues.absWidth != null ? newValues.absWidth : this.absWidth;
-  this.value = newValues.value != null ? newValues.value : Number((((newValues.max || this.max) - (newValues.min || this.min)) * this.value / (this.max - this.min)).toFixed(newValues.comma || this.comma));
   this.min = newValues.min != null ? newValues.min : this.min;
   this.max = newValues.max != null ? newValues.max : this.max;
   this.comma = newValues.comma != null ? newValues.comma : this.comma;
+  this.thumbCount = newValues.thumbCount >= 1 ? newValues.thumbCount : this.thumbCount;
+  if (newValues.value != null) {
+    this.value = this.checkValue(newValues.value, this.comma, this.thumbCount);
+  } else if (newValues.min != null || newValues.max != null || newValues.comma != null || newValues.thumbCount >= 1) {
+    const newMin = newValues.min != null ? newValues.min : this.min;
+    const newMax = newValues.max != null ? newValues.max : this.max;
+    if (this.thumbCount != 1) {
+      //Value can't contain anything unexpected as we are working with a pre-existing and processed value
+      if (this.thumbCount == prevThumbCount || this.thumbCount < prevThumbCount) {
+        for (let i = 0; i < this.thumbCount; i++) {
+          this.value[i] = Number(((newMax - newMin) * this.value[i] / (this.max - this.min)).toFixed(this.comma));
+        }
+      } else { //if thumbCount is greater than previously
+        for (let i = 0; i < this.thumbCount; i++) {
+          this.value[i] = Number(((newMax - newMin) * (i < prevThumbCount ? this.value[i] : this.value[prevThumbCount - 1]) / (this.max - this.min)).toFixed(this.comma));
+        }
+      }
+    } else { //if thumbCount is 1
+      if (this.thumbCount == prevThumbCount) {
+        this.value = Number(((newMax - newMin) * this.value / (this.max - this.min)).toFixed(this.comma));
+      } else { //if previous thumbCount was greater than 1
+        this.value = Number(((newMax - newMin) * this.value[0] / (this.max - this.min)).toFixed(this.comma));
+      }
+    }
+    if (this.thumbCount != prevThumbCount) {
+      const thumb = this.element.knob[0].cloneNode(true);
+      this.element.knob = new Array(this.thumbCount);
+      for (let i = 0; i < this.thumbCount; i++) {
+        this.element.knob[i] = thumb.cloneNode(true);
+        this.element.knob[i].setAttribute('style', 'transform: translateX(' + (this.width - 14) * (this.value[i] - this.min) / (this.max - this.min) + 'px);');
+      }
+    }
+  }
   this.width = newValues.width ? this.computeWidth(newValues.width) : (!prevAbsWidth ? this.computeWidth(this.width - 14) : this.computeWidth(this.width));
   if (newValues.caption) {
     this.caption = newValues.caption;
     this.element.caption.innerHTML = this.caption;
   }
-  this.thumbCount = newValues.thumbCount || this.thumbCount;
+  this.extensible = newValues.extensible != null ? this.checkExtensible(newValues.extensible) : this.extensible;
   this.trimComma = newValues.trimComma != null ? newValues.trimComma : this.trimComma;
   this.tipDuration = newValues.tipDuration != null && (values.tipDuration > 0 || values.tipDuration == false) ? newValues.tipDuration : this.tipDuration;
   if (newValues.classList) {
@@ -194,12 +350,6 @@ Slider89.prototype.newValues = function(newValues = {}) {
   }
   if (newValues.taskMouseUp && this.checkTask(newValues.taskMouseUp)) {
     this.taskMouseUp = newValues.taskMouseUp;
-  }
-
-  if (this.value > this.max) {
-    this.value = this.max;
-  } else if (this.value < this.min) {
-    this.value = this.min;
   }
 
   this.element.wrapper.style.width = this.width + 'px';
@@ -224,10 +374,7 @@ Slider89.prototype.buildElement = function(target, replace) {
 Slider89.prototype.executeSlider = function(clickedX) {
   const rect = this.element.wrapper.getBoundingClientRect();
   const tip = this.element.tooltip;
-  const knobs = new Array(this.thumbCount);
-  for (var i = 0; i < this.thumbCount; i++) {
-    knobs[i] = this.element['knob' + (i ? (i+1) : '')];
-  }
+  const knob = this.element.knob;
   let finalValue;
   let distance = clickedX - rect.left - 7;
   if (distance < 0) {
@@ -244,22 +391,26 @@ Slider89.prototype.executeSlider = function(clickedX) {
       tip.classList.add('hidden');
     }, this.tipDuration);
   }
-  if (!this.lockedThumb) {
-    var nearestKnob;
+  if (!this.lockedThumb && this.thumbCount > 1) {
+    this.lockedThumb = {};
     let smallestDistance;
-    for (var i = 0; i < knobs.length; i++) {
-      const style = knobs[i].getAttribute('style');
+    for (var i = 0; i < knob.length; i++) {
+      const style = knob[i].getAttribute('style');
       let translate = style.slice(style.indexOf('translateX(') + 'translateX('.length);
       translate = parseInt(translate.slice(0, -3));
       if (i == 0 || Math.abs(distance - translate) < smallestDistance) {
         smallestDistance = Math.abs(distance - translate);
-        nearestKnob = knobs[i];
+        this.lockedThumb.node = knob[i];
+        this.lockedThumb.index = i;
       }
     }
     //translate the slider knob
-    nearestKnob.style.transform = 'translateX(' + distance + 'px)';
-    this.lockedThumb = nearestKnob;
-  } else this.lockedThumb.style.transform = 'translateX(' + distance + 'px)';
+    this.lockedThumb.node.style.transform = 'translateX(' + distance + 'px)';
+  } else if (this.lockedThumb) {
+    this.lockedThumb.node.style.transform = 'translateX(' + distance + 'px)';
+  } else {
+    knob.style.transform = 'translateX(' + distance + 'px)';
+  }
   //compute the final value
   finalValue = (this.max - this.min) * distance / (rect.width - 14) + this.min;
   //limit the amount of figures after comma accordingly to the value
@@ -272,7 +423,7 @@ Slider89.prototype.executeSlider = function(clickedX) {
     finalValue = Number(finalValue);
   }
   //If nothing has changed, stop
-  if (this.value == finalValue) {
+  if ((this.thumbCount > 1 ? this.value[this.lockedThumb.index] : this.value) == finalValue) {
     if (!this.taskLock && this.task != null) {
       (this.task)();
       this.taskLock = true;
@@ -284,7 +435,9 @@ Slider89.prototype.executeSlider = function(clickedX) {
     (this.task)();
   }
   //Update value
-  this.value = finalValue;
+  if (this.thumbCount > 1) {
+    this.value[this.lockedThumb.index] = finalValue;
+  } else this.value = finalValue;
   //Change the positioning of the tooltip accordingly to the position of the slider knob
   if (distance >= rect.width - tip.clientWidth - 14 && tip.classList.contains('right') || distance <= tip.clientWidth && tip.classList.contains('left')) {
     tip.classList.toggle('right');
@@ -292,29 +445,31 @@ Slider89.prototype.executeSlider = function(clickedX) {
   }
 }
 
-var slider89 = {
+const slider89 = {
   absWidth: false,
   min: 0,
   max: 100,
-  value: 0,
   comma: 0,
+  thumbCount: 1,
+  value: 0,
   width: 'auto',
   caption: '',
-  thumbCount: 1,
+  extensible: false,
   trimComma: true,
   tipDuration: 250,
   classList: [],
-  structure: '<wrapper><knob><tooltip></wrapper><caption>',
+  structure: '<:wrapper><knob><tooltip></wrapper><caption>',
   replaceNode: false,
   defaultValues: function(defValues) {
     if (defValues.absWidth != null) this.absWidth = defValues.absWidth;
     if (defValues.min != null) this.min = defValues.min;
     if (defValues.max != null) this.max = defValues.max;
-    if (defValues.value != null) this.value = defValues.value;
     if (defValues.comma != null && defValues.comma >= 0) this.comma = defValues.comma;
+    if (defValues.thumbCount >= 1) this.thumbCount = defValues.thumbCount;
+    if (defValues.value != null) this.value = Slider89.prototype.checkValue(defValues.value, this.comma, this.thumbCount);
     if (defValues.width != null) this.width = defValues.width;
     if (defValues.caption) this.caption = defValues.caption;
-    if (defValues.thumbCount) this.thumbCount = defValues.thumbCount;
+    if (defValues.extensible != null) this.extensible = Slider89.prototype.checkExtensible(defValues.extensible);
     if (defValues.trimComma != null) this.trimComma = defValues.trimComma;
     if (defValues.tipDuration != null && (defValues.tipDuration > 0 || defValues.tipDuration == false)) this.tipDuration = defValues.tipDuration;
     if (defValues.classList) this.classList = defValues.classList;
