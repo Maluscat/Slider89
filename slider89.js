@@ -27,6 +27,7 @@ function Slider89(target, values = {}) {
   this.taskLock = false;
   this.tipTimer;
   this.lockedThumb;
+  this.thumb;
 
   //Call buildElement parsing the target (element for the slider to be created in / to be replaced with) to build the slider
   this.element = this.buildElement(target, values.replaceNode != null ? values.replaceNode : slider89.replaceNode);
@@ -36,6 +37,7 @@ function Slider89(target, values = {}) {
   const obj = this;
   this.element.wrapper.addEventListener('mousedown', function(e) {
     document.body.classList.add('noselect');
+    if (!e.target.classList.contains('slider89_knob') && obj.extensible) obj.addThumb();
     obj.executeSlider(e.x);
     window.addEventListener('mousemove', obj.mouseMove);
     window.addEventListener('mouseup', obj.mouseUp);
@@ -95,7 +97,7 @@ Slider89.prototype.parseHTML = function(structure) {
     general: new RegExp('<([:/]?)(' + re.name + ').*?>|<(' + re.name + ').*?', 'g'),
     attributes: new RegExp('\\s+(' + re.attr.name + ')\\((' + re.attr.value + ')\\)\\s*?', 'g'),
     singleTag: new RegExp('<(' + re.name + ')' + re.tag + re.content + '(' + re.attribs + ')\\s*?>', 'g'),
-    multiTag: new RegExp('<:(' + re.name + ')' + re.tag + re.content + '(' + re.attribs + ')\\s*?>((?:[\\s\\S](?!<:' + re.name + '(?:\\s+' + re.name + ')*(?:\\s+".+?")*' + re.attribs + '\\s*?>[\\d\\D]*?<\\[\\w-]+\\s*>))*?)<\\/\\1\\s*>', 'g')
+    multiTag: new RegExp('<:(' + re.name + ')' + re.tag + re.content + '(' + re.attribs + ')\\s*?>((?:[\\s\\S](?!<:' + re.name + '(?:\\s+' + re.name + ')*(?:\\s+".+?")*' + re.attribs + '\\s*?>[\\d\\D]*?<\\/[\\w-]+\\s*>))*?)<\\/\\1\\s*>', 'g')
   };
 
   let lastWrapper = new Array();
@@ -170,10 +172,17 @@ Slider89.prototype.parseHTML = function(structure) {
   function parseSingleTags(str, parent) {
     return str.replace(rgx.singleTag, function(match, name, tag, inner, attributes) {
       const elem = assembleElement(name, tag, attributes, inner);
+      if (name == 'knob' && !Array.isArray(elem)) {
+        that.thumb = elem.cloneNode(true);
+      }
       if (Array.isArray(elem)) {
+        const thumbWrapper = document.createElement('div');
+        thumbWrapper.classList.add('slider89_thumbs');
         for (let i = 0; i < elem.length; i++) {
-          parent.appendChild(elem[i]);
+          thumbWrapper.appendChild(elem[i]);
         }
+        parent.appendChild(thumbWrapper);
+        html.thumbWrapper = thumbWrapper;
       } else parent.appendChild(elem);
       html[name] = elem;
       return '';
@@ -183,10 +192,8 @@ Slider89.prototype.parseHTML = function(structure) {
     let elem = document.createElement(tag || 'div');
     if (content) elem.textContent = content;
     const hasAttribs = !!attribs[name];
-    const multiThumbs = name == 'knob' && that.thumbCount > 1;
-    if (multiThumbs) {
-      var attrArray = [];
-    }
+    const multiThumbs = name == 'knob' && (that.thumbCount > 1 || that.extensible);
+    if (multiThumbs) var attrArray = new Array();
     if (attributes) {
       attributes.replace(rgx.attributes, function(attrib, attribName, value) {
         if (hasAttribs && attribs[name][attribName] && attribName[0] != '!') {
@@ -210,15 +217,14 @@ Slider89.prototype.parseHTML = function(structure) {
       }
     }
     if (multiThumbs) {
+      that.thumb = elem.cloneNode(true);
       const thumbs = new Array(that.thumbCount);
       for (let i = 0; i < that.thumbCount; i++) {
         thumbs[i] = elem.cloneNode(true);
         if (attrArray) {
           for (let n = 0; n < attrArray.length; n++) {
             const domAttr = elem.getAttribute(attrArray[n]);
-            if (domAttr) {
-              thumbs[i].setAttribute(attrArray[n], domAttr + ' ' + attribs[name][attrArray[n]][i]);
-            } else thumbs[i].setAttribute(attrArray[n], attribs[name][attrArray[n]][i]);
+            thumbs[i].setAttribute(attrArray[n], (domAttr ? domAttr + ' ' : '') + attribs[name][attrArray[n]][i]);
           }
         }
       }
@@ -237,7 +243,7 @@ Slider89.prototype.checkValue = function(value, comma, thumbCount) {
     if (typeof value == 'object') {
       if (thumbCount == 1) {
         const keys = Object.keys(value);
-        if (keys.length > 1) console.warn("Slider89 warning: ‘value’ is an object with multiple (" + keys.length + ") attributes although the slider uses only one thumb. Consider allocating a single number to ‘value’.\nSetting value to the " + (value['default'] != null ? "‘default’ attribute, '" + value['default'] : "first attribute, '" + value[keys[0]]) + "'.");
+        if (keys.length > 1) console.warn("Slider89 warning: Property ‘value’ is an object with multiple (" + keys.length + ") attributes although the slider uses only one thumb. Consider allocating a single number to ‘value’.\nSetting value to the " + (value['default'] != null ? "‘default’ attribute, '" + value['default'] : "first attribute, '" + value[keys[0]]) + "'.");
         value = Number((value['default'] != null ? value['default'] : value[keys[0]]).toFixed(comma));
       } else {
         const thisDefault = value['default'] != null ? Number(value['default'].toFixed(comma)) : 0;
@@ -258,26 +264,27 @@ Slider89.prototype.checkValue = function(value, comma, thumbCount) {
         return value;
       } else return Number(Number(value).toFixed(comma));
     } else { //if value is neither an object nor a number or boolean
-      console.error("Slider89 error: value has been declared wrongly, it must either be an object, an array or a number (currently " + typeof value + ").\nUsing the default of '0' instead");
+      console.error("Slider89 error: Property ‘value’ has been declared wrongly. It must either be an object, an array or a number (currently " + typeof value + ").\nUsing the default of '0' instead");
       return 0;
     }
   } else return 0; //if value is not given
 }
 
 Slider89.prototype.checkExtensible = function(extensible) {
-  if (extensible == false) {
+  if ((typeof extensible != 'object' || Array.isArray(extensible)) && typeof extensible != 'boolean') {
+    console.warn("Slider89 warning: Property ‘extensible’ has been declared wrongly. It must either be a boolean or an object (currently " + typeof extensible + ").\nUsing the default of 'false' instead");
     return false;
-  } else if (extensible != null && extensible.singleClick == null) {
-    return true;
-  } else if (extensible != null && extensible.singleClick == false) {
-    return { singleClick: false };
-  } else if (extensible != null && extensible.singleClick != null && extensible.singleClick.cursor == null) {
-    return { singleClick: true };
-  } else if (extensible != null && extensible.singleClick != null && extensible.singleClick.cursor != null && typeof extensible.singleClick.cursor != 'string') {
-    return { singleClick: { cursor: 'auto' } };
-  } else {
-    return extensible;
+  } else if (typeof extensible == 'object') {
+    if ((typeof extensible.singleClick != 'object' || Array.isArray(extensible.singleClick)) && typeof extensible.singleClick != 'boolean') {
+      console.warn("Slider89 warning: Property ‘singleClick’ inside ‘extensible’ has been declared wrongly. It must either be a boolean or an object (currently " + typeof extensible.singleClick + ").\nUsing the default of 'false' instead");
+      return false;
+    } else if (typeof extensible.singleClick == 'object') {
+      if (typeof extensible.singleClick.cursor != 'string') {
+        console.warn("Slider89 warning: Property ‘cursor’ inside ‘extensible.singleClick’ has been declared wrongly. It must be a string (currently " + typeof extensible.singleClick.cursor + ").\nUsing the default of 'auto' instead");
+      } else if (extensible.singleClick.cursor == null) return { singleClick: true };
+    } else if (extensible.singleClick == false) return true;
   }
+  return extensible;
 }
 
 Slider89.prototype.checkTask = function(task) {
@@ -361,6 +368,9 @@ Slider89.prototype.buildElement = function(target, replace) {
   for (var i = 0; i < this.classList.length; i++) {
     nodes.container.classList.add(this.classList[i]);
   }
+  if (this.extensible.singleClick && this.extensible.singleClick.cursor) {
+    nodes.wrapper.style.cursor = this.extensible.singleClick.cursor;
+  }
   if (replace) {
     target.parentNode.replaceChild(nodes.container, target);
   } else {
@@ -368,6 +378,15 @@ Slider89.prototype.buildElement = function(target, replace) {
   }
   return nodes;
 }
+
+Slider89.prototype.addThumb = function() {
+  const newThumb = this.thumb.cloneNode(true);
+  this.element.thumbWrapper.appendChild(newThumb);
+  this.lockedThumb = {};
+  this.lockedThumb.node = newThumb;
+  this.lockedThumb.index = this.thumbCount++;
+  this.element.knob.push(newThumb);
+};
 
 Slider89.prototype.executeSlider = function(clickedX) {
   const rect = this.element.wrapper.getBoundingClientRect();
