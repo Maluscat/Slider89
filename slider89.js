@@ -95,6 +95,7 @@ Slider89.prototype.parseHTML = function(structure) {
   re.general = '<[:/]?(' + re.name + ').*?>';
   const rgx = {
     general: new RegExp('<([:/]?)(' + re.name + ').*?>|<(' + re.name + ').*?', 'g'),
+    thumbAttrVars: /(~)?{(i)}/g,
     attributes: new RegExp('\\s+(' + re.attr.name + ')\\((' + re.attr.value + ')\\)\\s*?', 'g'),
     singleTag: new RegExp('<(' + re.name + ')' + re.tag + re.content + '(' + re.attribs + ')\\s*?>', 'g'),
     multiTag: new RegExp('<:(' + re.name + ')' + re.tag + re.content + '(' + re.attribs + ')\\s*?>((?:[\\s\\S](?!<:' + re.name + '(?:\\s+' + re.name + ')*(?:\\s+".+?")*' + re.attribs + '\\s*?>[\\d\\D]*?<\\/[\\w-]+\\s*>))*?)<\\/\\1\\s*>', 'g')
@@ -193,17 +194,24 @@ Slider89.prototype.parseHTML = function(structure) {
     if (content) elem.textContent = content;
     const hasAttribs = !!attribs[name];
     const multiThumbs = name == 'knob' && (that.thumbCount > 1 || that.extensible);
-    if (multiThumbs) var attrArray = new Array();
+    if (multiThumbs) {
+      var thumbArr = {
+        attr: new Array(),
+        var: new Array()
+      }
+    }
     if (attributes) {
       attributes.replace(rgx.attributes, function(attrib, attribName, value) {
         if (hasAttribs && attribs[name][attribName] && attribName[0] != '!') {
           if (Array.isArray(attribs[name][attribName])) {
-            attrArray.push(attribName);
+            thumbArr.attr.push(attribName);
           } else value += ' ' + attribs[name][attribName];
         } else if (attribName[0] == '!') {
           attribName = attribName.slice(1);
         }
-        elem.setAttribute(attribName, value || '');
+        if (name == 'knob' && rgx.thumbAttrVars.test(value)) {
+          thumbArr.var.push([attribName, value]);
+        } else elem.setAttribute(attribName, value || '');
       });
     }
     if (hasAttribs) {
@@ -211,7 +219,7 @@ Slider89.prototype.parseHTML = function(structure) {
       for (let i = 0; i < keys.length; i++) {
         if (!elem.getAttribute(keys[i])) {
           if (Array.isArray(attribs[name][keys[i]])) {
-            attrArray.push(keys[i]);
+            thumbArr.attr.push(keys[i]);
           } else elem.setAttribute(keys[i], attribs[name][keys[i]]);
         }
       }
@@ -221,11 +229,19 @@ Slider89.prototype.parseHTML = function(structure) {
       const thumbs = new Array(that.thumbCount);
       for (let i = 0; i < that.thumbCount; i++) {
         thumbs[i] = elem.cloneNode(true);
-        if (attrArray) {
-          for (let n = 0; n < attrArray.length; n++) {
-            const domAttr = elem.getAttribute(attrArray[n]);
-            thumbs[i].setAttribute(attrArray[n], (domAttr ? domAttr + ' ' : '') + attribs[name][attrArray[n]][i]);
-          }
+        for (let n = 0; n < thumbArr.attr.length; n++) {
+          const domAttr = elem.getAttribute(thumbArr.attr[n]);
+          thumbs[i].setAttribute(thumbArr.attr[n], (domAttr ? domAttr + ' ' : '') + attribs[name][thumbArr.attr[n]][i]);
+        }
+        for (let n = 0; n < thumbArr.var.length; n++) {
+          //thumbArr.var = Array<Array<name, value>>
+          const value = thumbArr.var[n][1].replace(rgx.thumbAttrVars, function(match, escaped, identifier) {
+            console.log(match, !escaped, identifier);
+            if (!escaped) {
+              if (identifier == 'i') return i;
+            } else return match.slice(1);
+          });
+          thumbs[i].setAttribute(thumbArr.var[n][0], value);
         }
       }
       return thumbs;
