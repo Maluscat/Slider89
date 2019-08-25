@@ -33,10 +33,21 @@ function Slider89(target, values = {}) {
   if (this.tipDuration == false) this.element.wrapper.children[1].classList.remove('hidden');
 
   const that = this;
+  this.doubleClick = function(e) {
+    if (!e.target.classList.contains('slider89_knob')) that.addThumb(e.clientX);
+  }
+  if (this.extensible && !this.extensible.singleClick) {
+    this.element.wrapper.addEventListener('dblclick', this.doubleClick);
+  }
   this.element.wrapper.addEventListener('mousedown', function(e) {
     document.body.classList.add('noselect');
-    if (!e.target.classList.contains('slider89_knob') && that.extensible) that.addThumb();
-    that.executeSlider(e.clientX);
+    if (that.extensible && !e.target.classList.contains('slider89_knob')) {
+      if (that.extensible.singleClick) {
+        that.addThumb(e.clientX);
+      }
+    } else {
+      that.executeSlider(e.clientX);
+    }
     window.addEventListener('mousemove', that.mouseMove);
     window.addEventListener('mouseup', that.mouseUp);
   });
@@ -233,7 +244,6 @@ Slider89.prototype.parseHTML = function(structure) {
         for (let n = 0; n < thumbArr.var.length; n++) {
           //thumbArr.var = Array<Array<name, value>>
           const value = thumbArr.var[n][1].replace(rgx.thumbAttrVars, function(match, escaped, identifier) {
-            console.log(match, !escaped, identifier);
             if (!escaped) {
               if (identifier == 'i') return i;
             } else return match.slice(1);
@@ -288,13 +298,9 @@ Slider89.prototype.checkExtensible = function(extensible) {
     console.warn("Slider89 warning: Property ‘extensible’ has been declared wrongly. It must either be a boolean or an object (currently " + typeof extensible + ").\nUsing the default of 'false' instead");
     return false;
   } else if (typeof extensible == 'object') {
-    if ((typeof extensible.singleClick != 'object' || Array.isArray(extensible.singleClick)) && typeof extensible.singleClick != 'boolean') {
+    if ((typeof extensible.singleClick != 'boolean') {
       console.warn("Slider89 warning: Property ‘singleClick’ inside ‘extensible’ has been declared wrongly. It must either be a boolean or an object (currently " + typeof extensible.singleClick + ").\nUsing the default of 'false' instead");
       return false;
-    } else if (typeof extensible.singleClick == 'object') {
-      if (typeof extensible.singleClick.cursor != 'string') {
-        console.warn("Slider89 warning: Property ‘cursor’ inside ‘extensible.singleClick’ has been declared wrongly. It must be a string (currently " + typeof extensible.singleClick.cursor + ").\nUsing the default of 'auto' instead");
-      } else if (extensible.singleClick.cursor == null) return { singleClick: true };
     } else if (extensible.singleClick == false) return true;
   }
   return extensible;
@@ -354,7 +360,12 @@ Slider89.prototype.newValues = function(newValues = {}) {
     this.caption = newValues.caption;
     this.element.caption.innerHTML = this.caption;
   }
-  this.extensible = newValues.extensible != null ? this.checkExtensible(newValues.extensible) : this.extensible;
+  if (newValues.extensible != null) {
+    const behavior = this.extensible.singleClick;
+    this.extensible = this.checkExtensible(newValues.extensible);
+    if (behavior != this.extensible.singleClick)
+      this.element.wrapper[this.extensible.singleClick ? 'removeEventListener' : 'addEventListener']('dblclick', this.doubleClick);
+  }
   this.trimComma = newValues.trimComma != null ? newValues.trimComma : this.trimComma;
   this.tipDuration = newValues.tipDuration != null && (values.tipDuration > 0 || values.tipDuration == false) ? newValues.tipDuration : this.tipDuration;
   if (newValues.classList) {
@@ -381,9 +392,6 @@ Slider89.prototype.buildElement = function(target, replace) {
   for (var i = 0; i < this.classList.length; i++) {
     nodes.container.classList.add(this.classList[i]);
   }
-  if (this.extensible.singleClick && this.extensible.singleClick.cursor) {
-    nodes.wrapper.style.cursor = this.extensible.singleClick.cursor;
-  }
   if (replace) {
     target.parentNode.replaceChild(nodes.container, target);
   } else {
@@ -392,13 +400,16 @@ Slider89.prototype.buildElement = function(target, replace) {
   return nodes;
 }
 
-Slider89.prototype.addThumb = function() {
+Slider89.prototype.addThumb = function(clickedX) {
   const newThumb = this.thumb.cloneNode(true);
   this.element.thumbWrapper.appendChild(newThumb);
-  this.lockedThumb = {};
-  this.lockedThumb.node = newThumb;
-  this.lockedThumb.index = this.thumbCount++;
+  this.lockedThumb = {
+    node: newThumb,
+    index: this.thumbCount++
+  };
   this.element.knob.push(newThumb);
+  this.executeSlider(clickedX);
+  this.lockedThumb = null;
 };
 
 Slider89.prototype.executeSlider = function(clickedX) {
