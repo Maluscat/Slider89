@@ -29,31 +29,28 @@ function Slider89(target, values = {}) {
   this.lockedThumb;
   this.thumb;
 
-  //Call buildElement parsing the target (element for the slider to be created in / to be replaced with) to build the slider
   this.element = this.buildElement(target, values.replaceNode != null ? values.replaceNode : slider89.replaceNode);
   if (this.tipDuration == false) this.element.wrapper.children[1].classList.remove('hidden');
 
-  //Write 'this' into a carrier-variable and attach the needed event listeners
-  const obj = this;
+  const that = this;
   this.element.wrapper.addEventListener('mousedown', function(e) {
     document.body.classList.add('noselect');
-    if (!e.target.classList.contains('slider89_knob') && obj.extensible) obj.addThumb();
-    obj.executeSlider(e.x);
-    window.addEventListener('mousemove', obj.mouseMove);
-    window.addEventListener('mouseup', obj.mouseUp);
+    if (!e.target.classList.contains('slider89_knob') && that.extensible) that.addThumb();
+    that.executeSlider(e.clientX);
+    window.addEventListener('mousemove', that.mouseMove);
+    window.addEventListener('mouseup', that.mouseUp);
   });
-  //The function executed by the mousemove listener. Needs to be here in order to reach 'obj'
   this.mouseMove = function(e) {
-    obj.executeSlider(e.x);
+    that.executeSlider(e.clientX);
   }
   //The function executed by the mouseup listener
   //On mouse up, remove the mouse move listener which was added on mouse down and remove itself until added again by mousedown
   this.mouseUp = function() {
     document.body.classList.remove('noselect');
-    window.removeEventListener('mousemove', obj.mouseMove);
-    if (obj.taskMouseUp != null) (obj.taskMouseUp)();
-    obj.lockedThumb = null;
-    window.removeEventListener('mouseup', obj.mouseUp);
+    window.removeEventListener('mousemove', that.mouseMove);
+    if (that.taskMouseUp != null) (that.taskMouseUp)();
+    that.lockedThumb = null;
+    window.removeEventListener('mouseup', that.mouseUp);
   }
 }
 
