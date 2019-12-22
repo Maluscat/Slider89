@@ -34,22 +34,27 @@ function Slider89(target, values = {}) {
 
   const that = this;
   this.doubleClick = function(e) {
-    if (!e.target.classList.contains('slider89_knob')) that.addThumb(e.clientX);
+    if (that.extensible.add == 'doubleclick' && !e.target.classList.contains('slider89_knob'))
+      that.addThumb(e.clientX);
+    if (that.extensible.remove == 'doubleclick' && e.target.classList.contains('slider89_knob'))
+      that.removeThumb(e.target);
   }
-  if (this.extensible && !this.extensible.singleClick) {
+  if (this.extensible && (this.extensible.add == 'doubleclick' || this.extensible.remove == 'doubleclick')) {
     this.element.wrapper.addEventListener('dblclick', this.doubleClick);
   }
   this.element.wrapper.addEventListener('mousedown', function(e) {
-    document.body.classList.add('noselect');
-    if (that.extensible && !e.target.classList.contains('slider89_knob')) {
-      if (that.extensible.singleClick) {
+    e.preventDefault();
+    if (that.extensible) {
+      if (that.extensible.add === e.button && !e.target.classList.contains('slider89_knob'))
         that.addThumb(e.clientX);
-      }
-    } else {
-      that.executeSlider(e.clientX);
+      if (that.extensible.remove === e.button && e.target.classList.contains('slider89_knob'))
+        that.removeThumb(e.target);
+    } else that.executeSlider(e.clientX);
+    if (e.button == 0) {
+      document.body.classList.add('noselect');
+      window.addEventListener('mousemove', that.mouseMove);
+      window.addEventListener('mouseup', that.mouseUp);
     }
-    window.addEventListener('mousemove', that.mouseMove);
-    window.addEventListener('mouseup', that.mouseUp);
   });
   this.mouseMove = function(e) {
     that.executeSlider(e.clientX);
@@ -294,16 +299,68 @@ Slider89.prototype.checkValue = function(value, comma, thumbCount) {
 }
 
 Slider89.prototype.checkExtensible = function(extensible) {
+  //This code is so wrong
+  const defs = {
+    add: 'doubleclick',
+    remove: 1,
+    maxThumbs: 5,
+    minThumbs: 1
+  };
   if ((typeof extensible != 'object' || Array.isArray(extensible)) && typeof extensible != 'boolean') {
     console.warn("Slider89 warning: Property ‘extensible’ has been declared wrongly. It must either be a boolean or an object (currently " + typeof extensible + ").\nUsing the default of 'false' instead");
     return false;
   } else if (typeof extensible == 'object') {
-    if ((typeof extensible.singleClick != 'boolean') {
-      console.warn("Slider89 warning: Property ‘singleClick’ inside ‘extensible’ has been declared wrongly. It must either be a boolean or an object (currently " + typeof extensible.singleClick + ").\nUsing the default of 'false' instead");
-      return false;
-    } else if (extensible.singleClick == false) return true;
-  }
+    if (extensible.maxThumbs != null) {
+      if (typeof extensible.maxThumbs != 'number') {
+        console.warn("Slider89 warning: Property ‘maxThumbs’ inside ‘extensible’ has been declared wrongly. It must be a number or 'false' (currently " + typeof extensible.maxThumbs + ").\nUsing the default of '" + defs.maxThumbs + "' instead");
+        extensible.maxThumbs = defs.maxThumbs;
+      }
+    } else extensible.maxThumbs = defs.maxThumbs;
+    if (extensible.minThumbs != null) {
+      if (typeof extensible.minThumbs != 'number') {
+        console.warn("Slider89 warning: Property ‘minThumbs’ inside ‘extensible’ has been declared wrongly. It must be a number or 'false' (currently " + typeof extensible.minThumbs + ").\nUsing the default of '" + defs.minThumbs + "' instead");
+        extensible.minThumbs = defs.minThumbs;
+      }
+    } else extensible.minThumbs = defs.minThumbs;
+    mouseCheck('add');
+    mouseCheck('remove');
+  } else if (extensible == true) return defs;
   return extensible;
+
+  function mouseCheck(prop) {
+    const def = (prop == 'add' ? defs.add : defs.remove);
+    if (extensible[prop] != null) {
+      //Translating extensible[prop] to mouseEvent.button codes
+      if (typeof extensible[prop] == 'boolean') {
+        if (extensible[prop] == true) extensible[prop] = def;
+      } else if (typeof extensible[prop] == 'string') {
+        if (extensible[prop] != 'doubleclick') {
+          switch (extensible[prop]) {
+            case 'leftclick':
+              extensible[prop] = 0;
+              break;
+            case 'middleclick':
+              extensible[prop] = 1;
+              break;
+            case 'rightclick':
+              extensible[prop] = 2;
+              break;
+            default:
+              console.warn("Slider89 warning: Property ‘" + prop + "’ inside ‘extensible’ has been declared wrongly. It must either be a boolean, one of the four string mouse button shortcuts or a number (mouseEvent.button code) (currently an invalid string: " + extensible[prop] + ").\nUsing the default of '" + def + "' instead");
+              extensible[prop] = def;
+          }
+        }
+      } else if (typeof extensible[prop] == 'number') {
+        if (extensible[prop] > 2) {
+          console.warn("Slider89 warning: Property ‘" + prop + "’ inside ‘extensible’ has been declared wrongly. It must either be a boolean, a string mouse button shortcut or a number representing a mouseEvent.button code from 0 to 2 (currently an invalid button code: " + extensible[prop] + ").\nUsing the default of '" + def + "' instead.\nSee https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button for more info on button codes");
+          extensible[prop] = def;
+        }
+      } else {
+        console.warn("Slider89 warning: Property ‘" + prop + "’ inside ‘extensible’ has been declared wrongly. It must either be a boolean, a string mouse button shortcut or a number from 0 to 2 (mouseEvent.button code) (currently " + typeof extensible[prop] + ").\nUsing the default of '" + def + "' instead");
+        extensible[prop] = def;
+      }
+    } else extensible[prop] = def;
+  }
 }
 
 Slider89.prototype.checkTask = function(task) {
@@ -361,10 +418,13 @@ Slider89.prototype.newValues = function(newValues = {}) {
     this.element.caption.innerHTML = this.caption;
   }
   if (newValues.extensible != null) {
-    const behavior = this.extensible.singleClick;
+    const behavior = [this.extensible.add, this.extensible.remove];
     this.extensible = this.checkExtensible(newValues.extensible);
-    if (behavior != this.extensible.singleClick)
-      this.element.wrapper[this.extensible.singleClick ? 'removeEventListener' : 'addEventListener']('dblclick', this.doubleClick);
+    if ((this.extensible.add == 'doubleclick' || this.extensible.remove == 'doubleclick') && behvior.indexOf('doubleclick') == -1) {
+      this.element.wrapper.addEventListener('dblclick', this.doubleClick);
+    } else if (behvior.indexOf('doubleclick') != -1 && (this.extensible.add != 'doubleclick' || this.extensible.remove != 'doubleclick')) {
+      this.element.wrapper.removeEventListener('dblclick', this.doubleClick);
+    }
   }
   this.trimComma = newValues.trimComma != null ? newValues.trimComma : this.trimComma;
   this.tipDuration = newValues.tipDuration != null && (values.tipDuration > 0 || values.tipDuration == false) ? newValues.tipDuration : this.tipDuration;
@@ -401,15 +461,27 @@ Slider89.prototype.buildElement = function(target, replace) {
 }
 
 Slider89.prototype.addThumb = function(clickedX) {
-  const newThumb = this.thumb.cloneNode(true);
-  this.element.thumbWrapper.appendChild(newThumb);
-  this.lockedThumb = {
-    node: newThumb,
-    index: this.thumbCount++
-  };
-  this.element.knob.push(newThumb);
-  this.executeSlider(clickedX);
-  this.lockedThumb = null;
+  if (this.element.knob.length < this.extensible.maxThumbs) {
+    const newThumb = this.thumb.cloneNode(true);
+    this.element.thumbWrapper.appendChild(newThumb);
+    this.lockedThumb = {
+      node: newThumb,
+      index: this.thumbCount++
+    };
+    this.element.knob.push(newThumb);
+    this.executeSlider(clickedX);
+    this.lockedThumb = null;
+  }
+};
+
+Slider89.prototype.removeThumb = function(target) {
+  if (this.element.knob.length > this.extensible.minThumbs) {
+    this.thumbCount--;
+    this.element.thumbWrapper.removeChild(target);
+    const index = this.element.knob.indexOf(target);
+    this.element.knob.splice(index, 1);
+    this.value.splice(index, 1);
+  }
 };
 
 Slider89.prototype.executeSlider = function(clickedX) {
