@@ -109,19 +109,20 @@ function Slider89(target, config = {}, replace) {
 
         if (struct[i].shape) msg += ' (' + struct[i].shape + ')';
 
+        if (msg !== '' && (type == 'boolean' || type == 'true' || type == 'false')) msg += ' or ';
         if (type == 'boolean') {
-          msg += ' or a boolean';
+          msg += 'a boolean';
         } else if (type == 'true') {
-          msg += ' or true';
+          msg += 'true';
         } else if (type == 'false') {
-          msg += ' or false';
+          msg += 'false';
         }
       }
 
       return msg;
     }
     //Checking a property for the correct type & format
-    function checkTypes(val, prop, structure, msg) {
+    function checkTypes(val, prop, structure, msg, plural) {
       for (var i = 0; i < structure.length; i++) {
         const typeObj = structure[i];
         const type = typeObj.type;
@@ -130,19 +131,19 @@ function Slider89(target, config = {}, replace) {
           type == 'array' && Array.isArray(val) ||
           type == 'number' && typeof val == 'number'
         ) {
-          if (checkConditions(typeObj, prop, val, msg)) return true;
           if (type == 'number') {
-            if ((!!Number.isNaN && !Number.isNaN(val)) || !isNaN(val)) return true;
-            else propError(prop, msg + 'NaN');
+            if ((!!Number.isNaN && Number.isNaN(val)) || isNaN(val)) propError(prop, msg + ' is NaN');
           } else if (type == 'array') {
-
+            for (var n = 0; n < val.length; n++) {
+              checkTypes(val[n], prop, typeObj.structure, msg, true);
+            }
           }
+          if (checkConditions(typeObj, prop, val, msg)) return true;
         }
       }
-      propError(prop, msg + 'of type ' + typeof val);
+      propError(prop, msg + (plural ? 's values are ' : ' is ') +  'of type ' + typeof val);
     }
     function checkConditions(typeObj, prop, val, msg) {
-      console.log(val);
       if (typeObj.conditions) {
         const type = typeObj.type;
         for (var i = 0; i < typeObj.conditions.length; i++) {
@@ -151,18 +152,18 @@ function Slider89(target, config = {}, replace) {
             switch (cond[0]) {
               case 'length':
                 if (val.length !== cond[1])
-                propError(prop, msg + (type == 'array' ? 'an ' : 'a ') + type + ' of length ' + val.length);;
+                  propError(prop, msg + (type == 'array' ? 'an ' : 'a ') + type + ' of length ' + val.length);
                 break;
               case '>=':
                 if (val < cond[1])
-                propError(prop, msg + (cond[1] == 0 ? 'a negative number' : 'a number below ' + cond[1]));
+                  propError(prop, msg + (cond[1] == 0 ? 'a negative number' : 'a number below ' + cond[1]));
                 break;
             }
           } else {
             switch (cond) {
               case 'int':
                 if (val % 1 !== 0)
-                propError(prop, msg + 'a floating point number');
+                  propError(prop, msg + 'a floating point number');
                 break;
             }
           }
@@ -176,7 +177,7 @@ function Slider89(target, config = {}, replace) {
       const obj = properties[item];
 
       let errorMsg = computeTypeMsg(obj.structure, obj.shape);
-      errorMsg += ' but it is ';
+      errorMsg += ' but it';
 
       Object.defineProperty(Slider89.prototype, item, {
         set: function(val) {
