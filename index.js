@@ -179,7 +179,11 @@ function Slider89(target, config = {}, replace) {
       let errorMsg = computeTypeMsg(obj.structure, obj.shape);
       errorMsg += ' but it';
 
-      Object.defineProperty(Slider89.prototype, item, {
+      //Calling Object.defineProperty on the `this` of the class function (here carried over by `that`) is nowhere documented
+      //but it is necessary to be able to create multiple instances of the same class
+      //as {Class}.prototype will inherit the defined property to all instances
+      //and a new call of defineProperty (when creating a new instance) will throw an error for defining the same property twice
+      Object.defineProperty(that, item, {
         set: function(val) {
           checkTypes(val, item, obj.structure, errorMsg);
           vals[item] = val;
