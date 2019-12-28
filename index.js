@@ -3,33 +3,40 @@ function Slider89(target, config = {}, replace) {
   const that = this;
   let initial = false;
 
-  //Extended Array.prototype.includes() polyfill
-  Array.prototype.has = function(val, loop) {
-    if (loop) {
-      for (var i = 0; i < this.length; i++) {
-        if (this[i].indexOf(val) != -1) {
-          return this[i];
-        }
-      }
-    } else return this.indexOf(val) != -1;
-  }
-
   const properties = {
     range: {
       default: [0, 100],
-      type: [
-        ['array', ['number']],
-        ['length', 2]
+      structure: [
+        {
+          type: 'array',
+          conditions: [
+            ['length', 2]
+          ],
+          structure: [
+            {type: 'number'}
+          ]
+        },
+        {type: 'boolean'}
       ],
       shape: '[minValue, maxValue]'
     },
     value: {
       default: 0,
-      type: ['number']
+      structure: [
+        {type: 'number'}
+      ]
     },
     precision: {
       default: 0,
-      type: ['number', ['>=', 0], 'int']
+      structure: [
+        {
+          type: 'number',
+          conditions: [
+            ['>=', 0],
+            'int'
+          ]
+        }
+      ]
     },
     // step: {
     //   default: false,
@@ -57,69 +64,123 @@ function Slider89(target, config = {}, replace) {
   const vals = {};
 
   (function() {
-    //Conditions which are executed when a value is set
-    const conditions = {
-      'array': function(val, prop, msg) {
-        if (Array.isArray(val)) return true;
-        else propError(prop, msg + 'of type ' + typeof val);
-      },
-      'length': function(val, prop, msg, length) {
-        if (val.length == length) return true;
-        else propError(prop, msg + 'an array of length ' + val.length);
-      },
-      'number': function(val, prop, msg, length) {
-        if (typeof val == 'number') {
-          if ((!!Number.isNaN && !Number.isNaN(val)) || !isNaN(val)) {
-            return true;
-          } else propError(prop, msg + 'NaN');
-        } else propError(prop, msg + 'of type ' + typeof val);
-      },
-      'int': function(val, prop, msg) {
-        if (val % 1 === 0) return true;
-        else propError(prop, msg + 'a floating point number');
-      },
-      '>=': function(val, prop, msg, limit) {
-        if (val >= limit) return true;
-        else propError(prop, msg + (limit = 0 ? 'a negative number' : 'a number below ' + limit));
+    //Extended {Array, String}.prototype.includes() polyfill
+    function has(array, val, loop) {
+      if (!Array.isArray(array)) return false;
+      if (loop) {
+        for (var i = 0; i < array.length; i++) {
+          if (array[i].indexOf(val) != -1) {
+            return array[i];
+          }
+        }
+      } else return array.indexOf(val) != -1;
+    }
+    //Computing an automated error messages of what the property has got to be
+    function computeTypeMsg(struct, shape, plural) {
+      let msg = '';
+      for (var i = 0; i < struct.length; i++) {
+        const type = struct[i].type;
+        const conditions = struct[i].conditions;
+
+        if (type == 'number') {
+          const limit = has(conditions, '>=', true);
+          const hasInt = has(conditions, 'int');
+          if (limit && limit[1] === 0) {
+            if (!plural) msg += 'a ';
+            msg += 'non-negative';
+          } else if (hasInt && !plural) {
+            msg += 'an';
+          } else msg += 'any';
+          if (hasInt) {
+            msg += ' integer';
+          } else {
+            msg += ' number';
+          }
+          if (plural) msg += 's';
+          if (limit && limit[1] !== 0) msg += ' which ' + (plural ? 'are' : 'is') + ' greater than or equal to ' + limit[1];
+        }
+
+        else if (type == 'array') {
+          msg += 'an array';
+          const len = has(conditions, 'length', true);
+          if (len) msg += ' of length ' + len[1];
+          msg += ' with ' + computeTypeMsg(struct[i].structure, false, len && len[1] > 1 ? true : false) + ' as values';
+        }
+
+        if (struct[i].shape) msg += ' (' + struct[i].shape + ')';
+
+        if (type == 'boolean') {
+          msg += ' or a boolean';
+        } else if (type == 'true') {
+          msg += ' or true';
+        } else if (type == 'false') {
+          msg += ' or false';
+        }
       }
-    };
+
+      return msg;
+    }
+    //Checking a property for the correct type & format
+    function checkTypes(val, prop, structure, msg) {
+      for (var i = 0; i < structure.length; i++) {
+        const typeObj = structure[i];
+        const type = typeObj.type;
+        if (
+          (type == 'boolean' || type == 'false' || type == 'true') && typeof val == 'boolean' ||
+          type == 'array' && Array.isArray(val) ||
+          type == 'number' && typeof val == 'number'
+        ) {
+          if (checkConditions(typeObj, prop, val, msg)) return true;
+          if (type == 'number') {
+            if ((!!Number.isNaN && !Number.isNaN(val)) || !isNaN(val)) return true;
+            else propError(prop, msg + 'NaN');
+          } else if (type == 'array') {
+
+          }
+        }
+      }
+      propError(prop, msg + 'of type ' + typeof val);
+    }
+    function checkConditions(typeObj, prop, val, msg) {
+      console.log(val);
+      if (typeObj.conditions) {
+        const type = typeObj.type;
+        for (var i = 0; i < typeObj.conditions.length; i++) {
+          const cond = typeObj.conditions[i];
+          if (Array.isArray(cond)) {
+            switch (cond[0]) {
+              case 'length':
+                if (val.length !== cond[1])
+                propError(prop, msg + (type == 'array' ? 'an ' : 'a ') + type + ' of length ' + val.length);;
+                break;
+              case '>=':
+                if (val < cond[1])
+                propError(prop, msg + (cond[1] == 0 ? 'a negative number' : 'a number below ' + cond[1]));
+                break;
+            }
+          } else {
+            switch (cond) {
+              case 'int':
+                if (val % 1 !== 0)
+                propError(prop, msg + 'a floating point number');
+                break;
+            }
+          }
+        }
+      }
+      return true;
+    }
 
     for (var prop in properties) {
       const item = prop;
       const obj = properties[item];
 
-      //Computing an automated error messages of what the property has got to be
-      let errorMsg = 'property ‘' + item + '’ must be ';
-      if (obj.type.has('number')) {
-        const limit = obj.type.has('>=', true);
-        const hasInt = obj.type.has('int');
-        const hasNum = obj.type.has('number');
-        if (limit && limit[1] === 0) {
-          errorMsg += 'a non-negative';
-        } else if (hasInt) {
-          errorMsg += 'an';
-        } else errorMsg += 'any';
-        if (hasInt) {
-          errorMsg += ' integer';
-        } else if (hasNum) {
-          errorMsg += ' number';
-        }
-        if (limit && limit[1] !== 0) errorMsg += ' which is greater than or equal to ' + limit[1];
-      } else if (obj.type.has('array')) {
-        errorMsg += 'an array';
-        const len = obj.type.has('length', true);
-        if (len != null) errorMsg += ' of length ' + len[1];
-      }
-      if (obj.shape) errorMsg += ' (' + obj.shape + ')';
-      if (obj.type.has('false')) errorMsg += ' or false';
+      let errorMsg = computeTypeMsg(obj.structure, obj.shape);
       errorMsg += ' but it is ';
 
       Object.defineProperty(Slider89.prototype, item, {
         set: function(val) {
-          for (var i = 0; i < obj.type.length; i++) {
-            if (Array.isArray(obj.type[i])) conditions[obj.type[i][0]](val, item, errorMsg, obj.type[i][1]);
-            else conditions[obj.type[i]](val, item, errorMsg);
-          }
+          checkTypes(val, item, obj.structure, errorMsg);
           vals[item] = val;
         },
         get: function() {
@@ -128,49 +189,6 @@ function Slider89(target, config = {}, replace) {
       });
     }
   })();
-
-  // Object.defineProperties(Slider89.prototype, {
-  //   range: {
-  //     set: function(val) {
-  //       const errorMsg = 'property ‘range’ must be an array of length ' + defaults.range.length + ' ([minValue, maxValue]) but it is ';
-  //       if (Array.isArray(val)) {
-  //         if (val.length == defaults.range.length) vals.range = val;
-  //         else propError('range', errorMsg + 'an array of length ' + val.length);
-  //       } else propError('range', errorMsg + 'currently of type ' + typeof val);
-  //     },
-  //     get: function() {
-  //       return vals.range;
-  //     }
-  //   },
-  //   value: {
-  //     set: function(val) {
-  //       const errorMsg = 'property ‘value’ must be any number but it is ';
-  //       if (typeof val == 'number') {
-  //         if ((!!Number.isNaN && !Number.isNaN(val)) || !isNaN(val)) vals.value = val;
-  //         else propError('value', errorMsg + 'NaN');
-  //       } else propError('value', errorMsg + 'of type ' + typeof val);
-  //     },
-  //     get: function() {
-  //       return vals.value;
-  //     }
-  //   },
-  //   precision: {
-  //     set: function(val) {
-  //       const errorMsg = 'property ‘precision’ must be a non-negative integer but it is ';
-  //       if (typeof val == 'number') {
-  //         if ((!!Number.isNaN && !Number.isNaN(val)) || !isNaN(val)) {
-  //           if (val >= 0) {
-  //             if (val % 1 === 0) vals.precision = val;
-  //             else propError('precision', errorMsg + 'a floating point number');
-  //           } else propError('precision', errorMsg + 'a negative number');
-  //         } else propError('precision', errorMsg + 'NaN');
-  //       } else propError('precision', errorMsg + 'of type ' + typeof val);
-  //     },
-  //     get: function() {
-  //       return vals.precision;
-  //     }
-  //   }
-  // });
 
   (function() {
     initial = true;
@@ -181,13 +199,13 @@ function Slider89(target, config = {}, replace) {
   })();
 
   function propError(prop, msg) {
-    msg = 'Slider89: ' + msg + '.\n';
+    msg = 'Slider89: property ‘' + prop + '’ must be ' + msg + '.\n';
     if (initial) {
       msg += 'Aborting the slider construction.';
     } else {
       let prevVal = vals[prop];
       if (Array.isArray(prevVal)) prevVal = '[' + prevVal.join(', ') + ']';
-      msg += 'Continuing with the previous value (' + vals[prop] + ').'
+      msg += 'Continuing with the previous value (' + prevVal + ').'
     }
     throw new Error(msg);
   }
