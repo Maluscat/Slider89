@@ -107,7 +107,10 @@ function Slider89(target, config = {}, replace) {
           msg += ' with ' + computeTypeMsg(struct[i].structure, false, len && len[1] > 1 ? true : false) + ' as values';
         }
 
-        if (struct[i].shape) msg += ' (' + struct[i].shape + ')';
+        if (shape) {
+          msg += ' (' + shape + ')';
+          shape = false;
+        }
 
         if (msg !== '' && (type == 'boolean' || type == 'true' || type == 'false')) msg += ' or ';
         if (type == 'boolean') {
