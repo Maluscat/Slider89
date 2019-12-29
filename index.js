@@ -74,7 +74,7 @@ function Slider89(target, config = {}, replace) {
         ]
       }]
     },
-    // structure: { //name unclear
+    // structure: { //name unclear //write only -> exception in the setter needed!
     //   default: false,
     //   type: []
     // },
@@ -84,135 +84,10 @@ function Slider89(target, config = {}, replace) {
     // }
   }
 
-  //The actual `vals` properties don't need to be initialized, this happens in the loop below
   const vals = {};
 
   //Initializing basic class functionality
   (function() {
-    //Extended {Array, String}.prototype.includes() polyfill
-    function has(array, val, loop) {
-      if (!Array.isArray(array)) return false;
-      if (loop) {
-        for (var i = 0; i < array.length; i++) {
-          if (array[i].indexOf(val) != -1) {
-            return array[i];
-          }
-        }
-      } else return array.indexOf(val) != -1;
-    }
-    //Throwing an error and aborting the current process
-    function propError(prop, msg) {
-      msg = 'Slider89: property ‘' + prop + '’ must be ' + msg + '.\n';
-      if (initial) {
-        msg += 'Aborting the slider construction.';
-      } else {
-        let prevVal = vals[prop];
-        if (Array.isArray(prevVal)) prevVal = '[' + prevVal.join(', ') + ']';
-        msg += 'Continuing with the previous value (' + prevVal + ').'
-      }
-      throw new Error(msg);
-    }
-    //Computing an automated error messages of what the property has got to be
-    function computeTypeMsg(struct, shape, plural) {
-      let msg = '';
-      for (var i = 0; i < struct.length; i++) {
-        const type = struct[i].type;
-        const conditions = struct[i].conditions;
-
-        if (type == 'number') {
-          const limit = has(conditions, '>=', true);
-          const hasInt = has(conditions, 'int');
-          if (limit && limit[1] === 0) {
-            if (!plural) msg += 'a ';
-            msg += 'non-negative';
-          } else if (hasInt && !plural) {
-            msg += 'an';
-          } else msg += 'any';
-          if (hasInt) {
-            msg += ' integer';
-          } else {
-            msg += ' number';
-          }
-          if (plural) msg += 's';
-          if (limit && limit[1] !== 0) msg += ' which ' + (plural ? 'are' : 'is') + ' greater than or equal to ' + limit[1];
-        }
-
-        else if (type == 'array') {
-          msg += 'an array';
-          const len = has(conditions, 'length', true);
-          if (len) msg += ' of length ' + len[1];
-          msg += ' with ' + computeTypeMsg(struct[i].structure, false, len && len[1] > 1 ? true : false) + ' as values';
-        }
-
-        if (shape) {
-          msg += ' (' + shape + ')';
-          shape = false;
-        }
-
-        if (msg !== '' && (type == 'boolean' || type == 'true' || type == 'false')) msg += ' or ';
-        if (type == 'boolean') {
-          msg += 'a boolean';
-        } else if (type == 'true') {
-          msg += 'true';
-        } else if (type == 'false') {
-          msg += 'false';
-        }
-      }
-
-      return msg;
-    }
-    //Checking a property for the correct type & format
-    function checkTypes(val, prop, structure, msg, plural) {
-      for (var i = 0; i < structure.length; i++) {
-        const typeObj = structure[i];
-        const type = typeObj.type;
-        if (
-          (type == 'boolean' || type == 'false' || type == 'true') && typeof val == 'boolean' ||
-          type == 'array' && Array.isArray(val) ||
-          type == 'number' && typeof val == 'number'
-        ) {
-          if (type == 'number') {
-            if ((!!Number.isNaN && Number.isNaN(val)) || isNaN(val)) propError(prop, msg + ' is NaN');
-          } else if (type == 'array') {
-            for (var n = 0; n < val.length; n++) {
-              checkTypes(val[n], prop, typeObj.structure, msg, true);
-            }
-          }
-          if (checkConditions(typeObj, prop, val, msg)) return true;
-        }
-      }
-      propError(prop, msg + (plural ? 's values are ' : ' is ') +  'of type ' + typeof val);
-    }
-    function checkConditions(typeObj, prop, val, msg) {
-      if (typeObj.conditions) {
-        msg += ' is ';
-        const type = typeObj.type;
-        for (var i = 0; i < typeObj.conditions.length; i++) {
-          const cond = typeObj.conditions[i];
-          if (Array.isArray(cond)) {
-            switch (cond[0]) {
-              case 'length':
-                if (val.length !== cond[1])
-                  propError(prop, msg + (type == 'array' ? 'an ' : 'a ') + type + ' of length ' + val.length);
-                break;
-              case '>=':
-                if (val < cond[1])
-                  propError(prop, msg + (cond[1] == 0 ? 'a negative number' : 'a number below ' + cond[1]));
-                break;
-            }
-          } else {
-            switch (cond) {
-              case 'int':
-                if (val % 1 !== 0)
-                  propError(prop, msg + 'a floating point number');
-                break;
-            }
-          }
-        }
-      }
-      return true;
-    }
-
     for (var prop in properties) {
       const item = prop;
       const obj = properties[item];
@@ -243,4 +118,132 @@ function Slider89(target, config = {}, replace) {
     }
     initial = false;
   })();
+
+
+  // ------ Helper functions ------
+  function propError(prop, msg) {
+    msg = 'Slider89: property ‘' + prop + '’ must be ' + msg + '.\n';
+    if (initial) {
+      msg += 'Aborting the slider construction.';
+    } else {
+      let prevVal = vals[prop];
+      if (Array.isArray(prevVal)) prevVal = '[' + prevVal.join(', ') + ']';
+      msg += 'Continuing with the previous value (' + prevVal + ').'
+    }
+    throw new Error(msg);
+  }
+
+  //Extended {Array, String}.prototype.includes() polyfill
+  function has(array, val, loop) {
+    if (!Array.isArray(array)) return false;
+    if (loop) {
+      for (var i = 0; i < array.length; i++) {
+        if (array[i].indexOf(val) != -1) {
+          return array[i];
+        }
+      }
+    } else return array.indexOf(val) != -1;
+  }
+
+  //Computing an automated error message regarding the property's types and conditions
+  function computeTypeMsg(struct, shape, plural) {
+    let msg = '';
+    for (var i = 0; i < struct.length; i++) {
+      const type = struct[i].type;
+      const conditions = struct[i].conditions;
+
+      if (type == 'number') {
+        const limit = has(conditions, '>=', true);
+        const hasInt = has(conditions, 'int');
+        if (limit && limit[1] === 0) {
+          if (!plural) msg += 'a ';
+          msg += 'non-negative';
+        } else if (hasInt && !plural) {
+          msg += 'an';
+        } else msg += 'any';
+        if (hasInt) {
+          msg += ' integer';
+        } else {
+          msg += ' number';
+        }
+        if (plural) msg += 's';
+        if (limit && limit[1] !== 0) msg += ' which ' + (plural ? 'are' : 'is') + ' greater than or equal to ' + limit[1];
+      }
+
+      else if (type == 'array') {
+        msg += 'an array';
+        const len = has(conditions, 'length', true);
+        if (len) msg += ' of length ' + len[1];
+        msg += ' with ' + computeTypeMsg(struct[i].structure, false, len && len[1] > 1 ? true : false) + ' as values';
+      }
+
+      if (shape) {
+        msg += ' (' + shape + ')';
+        shape = false;
+      }
+
+      if (msg !== '' && (type == 'boolean' || type == 'true' || type == 'false')) msg += ' or ';
+      if (type == 'boolean') {
+        msg += 'a boolean';
+      } else if (type == 'true') {
+        msg += 'true';
+      } else if (type == 'false') {
+        msg += 'false';
+      }
+    }
+
+    return msg;
+  }
+
+  //Checking a property for the correct type & format
+  function checkTypes(val, prop, structure, msg, plural) {
+    for (var i = 0; i < structure.length; i++) {
+      const typeObj = structure[i];
+      const type = typeObj.type;
+      if (
+        (type == 'boolean' || type == 'false' || type == 'true') && typeof val == 'boolean' ||
+        type == 'array' && Array.isArray(val) ||
+        type == 'number' && typeof val == 'number'
+      ) {
+        if (type == 'number') {
+          if ((!!Number.isNaN && Number.isNaN(val)) || isNaN(val)) propError(prop, msg + ' is NaN');
+        } else if (type == 'array') {
+          for (var n = 0; n < val.length; n++) {
+            checkTypes(val[n], prop, typeObj.structure, msg, true);
+          }
+        }
+        if (checkConditions(typeObj, prop, val, msg)) return true;
+      }
+    }
+    propError(prop, msg + (plural ? 's values are ' : ' is ') +  'of type ' + typeof val);
+  }
+  function checkConditions(typeObj, prop, val, msg) {
+    if (typeObj.conditions) {
+      msg += ' is ';
+      const type = typeObj.type;
+      for (var i = 0; i < typeObj.conditions.length; i++) {
+        const cond = typeObj.conditions[i];
+        if (Array.isArray(cond)) {
+          switch (cond[0]) {
+            case 'length':
+            if (val.length !== cond[1])
+            propError(prop, msg + (type == 'array' ? 'an ' : 'a ') + type + ' of length ' + val.length);
+            break;
+            case '>=':
+            if (val < cond[1])
+            propError(prop, msg + (cond[1] == 0 ? 'a negative number' : 'a number below ' + cond[1]));
+            break;
+          }
+        } else {
+          switch (cond) {
+            case 'int':
+            if (val % 1 !== 0)
+            propError(prop, msg + 'a floating point number');
+            break;
+          }
+        }
+      }
+    }
+    return true;
+  }
 }
