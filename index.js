@@ -16,45 +16,69 @@ function Slider89(target, config = {}, replace) {
             {type: 'number'}
           ]
         },
-        {type: 'boolean'}
+        {
+          type: 'boolean'
+        }
       ],
       shape: '[minValue, maxValue]'
     },
     value: {
       default: 0,
-      structure: [
-        {type: 'number'}
-      ]
+      structure: [{
+        type: 'number'
+      }]
     },
     precision: {
       default: 0,
+      structure: [{
+        type: 'number',
+        conditions: [
+          ['>=', 0],
+          'int'
+        ]
+      }]
+    },
+    step: {
+      default: false,
       structure: [
         {
           type: 'number',
           conditions: [
-            ['>=', 0],
-            'int'
+            ['>=', 0]
           ]
+        },
+        {
+          type: 'false'
         }
       ]
     },
-    // step: {
-    //   default: false,
-    //   type: ['number', '>= 0'] //or false
-    // },
-    // caption: {
-    //   default: false,
-    //   type: ['string']
-    // },
-    // thumbCount: {
-    //   default: 1,
-    //   type: ['number', 'int', '>= 1', 'false']
-    // },
-    // structure: { //?
+    caption: {
+      default: false,
+      structure: [
+        {
+          type: 'string'
+        },
+        {
+          type: 'false'
+        }
+      ]
+    },
+    //Can also be 0 as a way to disable the slider? -> rather a new property "disabled" adding a class "disabled"
+    thumbCount: {
+      default: 1,
+      structure: [{
+        type: 'number',
+        conditions: [
+          'int',
+          ['>=', 1],
+        ]
+      }]
+    },
+    // structure: { //name unclear
     //   default: false,
     //   type: []
     // },
-    // classList: {
+    // classList: { //object
     //   default: false,
     //   type: []
     // }
@@ -148,6 +172,7 @@ function Slider89(target, config = {}, replace) {
     }
     function checkConditions(typeObj, prop, val, msg) {
       if (typeObj.conditions) {
+        msg += ' is ';
         const type = typeObj.type;
         for (var i = 0; i < typeObj.conditions.length; i++) {
           const cond = typeObj.conditions[i];
