@@ -87,6 +87,7 @@ function Slider89(target, config = {}, replace) {
   //The actual `vals` properties don't need to be initialized, this happens in the loop below
   const vals = {};
 
+  //Initializing basic class functionality
   (function() {
     //Extended {Array, String}.prototype.includes() polyfill
     function has(array, val, loop) {
@@ -98,6 +99,18 @@ function Slider89(target, config = {}, replace) {
           }
         }
       } else return array.indexOf(val) != -1;
+    }
+    //Throwing an error and aborting the current process
+    function propError(prop, msg) {
+      msg = 'Slider89: property ‘' + prop + '’ must be ' + msg + '.\n';
+      if (initial) {
+        msg += 'Aborting the slider construction.';
+      } else {
+        let prevVal = vals[prop];
+        if (Array.isArray(prevVal)) prevVal = '[' + prevVal.join(', ') + ']';
+        msg += 'Continuing with the previous value (' + prevVal + ').'
+      }
+      throw new Error(msg);
     }
     //Computing an automated error messages of what the property has got to be
     function computeTypeMsg(struct, shape, plural) {
@@ -230,16 +243,4 @@ function Slider89(target, config = {}, replace) {
     }
     initial = false;
   })();
-
-  function propError(prop, msg) {
-    msg = 'Slider89: property ‘' + prop + '’ must be ' + msg + '.\n';
-    if (initial) {
-      msg += 'Aborting the slider construction.';
-    } else {
-      let prevVal = vals[prop];
-      if (Array.isArray(prevVal)) prevVal = '[' + prevVal.join(', ') + ']';
-      msg += 'Continuing with the previous value (' + prevVal + ').'
-    }
-    throw new Error(msg);
-  }
 }
