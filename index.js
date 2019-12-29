@@ -88,6 +88,7 @@ function Slider89(target, config = {}, replace) {
 
   //Initializing basic class functionality
   (function() {
+    initial = true;
     for (var prop in properties) {
       const item = prop;
       const obj = properties[item];
@@ -108,12 +109,7 @@ function Slider89(target, config = {}, replace) {
           return vals[item];
         }
       });
-    }
-  })();
 
-  (function() {
-    initial = true;
-    for (var prop in properties) {
       that[prop] = config[prop] !== undefined ? config[prop] : properties[prop].default;
     }
     initial = false;
