@@ -2,6 +2,8 @@
 function Slider89(target, config = {}, replace) {
   const that = this;
   let initial = false;
+  let activeThumb;
+  let mouseDownPos;
 
   if (!target) error('no target node has been passed (first argument of the constructor)', true);
 
@@ -188,6 +190,45 @@ function Slider89(target, config = {}, replace) {
       }
     } else return array.indexOf(val) != -1;
   }
+  function getTranslate(node) {
+    const style = node.style.transform;
+    if (!style) return false;
+    const firstBracket = style.slice(style.indexOf('translateX(') + 'translateX('.length);
+    return parseFloat(firstBracket.slice(0, firstBracket.indexOf(')')));
+  }
+
+  // ------ Event functions ------
+  function slideStart(e) {
+    document.body.classList.add('sl89-noselect');
+    activeThumb = this;
+    mouseDownPos = e.clientX - getTranslate(this);
+    window.addEventListener('mouseup', slideEnd);
+    window.addEventListener('mousemove', slideMove);
+  }
+  //rangeWidth = 200px;
+  //thumbWidth = 16px;
+  //totalRange = 100;
+  //offset = range * thumbWidth / totalRange - thumbWidth / 2;
+  //translate = (rangeWidth / (totalRange / range));
+  //100 range = translateX(184px);
+  //50 range = translateX(100px);
+  //0 range = translateX(0px);
+  function slideMove(e) {
+    const rangeWidth = activeThumb.parentNode.clientWidth;
+    const thumbWidth = activeThumb.clientWidth;
+    const range = vals.range[1] - vals.range[0];
+    let distance = e.clientX - mouseDownPos;
+    if (distance > rangeWidth - thumbWidth) distance = rangeWidth - thumbWidth;
+    if (distance < 0) distance = 0;
+    that.node.thumb.style.transform = 'translateX(' + distance + 'px)';
+  }
+  function slideEnd() {
+    window.removeEventListener('mouseup', slideEnd);
+    window.removeEventListener('mousemove', slideMove);
+    mouseDownPos = null;
+    activeThumb = null;
+    document.body.classList.remove('sl89-noselect');
+  }
 
   // ------ Scope-specific functions ------
   // -> Element building
@@ -208,6 +249,7 @@ function Slider89(target, config = {}, replace) {
     }
     error(msg, initial);
   }
+
 
   //Computing an automated error message regarding the property's types and conditions
   function computeTypeMsg(struct, shape, plural) {
