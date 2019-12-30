@@ -5,6 +5,32 @@ function Slider89(target, config = {}, replace) {
 
   if (!target) error('no target node has been passed (first argument of the constructor)', true);
 
+  //Style rule strings which will be inserted into a new stylesheet
+  const styles = [
+    '.sl89-wrapper {' +
+      'width: 200px;' +
+      'height: 25px;' +
+      'background-color: hsl(0, 0%, 18%);' +
+    '}',
+    '.sl89-thumb {' +
+      'width: 16px;' +
+      'height: 100%;' +
+      'background-color: hsl(0, 0%, 28%);' +
+      'cursor: pointer;' +
+      'transition: background-color .15s ease-in-out;' +
+    '}',
+    '.sl89-thumb:hover {' +
+      'background-color: hsl(0, 0%, 30%);' +
+    '}',
+    '.sl89-noselect {' +
+      '-webkit-user-select: none;' +
+      '-moz-user-select: none;' +
+      '-ms-user-select: none;' +
+      'user-select: none;' +
+      'pointer-events: none' +
+    '}'
+  ];
+
   const properties = {
     range: {
       default: [0, 100],
@@ -117,6 +143,33 @@ function Slider89(target, config = {}, replace) {
     initial = false;
   })();
 
+  //Build the slider element
+  (function() {
+    const node = {};
+    node.slider = document.createElement('div');
+    node.wrapper = document.createElement('div');
+    node.thumb = document.createElement('div');
+
+    node.wrapper.appendChild(node.thumb);
+    node.slider.appendChild(node.wrapper);
+
+    node.slider.classList.add('slider89');
+    for (var element in node) {
+      if (element != 'slider') {
+        node[element].classList.add('sl89-' + element);
+      }
+    }
+
+    createStyleSheet();
+    node.thumb.style.transform = 'translateX(0)'; //TODO
+    node.thumb.addEventListener('mousedown', slideStart);
+
+    if (replace) target.parentNode.replaceChild(node.slider, target);
+    else target.appendChild(node.slider);
+
+    that.node = node;
+  })();
+
 
   // ------ Helper functions ------
   function error(msg, abort) {
@@ -137,6 +190,14 @@ function Slider89(target, config = {}, replace) {
   }
 
   // ------ Scope-specific functions ------
+  // -> Element building
+  function createStyleSheet() {
+    const sheet = document.head.appendChild(document.createElement('style')).sheet;
+    for (var i = 0; i < styles.length; i++) {
+      sheet.insertRule(styles[i], 0);
+    }
+  }
+
   // -> Initialization
   function propError(prop, msg) {
     msg = 'property ‘' + prop + '’ must be ' + msg;
