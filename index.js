@@ -3,6 +3,8 @@ function Slider89(target, config = {}, replace) {
   const that = this;
   let initial = false;
 
+  if (!target) error('no target node has been passed (first argument of the constructor)', true);
+
   const properties = {
     range: {
       default: [0, 100],
@@ -63,17 +65,17 @@ function Slider89(target, config = {}, replace) {
         }
       ]
     },
-    //Can also be 0 as a way to disable the slider? -> rather a new property "disabled" adding a class "disabled"
-    thumbCount: {
-      default: 1,
-      structure: [{
-        type: 'number',
-        conditions: [
-          'int',
-          ['>=', 1],
-        ]
-      }]
-    },
+    // //Can also be 0 as a way to disable the slider? -> rather a new property "disabled" adding a class "disabled"
+    // thumbCount: {
+    //   default: 1,
+    //   structure: [{
+    //     type: 'number',
+    //     conditions: [
+    //       'int',
+    //       ['>=', 1],
+    //     ]
+    //   }]
+    // },
     // structure: { //name unclear //write only -> exception in the setter needed!
     //   default: false,
     //   type: []
@@ -117,18 +119,11 @@ function Slider89(target, config = {}, replace) {
 
 
   // ------ Helper functions ------
-  function propError(prop, msg) {
-    msg = 'Slider89: property ‘' + prop + '’ must be ' + msg + '.\n';
-    if (initial) {
-      msg += 'Aborting the slider construction.';
-    } else {
-      let prevVal = vals[prop];
-      if (Array.isArray(prevVal)) prevVal = '[' + prevVal.join(', ') + ']';
-      msg += 'Continuing with the previous value (' + prevVal + ').'
-    }
+  function error(msg, abort) {
+    msg = 'Slider89: ' + msg;
+    if (abort) msg += '.\nAborting the slider construction.';
     throw new Error(msg);
   }
-
   //Extended {Array, String}.prototype.includes() polyfill
   function has(array, val, loop) {
     if (!Array.isArray(array)) return false;
@@ -139,6 +134,18 @@ function Slider89(target, config = {}, replace) {
         }
       }
     } else return array.indexOf(val) != -1;
+  }
+
+  // ------ Scope-specific functions ------
+  // -> Initialization
+  function propError(prop, msg) {
+    msg = 'property ‘' + prop + '’ must be ' + msg;
+    if (!initial) {
+      let prevVal = vals[prop];
+      if (Array.isArray(prevVal)) prevVal = '[' + prevVal.join(', ') + ']';
+      msg += '.\nContinuing with the previous value (' + prevVal + ').';
+    }
+    error(msg, initial);
   }
 
   //Computing an automated error message regarding the property's types and conditions
