@@ -10,7 +10,7 @@ function Slider89(target, config = {}, replace) {
   //Style rule strings which will be inserted into a new stylesheet
   const styles = [
     '.sl89-wrapper {' +
-      'width: 200px;' +
+      'width: 200px;' + //216?
       'height: 25px;' +
       'background-color: hsl(0, 0%, 18%);' +
     '}',
@@ -205,22 +205,18 @@ function Slider89(target, config = {}, replace) {
     window.addEventListener('mouseup', slideEnd);
     window.addEventListener('mousemove', slideMove);
   }
-  //rangeWidth = 200px;
-  //thumbWidth = 16px;
-  //totalRange = 100;
-  //offset = range * thumbWidth / totalRange - thumbWidth / 2;
-  //translate = (rangeWidth / (totalRange / range));
-  //100 range = translateX(184px);
-  //50 range = translateX(100px);
-  //0 range = translateX(0px);
   function slideMove(e) {
-    const rangeWidth = activeThumb.parentNode.clientWidth;
-    const thumbWidth = activeThumb.clientWidth;
+    //check for non-x movement (-> returning)?
+    const absWidth = activeThumb.parentNode.clientWidth - activeThumb.clientWidth;
     const range = vals.range[1] - vals.range[0];
+
     let distance = e.clientX - mouseDownPos;
-    if (distance > rangeWidth - thumbWidth) distance = rangeWidth - thumbWidth;
+    if (distance > absWidth) distance = absWidth;
     if (distance < 0) distance = 0;
     that.node.thumb.style.transform = 'translateX(' + distance + 'px)';
+
+    const val = distance / absWidth * range + vals.range[0];
+    vals.value = Number(val.toFixed(vals.precision));
   }
   function slideEnd() {
     window.removeEventListener('mouseup', slideEnd);
@@ -249,7 +245,6 @@ function Slider89(target, config = {}, replace) {
     }
     error(msg, initial);
   }
-
 
   //Computing an automated error message regarding the property's types and conditions
   function computeTypeMsg(struct, shape, plural) {
@@ -333,18 +328,18 @@ function Slider89(target, config = {}, replace) {
           switch (cond[0]) {
             case 'length':
             if (val.length !== cond[1])
-            propError(prop, msg + (type == 'array' ? 'an ' : 'a ') + type + ' of length ' + val.length);
+              propError(prop, msg + (type == 'array' ? 'an ' : 'a ') + type + ' of length ' + val.length);
             break;
             case '>=':
             if (val < cond[1])
-            propError(prop, msg + (cond[1] == 0 ? 'a negative number' : 'a number below ' + cond[1]));
+              propError(prop, msg + (cond[1] == 0 ? 'a negative number' : 'a number below ' + cond[1]));
             break;
           }
         } else {
           switch (cond) {
             case 'int':
             if (val % 1 !== 0)
-            propError(prop, msg + 'a floating point number');
+              propError(prop, msg + 'a floating point number');
             break;
           }
         }
