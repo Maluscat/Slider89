@@ -1,11 +1,16 @@
 'use strict';
-function Slider89(target, config = {}, replace) {
+function Slider89(target, config, replace) {
+  if (!target) error('no target node has been passed (first argument of the constructor)', true);
+
+  if (config != undefined && config !== false && (typeof config != 'object' || Array.isArray(config))) {
+    const typeMsg = 'but it is ' + (Array.isArray(config) ? 'an array' : 'of type ' + typeof config);
+    error('the configuration object (second argument of the constructor) should be an object ' + typeMsg, true);
+  } else config = {};
+
   const that = this;
   let initial = false;
   let activeThumb;
   let mouseDownPos;
-
-  if (!target) error('no target node has been passed (first argument of the constructor)', true);
 
   //Style rule strings which will be inserted into a new stylesheet
   const styles = [
