@@ -82,12 +82,20 @@ function Slider89(target, config = {}, replace) {
     caption: {
       default: false,
       structure: [
+        {type: 'string'},
+        {type: 'false'}
+      ]
+    },
+    structure: { //name unclear //write only -> exception in the setter needed!
+      default: false,
+      structure: [
         {
-          type: 'string'
+          type: 'string',
+          conditions: [
+            'not empty'
+          ]
         },
-        {
-          type: 'false'
-        }
+        {type: 'false'}
       ]
     },
     // //Can also be 0 as a way to disable the slider? -> rather a new property "disabled" adding a class "disabled"
@@ -100,10 +108,6 @@ function Slider89(target, config = {}, replace) {
     //       ['>=', 1],
     //     ]
     //   }]
-    // },
-    // structure: { //name unclear //write only -> exception in the setter needed!
-    //   default: false,
-    //   type: []
     // },
     // classList: { //object
     //   default: false,
@@ -144,27 +148,33 @@ function Slider89(target, config = {}, replace) {
 
   //Build the slider element
   (function() {
-    const node = {};
-    node.slider = document.createElement('div');
-    node.wrapper = document.createElement('div');
-    node.thumb = document.createElement('div');
+    //No caption or result node yet
+    if (vals.structure == false) {
+      //In case no custom structure is defined, manually build the node to ensure best performance (parseStructure takes a while)
+      var node = {};
+      node.slider = document.createElement('div');
+      node.wrapper = document.createElement('div');
+      node.thumb = document.createElement('div');
 
-    node.wrapper.appendChild(node.thumb);
-    node.slider.appendChild(node.wrapper);
+      node.wrapper.appendChild(node.thumb);
+      node.slider.appendChild(node.wrapper);
 
-    node.slider.classList.add('slider89');
-    for (var element in node) {
-      if (element != 'slider') {
-        node[element].classList.add('sl89-' + element);
-      }
+      node.slider.classList.add('slider89');
+      for (var element in node)
+        if (element != 'slider') node[element].classList.add('sl89-' + element);
+    } else {
+      var node = parseStructure(vals.structure);
     }
-
     createStyleSheet();
-    node.thumb.style.transform = 'translateX(0)'; //TODO
-    node.thumb.addEventListener('mousedown', slideStart);
 
     if (replace) target.parentNode.replaceChild(node.slider, target);
     else target.appendChild(node.slider);
+
+    const absWidth = node.thumb.parentNode.clientWidth - node.thumb.clientWidth;
+    const range = vals.range[1] - vals.range[0];
+    const distance = (vals.value - vals.range[0]) / range * absWidth;
+    node.thumb.style.transform = 'translateX(' + distance + 'px)';
+    node.thumb.addEventListener('mousedown', slideStart);
 
     that.node = node;
   })();
@@ -233,6 +243,139 @@ function Slider89(target, config = {}, replace) {
       sheet.insertRule(styles[i], 0);
     }
   }
+  function parseStructure(structure) {
+    const node = {
+      slider: document.createElement('div')
+    };
+    node.slider.classList.add('slider89');
+
+    const attribs = {};
+    (function() {
+      const defNodes = [
+        'wrapper',
+        'thumb'
+      ];
+      defNodes.forEach(function(node) {
+        attribs[node] = {
+          class: 'sl89-' + node
+        };
+      });
+    })();
+
+    const reg = {
+      attr: {
+        name: '!?[\\w-]+',
+        value: '[^()]*?'
+      },
+      name: '[\\w-]+'
+    };
+    reg.content = '(?:\\s+"(.+?)")*';
+    reg.tag = '(?:\\s+(' + reg.name + '))*';
+    reg.attribs = '(?:\\s+' + reg.attr.name + '\\(' + reg.attr.value + '\\))*';
+    reg.global = '(' + reg.name + ').*?';
+    const rgx = {
+      general: '<([:/]?)' + reg.global + '>|<' + reg.global,
+      attributes: '\\s+(' + reg.attr.name + ')\\((' + reg.attr.value + ')\\)\\s*?',
+      singleTag: '<(' + reg.name + ')' + reg.tag + reg.content + '(' + reg.attribs + ')\\s*?>',
+      multiTag: '<:(' + reg.name + ')' + reg.tag + reg.content + '(' + reg.attribs + ')\\s*?>((?:[\\s\\S](?!<:' + reg.name + '(?:\\s+' + reg.name + ')*(?:\\s+".+?")*' + reg.attribs + '\\s*?>[\\d\\D]*?<\\/[\\w-]+\\s*>))*?)<\\/\\1\\s*>',
+    };
+    (function() {
+      for (var expr in rgx) rgx[expr] = new RegExp(rgx[expr], 'g');
+    })();
+
+    let lastWrapper = new Array();
+    let parentLock = false;
+    while(rgx.multiTag.test(structure)) {
+      structure = structure.replace(rgx.multiTag, function(match, name, tag, inner, attributes, content) {
+        const elem = assembleElement(name, tag, attributes, null);
+        content = parseSingleTags(content, elem);
+        if (inner) elem.textContent = inner;
+        if (parentLock) {
+          lastWrapper.forEach(function(el) {
+            elem.appendChild(el);
+          });
+          lastWrapper = new Array();
+          parentLock = false;
+        }
+        lastWrapper.push(elem);
+        node[name] = elem;
+        return content;
+      });
+      parentLock = true;
+    }
+
+    structure = parseSingleTags(structure, node.slider);
+
+    lastWrapper.forEach(function(el) {
+      node.slider.appendChild(el);
+    });
+
+    if (/\S+/g.test(structure)) {
+      structure = structure.trim();
+      const names = new Array();
+      let leftover = false;
+      if (rgx.general.test(structure)) {
+        structure.replace(rgx.general, function(match, amplifier, name, name2) {
+          let nameObj = {};
+          nameObj.name = name || name2;
+          if (amplifier == ':') nameObj.isWrapper = true;
+          if (amplifier == '/') nameObj.isClosing = true;
+          if (name2) nameObj.noEnd = true;
+          names.push(nameObj);
+        });
+      } else leftover = true;
+
+      const errorList = (function() {
+        let info = '';
+        if (!leftover) {
+          info = 'Found errors:\n';
+          names.forEach(function(name) {
+            info += '- "' + name.name + '"';
+            if (name.isClosing) info += ' => Closing tag finding no beginning\n';
+            if (name.isWrapper) info += ' => Opening tag finding no end\n';
+            if (name.noEnd) info += ' => Missing ending character (‘>’)\n';
+          });
+        } else info += 'Leftover structure:\n- "' + structure + '"';
+        return info;
+      })();
+      //TODO: refer to docs
+      error((names.length > 1 ? 'several ‘structure’ elements have' : 'a ‘structure’ element has') + ' been declared wrongly and could not be parsed. ' + errorList, true);
+    }
+
+    return node;
+
+    function parseSingleTags(str, parent) {
+      return str.replace(rgx.singleTag, function(match, name, tag, inner, attributes) {
+        const elem = assembleElement(name, tag, attributes, inner);
+        parent.appendChild(elem);
+        node[name] = elem;
+        return '';
+      });
+    }
+
+    function assembleElement(name, tag, attributes, content) {
+      let elem = document.createElement(tag || 'div');
+      const hasAttribs = !!attribs[name];
+      if (content) elem.textContent = content;
+      if (attributes) {
+        attributes.replace(rgx.attributes, function(attrib, attribName, value) {
+          if (hasAttribs && attribs[name][attribName] && attribName[0] != '!') {
+            value += ' ' + attribs[name][attribName];
+          } else if (attribName[0] == '!') {
+            attribName = attribName.slice(1);
+          }
+          elem.setAttribute(attribName, value || '');
+        });
+      }
+      if (hasAttribs) {
+        for (var attr in attribs[name]) {
+          if (!elem.getAttribute(attr)) elem.setAttribute(attr, attribs[name][attr]);
+        }
+      }
+      return elem;
+    }
+  }
+
 
   // -> Initialization
   function propError(prop, msg) {
@@ -277,6 +420,11 @@ function Slider89(target, config = {}, replace) {
         msg += ' with ' + computeTypeMsg(struct[i].structure, false, len && len[1] > 1 ? true : false) + ' as values';
       }
 
+      else if (type == 'string') {
+        msg += 'a string';
+        if (has(conditions, 'not empty')) msg += ' which is not empty';
+      }
+
       if (shape) {
         msg += ' (' + shape + ')';
         shape = false;
@@ -303,7 +451,8 @@ function Slider89(target, config = {}, replace) {
       if (
         (type == 'boolean' || type == 'false' || type == 'true') && typeof val == 'boolean' ||
         type == 'array' && Array.isArray(val) ||
-        type == 'number' && typeof val == 'number'
+        type == 'number' && typeof val == 'number' ||
+        type == 'string' && typeof val == 'string'
       ) {
         if (type == 'number') {
           if ((!!Number.isNaN && Number.isNaN(val)) || isNaN(val)) propError(prop, msg + ' is NaN');
@@ -339,6 +488,10 @@ function Slider89(target, config = {}, replace) {
             case 'int':
             if (val % 1 !== 0)
               propError(prop, msg + 'a floating point number');
+            break;
+            case 'not empty':
+            if (val === '')
+              propError(prop, msg + 'an empty string');
             break;
           }
         }
