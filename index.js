@@ -21,9 +21,6 @@ function Slider89(target, config = {}, replace) {
       'cursor: pointer;' +
       'transition: background-color .15s ease-in-out;' +
     '}',
-    '.sl89-thumb:hover {' +
-      'background-color: hsl(0, 0%, 30%);' +
-    '}',
     '.sl89-noselect {' +
       '-webkit-user-select: none;' +
       '-moz-user-select: none;' +
@@ -200,6 +197,7 @@ function Slider89(target, config = {}, replace) {
   // ------ Event functions ------
   function slideStart(e) {
     document.body.classList.add('sl89-noselect');
+    that.node.thumb.classList.add('active');
     activeThumb = this;
     mouseDownPos = e.clientX - getTranslate(this);
     window.addEventListener('mouseup', slideEnd);
@@ -223,6 +221,7 @@ function Slider89(target, config = {}, replace) {
     window.removeEventListener('mousemove', slideMove);
     mouseDownPos = null;
     activeThumb = null;
+    that.node.thumb.classList.remove('active');
     document.body.classList.remove('sl89-noselect');
   }
 
