@@ -181,13 +181,10 @@ function Slider89(target, config, replace) {
     const distance = (vals.value - vals.range[0]) / range * absWidth;
     node.thumb.style.transform = 'translateX(' + distance + 'px)';
 
-    //TODO: passive detection?
-    const passive = {
-      passive: true
-    };
-    node.thumb.addEventListener('touchstart', touchStart, passive);
-    node.thumb.addEventListener('touchmove', touchMove, passive);
-    node.thumb.addEventListener('touchend', touchEnd, passive);
+    node.thumb.addEventListener('touchstart', touchStart);
+    node.thumb.addEventListener('touchmove', touchMove);
+    node.thumb.addEventListener('touchend', touchEnd);
+    node.thumb.addEventListener('touchcancel', touchEnd);
 
     node.thumb.addEventListener('mousedown', slideStart);
 
@@ -223,17 +220,20 @@ function Slider89(target, config, replace) {
   //TODO: don't explicitly track index 0. It works in all my tests but especially on APIs like these, browsers and operating systems vary strongly
   function touchStart(e) {
     if (activeTouchID == null) {
+      e.preventDefault();
       activeTouchID = e.touches[0].identifier;
       slideStart.call(this, e.touches[0]);
     }
   }
   function touchMove(e) {
     if (e.touches[0].identifier == activeTouchID) {
+      e.preventDefault();
       slideMove.call(this, e.touches[0]);
     }
   }
   function touchEnd(e) {
     if (activeTouchID != null) {
+      e.preventDefault();
       if (e.touches.length == 0 || e.touches.length > 0 && e.touches[0].identifier !== activeTouchID) {
         slideEnd.call(this, e.touches[0]);
         activeTouchID = null;
