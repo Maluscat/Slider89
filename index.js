@@ -10,6 +10,7 @@ function Slider89(target, config, replace) {
   const that = this;
   let initial = false;
   let activeThumb;
+  let activeTouchID;
   let mouseDownPos;
 
   //Style rule strings which will be inserted into a new stylesheet
@@ -132,7 +133,7 @@ function Slider89(target, config, replace) {
       let errorMsg = computeTypeMsg(obj.structure, obj.shape);
       errorMsg += ' but it';
 
-      //Calling Object.defineProperty on the `this` of the class function (here carried over by `that`) is nowhere documented
+      //Calling Object.defineProperty on the `this` of the class function is nowhere documented
       //but it is necessary to be able to create multiple instances of the same class
       //as {Class}.prototype will inherit the defined property to all instances
       //and a new call of defineProperty (when creating a new instance) will throw an error for defining the same property twice
@@ -179,6 +180,15 @@ function Slider89(target, config, replace) {
     const range = vals.range[1] - vals.range[0];
     const distance = (vals.value - vals.range[0]) / range * absWidth;
     node.thumb.style.transform = 'translateX(' + distance + 'px)';
+
+    //TODO: passive detection?
+    const passive = {
+      passive: true
+    };
+    node.thumb.addEventListener('touchstart', touchStart, passive);
+    node.thumb.addEventListener('touchmove', touchMove, passive);
+    node.thumb.addEventListener('touchend', touchEnd, passive);
+
     node.thumb.addEventListener('mousedown', slideStart);
 
     that.node = node;
@@ -210,6 +220,26 @@ function Slider89(target, config, replace) {
   }
 
   // ------ Event functions ------
+  //TODO: don't explicitly track index 0. It works in all my tests but especially on APIs like these, browsers and operating systems vary strongly
+  function touchStart(e) {
+    if (activeTouchID == null) {
+      activeTouchID = e.touches[0].identifier;
+      slideStart.call(this, e.touches[0]);
+    }
+  }
+  function touchMove(e) {
+    if (e.touches[0].identifier == activeTouchID) {
+      slideMove.call(this, e.touches[0]);
+    }
+  }
+  function touchEnd(e) {
+    if (activeTouchID != null) {
+      if (e.touches.length == 0 || e.touches.length > 0 && e.touches[0].identifier !== activeTouchID) {
+        slideEnd.call(this, e.touches[0]);
+        activeTouchID = null;
+      }
+    }
+  }
   function slideStart(e) {
     document.body.classList.add('sl89-noselect');
     that.node.thumb.classList.add('active');
