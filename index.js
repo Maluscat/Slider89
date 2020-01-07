@@ -61,7 +61,13 @@ function Slider89(target, config, replace) {
       default: 0,
       structure: [{
         type: 'number'
-      }]
+      }],
+      setter: function(val, vals) {
+        if (val < vals.range[0] || val > vals.range[1]) {
+          const rangeStr = '[' + vals.range.join(', ') + ']';
+          propError('value', 'in the given range of ' + rangeStr + ' but it exceeds it (' + val + ')');
+        }
+      }
     },
     precision: {
       default: 0,
@@ -142,6 +148,7 @@ function Slider89(target, config, replace) {
       Object.defineProperty(that, item, {
         set: function(val) {
           checkTypes(val, item, obj.structure, errorMsg);
+          if (obj.setter) (obj.setter)(val, vals);
           vals[item] = val;
         },
         get: function() {
