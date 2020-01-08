@@ -310,7 +310,7 @@ function Slider89(target, config, replace) {
 
     const reg = {
       attr: {
-        name: '!?[\\w-]+',
+        name: '[\\w-]+',
         value: '[^()]*?'
       },
       all: '[\\d\\D]',
@@ -410,10 +410,9 @@ function Slider89(target, config, replace) {
       if (content) elem.textContent = content;
       if (attributes) {
         attributes.replace(rgx.attributes, function(attrib, attribName, value) {
-          if (hasAttribs && attribs[name][attribName] && attribName[0] != '!') {
+          //Tailored for space-separated values (check for duplicates in value vs. default structue style)
+          if (hasAttribs && attribs[name][attribName] && value.split(' ').indexOf(attribs[name][attribName]) == -1) {
             value += ' ' + attribs[name][attribName];
-          } else if (attribName[0] == '!') {
-            attribName = attribName.slice(1);
           }
           elem.setAttribute(attribName, value || '');
         });
