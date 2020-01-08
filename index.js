@@ -181,17 +181,19 @@ function Slider89(target, config, replace) {
     if (replace) target.parentNode.replaceChild(node.slider, target);
     else target.appendChild(node.slider);
 
-    const absWidth = node.thumb.parentNode.clientWidth - node.thumb.clientWidth;
-    const range = vals.range[1] - vals.range[0];
-    const distance = (vals.value - vals.range[0]) / range * absWidth;
-    node.thumb.style.transform = 'translateX(' + distance + 'px)';
+    if (node.thumb) {
+      const absWidth = node.thumb.parentNode.clientWidth - node.thumb.clientWidth;
+      const range = vals.range[1] - vals.range[0];
+      const distance = (vals.value - vals.range[0]) / range * absWidth;
+      node.thumb.style.transform = 'translateX(' + distance + 'px)';
 
-    node.thumb.addEventListener('touchstart', touchStart);
-    node.thumb.addEventListener('touchmove', touchMove);
-    node.thumb.addEventListener('touchend', touchEnd);
-    node.thumb.addEventListener('touchcancel', touchEnd);
+      node.thumb.addEventListener('touchstart', touchStart);
+      node.thumb.addEventListener('touchmove', touchMove);
+      node.thumb.addEventListener('touchend', touchEnd);
+      node.thumb.addEventListener('touchcancel', touchEnd);
 
-    node.thumb.addEventListener('mousedown', slideStart);
+      node.thumb.addEventListener('mousedown', slideStart);
+    }
 
     that.node = node;
   })();
