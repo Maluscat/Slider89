@@ -368,10 +368,10 @@ function Slider89(target, config, replace) {
         structure.replace(rgx.general, function(match, amplifier, name, name2, name3) {
           let nameObj = {};
           nameObj.name = name || name2 || name3;
-          if (amplifier == ':') nameObj.isWrapper = true;
-          else if (amplifier == '/') nameObj.isClosing = true;
-          if (name2) nameObj.noEnd = true;
-          if (name3) nameObj.noBeginning = true;
+          if (amplifier == ':') nameObj.error = 'isWrapper';
+          else if (amplifier == '/') nameObj.error = 'isClosing';
+          else if (name2) nameObj.error = 'noEnd';
+          else if (name3) nameObj.error = 'noBeginning';
           names.push(nameObj);
         });
       } else leftover = true;
@@ -381,12 +381,25 @@ function Slider89(target, config, replace) {
         if (!leftover) {
           info = 'Found errors:\n';
           names.forEach(function(name) {
-            info += '- "' + name.name + '"';
-            if (name.isClosing) info += ' => Closing tag finding no beginning (is the beginning marked with a ‘:’?).\n';
-            else if (name.isWrapper) info += ' => Opening tag finding no end.\n';
-            else if (name.noEnd) info += ' => Missing ending character (‘>’).\n';
-            else if (name.noBeginning) info += ' => Missing beginning character (‘<’).\n';
+            info += '- "' + name.name + '" => ';
+            switch (name.error) {
+              case 'isClosing':
+                info += 'Closing tag finding no beginning (is the beginning marked with a ‘:’?)';
+                break;
+              case 'isWrapper':
+                info += 'Opening tag finding no end';
+                break;
+              case 'noEnd':
+                info += 'Missing ending character (‘>’)';
+                break;
+              case 'noBeginning':
+                info += 'Missing beginning character (‘<’)';
+                break;
+              default:
+                info += 'Unidentified error. Please check the element for syntax errors';
+            }
           });
+          info += '.\n';
         } else info += 'Leftover structure:\n- "' + structure + '"\n';
         return info;
       })();
