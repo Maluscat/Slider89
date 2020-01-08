@@ -17,7 +17,7 @@ function Slider89(target, config, replace) {
 
   //Style rule strings which will be inserted into a new stylesheet
   const styles = [
-    '.sl89-wrapper {' +
+    '.sl89-track {' +
       'width: 200px;' + //216?
       'height: 25px;' +
       'background-color: hsl(0, 0%, 18%);' +
@@ -164,11 +164,11 @@ function Slider89(target, config, replace) {
       //In case no custom structure is defined, manually build the node to ensure best performance (parseStructure takes a while)
       var node = {};
       node.slider = document.createElement('div');
-      node.wrapper = document.createElement('div');
+      node.track = document.createElement('div');
       node.thumb = document.createElement('div');
 
-      node.wrapper.appendChild(node.thumb);
-      node.slider.appendChild(node.wrapper);
+      node.track.appendChild(node.thumb);
+      node.slider.appendChild(node.track);
 
       node.slider.classList.add('slider89');
       for (var element in node)
@@ -294,7 +294,7 @@ function Slider89(target, config, replace) {
     const attribs = {};
     (function() {
       const defNodes = [
-        'wrapper',
+        'track',
         'thumb'
       ];
       defNodes.forEach(function(node) {
