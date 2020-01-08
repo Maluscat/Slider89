@@ -48,12 +48,10 @@ function Slider89(target, config, replace) {
             ['length', 2]
           ],
           structure: [
-            {type: 'number'}
+            { type: 'number' }
           ]
         },
-        {
-          type: 'boolean'
-        }
+        { type: 'boolean' }
       ],
       shape: '[minValue, maxValue]'
     },
@@ -88,16 +86,14 @@ function Slider89(target, config, replace) {
             ['>=', 0]
           ]
         },
-        {
-          type: 'false'
-        }
+        { type: 'false' }
       ]
     },
     caption: {
       default: false,
       structure: [
-        {type: 'string'},
-        {type: 'false'}
+        { type: 'string' },
+        { type: 'false' }
       ]
     },
     structure: { //name unclear //write only -> exception in the setter needed!
@@ -109,7 +105,7 @@ function Slider89(target, config, replace) {
             'not empty'
           ]
         },
-        {type: 'false'}
+        { type: 'false' }
       ]
     },
     // //Can also be 0 as a way to disable the slider? -> rather a new property "disabled" adding a class "disabled"
