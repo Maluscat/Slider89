@@ -202,9 +202,11 @@ function Slider89(target, config, replace) {
 
 
   // ------ Helper functions ------
-  function error(msg, abort) {
+  function error(msg, abort, noEnd) {
+    //TODO: refer to docs
     msg = 'Slider89: ' + msg;
-    if (abort) msg += '.\nAborting the slider construction.';
+    if (!noEnd) msg += '.\n';
+    if (abort) msg += 'Aborting the slider construction.';
     throw new Error(msg);
   }
   //Extended {Array, String}.prototype.includes() polyfill
@@ -311,17 +313,21 @@ function Slider89(target, config, replace) {
         name: '!?[\\w-]+',
         value: '[^()]*?'
       },
+      all: '[\\d\\D]',
+      tabSpace: '[ \\t]+',
       name: '[\\w-]+'
     };
+    reg.capName = '(' + reg.name + ')';
+    reg.glbMatch = reg.capName + '(?:' + reg.tabSpace + '(?:(?!<).)*?)?>';
     reg.content = '(?:\\s+"(.+?)")*';
-    reg.tag = '(?:\\s+(' + reg.name + '))*';
+    reg.tag = '(?:\\s+' + reg.capName + ')*';
     reg.attribs = '(?:\\s+' + reg.attr.name + '\\(' + reg.attr.value + '\\))*';
-    reg.global = '(' + reg.name + ').*?';
+    reg.base = reg.capName + reg.tag + reg.content + '(' + reg.attribs + ')\\s*?';
     const rgx = {
-      general: '<([:/]?)' + reg.global + '>|<' + reg.global,
+      general: '<([:/]?)' + reg.glbMatch + '|<' + reg.capName + '.*?|' + reg.tabSpace + reg.glbMatch,
       attributes: '\\s+(' + reg.attr.name + ')\\((' + reg.attr.value + ')\\)\\s*?',
-      singleTag: '<(' + reg.name + ')' + reg.tag + reg.content + '(' + reg.attribs + ')\\s*?>',
-      multiTag: '<:(' + reg.name + ')' + reg.tag + reg.content + '(' + reg.attribs + ')\\s*?>((?:[\\s\\S](?!<:' + reg.name + '(?:\\s+' + reg.name + ')*(?:\\s+".+?")*' + reg.attribs + '\\s*?>[\\d\\D]*?<\\/[\\w-]+\\s*>))*?)<\\/\\1\\s*>',
+      singleTag: '<' + reg.base + '>',
+      multiTag: '<:' + reg.base + '>((?:'+reg.all+'(?!<:' + reg.capName + '(?:\\s+' + reg.name + ')*(?:\\s+".+?")*' + reg.attribs + '\\s*?>'+reg.all+'*?<\\/\\6\\s*>))*?)<\\/\\1\\s*>'
     };
     (function() {
       for (var expr in rgx) rgx[expr] = new RegExp(rgx[expr], 'g');
@@ -359,12 +365,13 @@ function Slider89(target, config, replace) {
       const names = new Array();
       let leftover = false;
       if (rgx.general.test(structure)) {
-        structure.replace(rgx.general, function(match, amplifier, name, name2) {
+        structure.replace(rgx.general, function(match, amplifier, name, name2, name3) {
           let nameObj = {};
-          nameObj.name = name || name2;
+          nameObj.name = name || name2 || name3;
           if (amplifier == ':') nameObj.isWrapper = true;
-          if (amplifier == '/') nameObj.isClosing = true;
+          else if (amplifier == '/') nameObj.isClosing = true;
           if (name2) nameObj.noEnd = true;
+          if (name3) nameObj.noBeginning = true;
           names.push(nameObj);
         });
       } else leftover = true;
@@ -375,15 +382,15 @@ function Slider89(target, config, replace) {
           info = 'Found errors:\n';
           names.forEach(function(name) {
             info += '- "' + name.name + '"';
-            if (name.isClosing) info += ' => Closing tag finding no beginning\n';
-            if (name.isWrapper) info += ' => Opening tag finding no end\n';
-            if (name.noEnd) info += ' => Missing ending character (‘>’)\n';
+            if (name.isClosing) info += ' => Closing tag finding no beginning (is the beginning marked with a ‘:’?).\n';
+            else if (name.isWrapper) info += ' => Opening tag finding no end.\n';
+            else if (name.noEnd) info += ' => Missing ending character (‘>’).\n';
+            else if (name.noBeginning) info += ' => Missing beginning character (‘<’).\n';
           });
-        } else info += 'Leftover structure:\n- "' + structure + '"';
+        } else info += 'Leftover structure:\n- "' + structure + '"\n';
         return info;
       })();
-      //TODO: refer to docs
-      error((names.length > 1 ? 'several ‘structure’ elements have' : 'a ‘structure’ element has') + ' been declared wrongly and could not be parsed. ' + errorList, true);
+      error((names.length > 1 ? 'several ‘structure’ elements have' : 'a ‘structure’ element has') + ' been declared wrongly and could not be parsed. ' + errorList, true, true);
     }
 
     return node;
