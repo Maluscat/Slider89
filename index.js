@@ -300,6 +300,7 @@ function Slider89(target, config, replace) {
     }
   }
   function parseStructure(structure) {
+    //TODO?: node order
     const node = {
       slider: document.createElement('div')
     };
