@@ -1,12 +1,15 @@
 'use strict';
 function Slider89(target, config, replace) {
-  if (!target) error('no target node has been passed (first argument of the constructor)', true, 'constructor');
+  if (!target) {
+    error('no target node has been passed (first argument of the constructor)', true, 'constructor');
+  } else if (target && (!target.nodeType || target.nodeType != 1)) {
+    error('the first argument of the constructor (slider target node) must be a DOM node ' + typeMsg(target), true, 'constructor');
+  }
 
   if (config == undefined || config === false) {
     config = {};
   } else if (typeof config != 'object' || Array.isArray(config)) {
-    const typeMsg = 'but it is ' + (Array.isArray(config) ? 'an array' : 'of type ' + typeof config);
-    error('the configuration object (second argument of the constructor) should be an object ' + typeMsg, true, 'constructor');
+    error('the configuration object (second argument of the constructor) should be an object ' + typeMsg(config), true, 'constructor');
   }
 
   const that = this;
@@ -15,7 +18,7 @@ function Slider89(target, config, replace) {
   let activeTouchID;
   let mouseDownPos;
 
-  //Style rule strings which will be inserted into a new stylesheet
+  //Style rule strings which will be inserted into a newly created stylesheet
   const styles = [
     '.sl89-track {' +
       'width: 200px;' + //216?
@@ -212,6 +215,9 @@ function Slider89(target, config, replace) {
     if (!noEnd) msg += '.\n';
     if (abort) msg += 'Aborting the slider construction.';
     throw new Error(msg);
+  }
+  function typeMsg(variable) {
+    return 'but it is ' + (Array.isArray(variable) ? 'an array' : 'of type ' + typeof variable);
   }
   //Extended {Array, String}.prototype.includes() polyfill
   function has(array, val, loop) {
