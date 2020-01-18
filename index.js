@@ -166,6 +166,11 @@ function Slider89(target, config, replace) {
       node.slider = document.createElement('div');
       node.track = document.createElement('div');
       node.thumb = document.createElement('div');
+      if (typeof vals.caption == 'string') {
+        node.caption = document.createElement('div');
+        if (vals.caption) node.caption.textContent = vals.caption;
+        node.slider.appendChild(node.caption);
+      }
 
       node.track.appendChild(node.thumb);
       node.slider.appendChild(node.track);
@@ -258,7 +263,7 @@ function Slider89(target, config, replace) {
     window.addEventListener('mousemove', slideMove);
   }
   function slideMove(e) {
-    //check for non-x movement (-> returning)?
+    //TODO?: check for non-x movement (-> returning)?
     const absWidth = activeThumb.parentNode.clientWidth - activeThumb.clientWidth;
     const range = vals.range[1] - vals.range[0];
 
@@ -297,7 +302,8 @@ function Slider89(target, config, replace) {
     (function() {
       const defNodes = [
         'track',
-        'thumb'
+        'thumb',
+        'caption'
       ];
       defNodes.forEach(function(node) {
         attribs[node] = {
