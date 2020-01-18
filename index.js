@@ -431,6 +431,9 @@ function Slider89(target, config, replace) {
     }
 
     function assembleElement(name, tag, attributes, content) {
+      if (node[name]) {
+        error('Every node must have a unique name but there are mutiple nodes called ‘' + name + '’', true);
+      }
       let elem = document.createElement(tag || 'div');
       const hasAttribs = !!attribs[name];
       if (content) elem.textContent = content;
