@@ -1,12 +1,12 @@
 'use strict';
 function Slider89(target, config, replace) {
-  if (!target) error('no target node has been passed (first argument of the constructor)', true);
+  if (!target) error('no target node has been passed (first argument of the constructor)', true, 'constructor');
 
   if (config == undefined || config === false) {
     config = {};
   } else if (typeof config != 'object' || Array.isArray(config)) {
     const typeMsg = 'but it is ' + (Array.isArray(config) ? 'an array' : 'of type ' + typeof config);
-    error('the configuration object (second argument of the constructor) should be an object ' + typeMsg, true);
+    error('the configuration object (second argument of the constructor) should be an object ' + typeMsg, true, 'constructor');
   }
 
   const that = this;
@@ -205,9 +205,10 @@ function Slider89(target, config, replace) {
 
 
   // ------ Helper functions ------
-  function error(msg, abort, noEnd) {
+  function error(msg, abort, target, noEnd) {
     //TODO: refer to docs
-    msg = 'Slider89: ' + msg;
+    const intro = 'Slider89 ' + (target ? '@ ' + target : '') + ': ';
+    msg = intro + msg;
     if (!noEnd) msg += '.\n';
     if (abort) msg += 'Aborting the slider construction.';
     throw new Error(msg);
@@ -416,7 +417,7 @@ function Slider89(target, config, replace) {
         } else info += 'Leftover structure:\n- "' + structure + '"\n';
         return info;
       })();
-      error((names.length > 1 ? 'several ‘structure’ elements have' : 'a ‘structure’ element has') + ' been declared wrongly and could not be parsed. ' + errorList, true, true);
+      error((names.length > 1 ? 'several elements have' : 'an element has') + ' been declared wrongly and could not be parsed. ' + errorList, true, 'structure', true);
     }
 
     return node;
@@ -432,7 +433,7 @@ function Slider89(target, config, replace) {
 
     function assembleElement(name, tag, attributes, content) {
       if (node[name]) {
-        error('Every node must have a unique name but there are mutiple nodes called ‘' + name + '’', true);
+        error('Every element must have a unique name but there are mutiple elements called ‘' + name + '’', true, 'structure');
       }
       let elem = document.createElement(tag || 'div');
       const hasAttribs = !!attribs[name];
