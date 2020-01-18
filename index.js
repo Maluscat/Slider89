@@ -322,16 +322,21 @@ function Slider89(target, config, replace) {
       name: '[\\w-]+'
     };
     reg.capName = '(' + reg.name + ')';
-    reg.glbMatch = reg.capName + '(?:' + reg.tabSpace + '(?:(?!<).)*?)?>';
-    reg.content = '(?:\\s+"(.+?)")*';
+    reg.glbMatch = '(?:' + reg.tabSpace + '(?:(?!<).)*?)?>';
+    reg.general = {
+      inner: '<([:/]?)' + reg.capName + '(?:' + reg.tabSpace + reg.name + ')?(?:' + reg.tabSpace + '(""))?' + reg.glbMatch,
+      noEnd: '<' + reg.capName + '.*?',
+      noBeginning: '(?:^|' + reg.tabSpace + ')' + reg.capName + reg.glbMatch,
+    };
+    reg.content = '(?:\\s+"('+reg.all+'+?)")*';
     reg.tag = '(?:\\s+' + reg.capName + ')*';
     reg.attribs = '(?:\\s+' + reg.attr.name + '\\(' + reg.attr.value + '\\))*';
     reg.base = reg.capName + reg.tag + reg.content + '(' + reg.attribs + ')\\s*?';
     const rgx = {
-      general: '<([:/]?)' + reg.glbMatch + '|<' + reg.capName + '.*?|' + reg.tabSpace + reg.glbMatch,
+      general: reg.general.inner + '|' + reg.general.noEnd + '|' + reg.general.noBeginning,
       attributes: '\\s+(' + reg.attr.name + ')\\((' + reg.attr.value + ')\\)\\s*?',
       singleTag: '<' + reg.base + '>',
-      multiTag: '<:' + reg.base + '>((?:'+reg.all+'(?!<:' + reg.capName + '(?:\\s+' + reg.name + ')*(?:\\s+".+?")*' + reg.attribs + '\\s*?>'+reg.all+'*?<\\/\\6\\s*>))*?)<\\/\\1\\s*>'
+      multiTag: '<:' + reg.base + '>((?:'+reg.all+'(?!<:' + reg.capName + '(?:\\s+' + reg.name + ')*(?:\\s+"'+reg.all+'+?")*' + reg.attribs + '\\s*?>'+reg.all+'*?<\\/\\6\\s*>))*?)<\\/\\1\\s*>'
     };
     (function() {
       for (var expr in rgx) rgx[expr] = new RegExp(rgx[expr], 'g');
@@ -369,11 +374,12 @@ function Slider89(target, config, replace) {
       const names = new Array();
       let leftover = false;
       if (rgx.general.test(structure)) {
-        structure.replace(rgx.general, function(match, amplifier, name, name2, name3) {
+        structure.replace(rgx.general, function(match, amplifier, name, content, name2, name3) {
           let nameObj = {};
           nameObj.name = name || name2 || name3;
           if (amplifier == ':') nameObj.error = 'isWrapper';
           else if (amplifier == '/') nameObj.error = 'isClosing';
+          else if (content != null) nameObj.error = 'emptyContent';
           else if (name2) nameObj.error = 'noEnd';
           else if (name3) nameObj.error = 'noBeginning';
           names.push(nameObj);
@@ -393,6 +399,9 @@ function Slider89(target, config, replace) {
               case 'isWrapper':
                 info += 'Opening tag finding no end';
                 break;
+              case 'emptyContent':
+                info += 'Redundant empty text content (‘""’)';
+                break;
               case 'noEnd':
                 info += 'Missing ending character (‘>’)';
                 break;
@@ -402,8 +411,8 @@ function Slider89(target, config, replace) {
               default:
                 info += 'Unidentified error. Please check the element for syntax errors';
             }
+            info += '.\n';
           });
-          info += '.\n';
         } else info += 'Leftover structure:\n- "' + structure + '"\n';
         return info;
       })();
