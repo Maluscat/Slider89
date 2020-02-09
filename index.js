@@ -99,7 +99,7 @@ function Slider89(target, config, replace) {
         { type: 'false' }
       ]
     },
-    structure: { //name unclear //write only -> exception in the setter needed!
+    structure: { //write only -> exception in the setter needed!
       default: false,
       structure: [
         {
@@ -111,21 +111,24 @@ function Slider89(target, config, replace) {
         { type: 'false' }
       ]
     },
-    // //Can also be 0 as a way to disable the slider? -> rather a new property "disabled" adding a class "disabled"
-    // thumbCount: {
-    //   default: 1,
-    //   structure: [{
-    //     type: 'number',
-    //     conditions: [
-    //       'int',
-    //       ['>=', 1],
-    //     ]
-    //   }]
-    // },
-    // classList: { //object
-    //   default: false,
-    //   type: []
-    // }
+    classList: {
+      default: 'false',
+      structure: [
+        {
+          type: 'object',
+          structure: [
+            {
+              type: 'array',
+              structure: [
+                { type: 'string' }
+              ]
+            }
+          ]
+        },
+        { type: 'false' }
+      ],
+      shape: '{nodeName: [..classes], ...}'
+    }
   }
 
   const vals = {};
@@ -160,7 +163,7 @@ function Slider89(target, config, replace) {
     initial = false;
   })();
 
-  //Build the slider element
+  //Building the slider element
   (function() {
     //No caption or result node yet
     if (vals.structure == false) {
@@ -476,7 +479,7 @@ function Slider89(target, config, replace) {
   }
 
   //Computing an automated error message regarding the property's types and conditions
-  function computeTypeMsg(struct, shape, plural) {
+  function computeTypeMsg(struct, shape, plural, deep) {
     let msg = '';
     for (var i = 0; i < struct.length; i++) {
       const type = struct[i].type;
@@ -501,15 +504,30 @@ function Slider89(target, config, replace) {
       }
 
       else if (type == 'array') {
-        msg += 'an array';
         const len = has(conditions, 'length', true);
+
+        const msgRes = computeTypeMsg(struct[i].structure, false, len && len[1] == 1 ? false : true, true);
+        if (!plural) msg += 'a';
+        if (deep) {
+          msg += ' ' + msgRes;
+        } else if (!plural) {
+          msg += 'n';
+        }
+        msg += ' array' + (plural ? 's' : '');
         if (len) msg += ' of length ' + len[1];
-        msg += ' with ' + computeTypeMsg(struct[i].structure, false, len && len[1] > 1 ? true : false) + ' as values';
+        if (!deep) msg += ' with ' + msgRes + ' as values';
+      }
+
+      else if (type == 'object') {
+        msg += 'an object';
+        msg += ' with ' + computeTypeMsg(struct[i].structure, false, true, true) + ' as values';
       }
 
       else if (type == 'string') {
-        msg += 'a string';
-        if (has(conditions, 'not empty')) msg += ' which is not empty';
+        if (!deep) msg += 'a ';
+        if (has(conditions, 'not empty')) msg += 'non-empty ';
+        msg += 'string';
+        if (!deep && plural) msg += 's';
       }
 
       if (shape) {
