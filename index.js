@@ -198,7 +198,6 @@ function Slider89(target, config, replace) {
           });
         } else errorNodes.push(key);
       }
-      //Implement `classList` + throwing an error on an undefined node
       if (errorNodes.length > 0) {
         const msg =
           "property `classList` contains items which aren't nodes of this slider:\n- \"" +
