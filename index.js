@@ -112,7 +112,7 @@ function Slider89(target, config, replace) {
       ]
     },
     classList: {
-      default: 'false',
+      default: false,
       structure: [
         {
           type: 'object',
@@ -127,7 +127,7 @@ function Slider89(target, config, replace) {
         },
         { type: 'false' }
       ],
-      shape: '{nodeName: [..classes], ...}'
+      shape: '{nodeName: [...classes]}'
     }
   }
 
@@ -509,7 +509,7 @@ function Slider89(target, config, replace) {
         const msgRes = computeTypeMsg(struct[i].structure, false, len && len[1] == 1 ? false : true, true);
         if (!plural) msg += 'a';
         if (deep) {
-          msg += ' ' + msgRes;
+          msg += msgRes;
         } else if (!plural) {
           msg += 'n';
         }
@@ -556,6 +556,7 @@ function Slider89(target, config, replace) {
       if (
         (type == 'boolean' || type == 'false' || type == 'true') && typeof val == 'boolean' ||
         type == 'array' && Array.isArray(val) ||
+        type == 'object' && typeof val == 'object' && !Array.isArray(val) ||
         type == 'number' && typeof val == 'number' ||
         type == 'string' && typeof val == 'string'
       ) {
@@ -564,6 +565,10 @@ function Slider89(target, config, replace) {
         } else if (type == 'array') {
           for (var n = 0; n < val.length; n++) {
             checkTypes(val[n], prop, typeObj.structure, msg, true);
+          }
+        } else if (type == 'object') {
+          for (var key in val) {
+            checkTypes(val[key], prop, typeObj.structure, msg, true);
           }
         }
         if (checkConditions(typeObj, prop, val, msg)) return true;
