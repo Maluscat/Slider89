@@ -187,6 +187,28 @@ function Slider89(target, config, replace) {
     } else {
       var node = parseStructure(vals.structure);
     }
+
+    if (vals.classList) {
+      let errorNodes = new Array();
+      for (var key in vals.classList) {
+        const classes = vals.classList[key];
+        if (node[key] && errorNodes.length == 0) {
+          classes.forEach(function(str) {
+            node[key].classList.add(str);
+          });
+        } else errorNodes.push(key);
+      }
+      //Implement `classList` + throwing an error on an undefined node
+      if (errorNodes.length > 0) {
+        const msg =
+          "property `classList` contains items which aren't nodes of this slider:\n- \"" +
+          errorNodes.join('.\n- "') +
+          "\"\nFollowing nodes are part of this slider's node pool:\n- \"" +
+          Object.keys(node).join('"\n- "');
+        error(msg + '"\n', true, false, true);
+      }
+    }
+
     createStyleSheet();
 
     if (replace) target.parentNode.replaceChild(node.slider, target);
