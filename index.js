@@ -234,7 +234,7 @@ function Slider89(target, config, replace) {
   // ------ Helper functions ------
   function error(msg, abort, target, noEnd) {
     //TODO: refer to docs
-    const intro = 'Slider89 ' + (target ? '@ ' + target : '') + ': ';
+    const intro = 'Slider89' + (target ? ' @ ' + target : '') + ': ';
     msg = intro + msg;
     if (!noEnd) msg += '.\n';
     if (abort) msg += 'Aborting the slider construction.';
