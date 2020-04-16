@@ -92,13 +92,6 @@ function Slider89(target, config, replace) {
         { type: 'false' }
       ]
     },
-    caption: {
-      default: false,
-      structure: [
-        { type: 'string' },
-        { type: 'false' }
-      ]
-    },
     structure: { //write only -> exception in the setter needed!
       default: false,
       structure: [
@@ -165,18 +158,13 @@ function Slider89(target, config, replace) {
 
   //Building the slider element
   (function() {
-    //No caption or result node yet
+    //No result node yet
     if (vals.structure == false) {
       //In case no custom structure is defined, manually build the node to ensure best performance (parseStructure takes a while)
       var node = {};
       node.slider = document.createElement('div');
       node.track = document.createElement('div');
       node.thumb = document.createElement('div');
-      if (typeof vals.caption == 'string') {
-        node.caption = document.createElement('div');
-        if (vals.caption) node.caption.textContent = vals.caption;
-        node.slider.appendChild(node.caption);
-      }
 
       node.track.appendChild(node.thumb);
       node.slider.appendChild(node.track);
@@ -334,8 +322,7 @@ function Slider89(target, config, replace) {
     (function() {
       const defNodes = [
         'track',
-        'thumb',
-        'caption'
+        'thumb'
       ];
       defNodes.forEach(function(node) {
         attribs[node] = {
