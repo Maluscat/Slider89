@@ -631,7 +631,7 @@ function Slider89(target, config, replace) {
               propError(prop, msg + 'a floating point number');
             break;
             case 'not empty':
-            if (val === '')
+            if (val.trim() === '')
               propError(prop, msg + 'an empty string');
             break;
           }
