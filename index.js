@@ -124,6 +124,7 @@ function Slider89(target, config, replace) {
     }
   }
 
+  //`vals` is holding every property of the class
   const vals = {};
 
   //Initializing basic class functionality
@@ -159,9 +160,10 @@ function Slider89(target, config, replace) {
   //Building the slider element
   (function() {
     //No result node yet
+    let node;
     if (vals.structure == false) {
       //In case no custom structure is defined, manually build the node to ensure best performance (parseStructure takes a while)
-      var node = {};
+      node = {};
       node.slider = document.createElement('div');
       node.track = document.createElement('div');
       node.thumb = document.createElement('div');
@@ -173,7 +175,7 @@ function Slider89(target, config, replace) {
       for (var element in node)
         if (element != 'slider') node[element].classList.add('sl89-' + element);
     } else {
-      var node = parseStructure(vals.structure);
+      node = parseStructure(vals.structure);
     }
 
     if (vals.classList) {
@@ -201,19 +203,19 @@ function Slider89(target, config, replace) {
     if (replace) target.parentNode.replaceChild(node.slider, target);
     else target.appendChild(node.slider);
 
-    if (node.thumb) {
+    const distance = (function() {
       const absWidth = node.thumb.parentNode.clientWidth - node.thumb.clientWidth;
       const range = vals.range[1] - vals.range[0];
-      const distance = (vals.value - vals.range[0]) / range * absWidth;
-      node.thumb.style.transform = 'translateX(' + distance + 'px)';
+      return (vals.value - vals.range[0]) / range * absWidth;
+    })();
+    node.thumb.style.transform = 'translateX(' + distance + 'px)';
 
-      node.thumb.addEventListener('touchstart', touchStart);
-      node.thumb.addEventListener('touchmove', touchMove);
-      node.thumb.addEventListener('touchend', touchEnd);
-      node.thumb.addEventListener('touchcancel', touchEnd);
+    node.thumb.addEventListener('touchstart', touchStart);
+    node.thumb.addEventListener('touchmove', touchMove);
+    node.thumb.addEventListener('touchend', touchEnd);
+    node.thumb.addEventListener('touchcancel', touchEnd);
 
-      node.thumb.addEventListener('mousedown', slideStart);
-    }
+    node.thumb.addEventListener('mousedown', slideStart);
 
     that.node = node;
   })();
@@ -364,7 +366,7 @@ function Slider89(target, config, replace) {
 
     while (rgx.multiTag.test(structure)) {
       structure = structure.replace(rgx.multiTag, function(match, name, tag, inner, attributes, content) {
-        const elem = assembleElement(name, tag, attributes, null);
+        const elem = assembleElement(name, tag, attributes);
         content = parseSingleTags(content, elem);
         if (inner) elem.textContent = inner;
         node[name] = elem;
@@ -431,6 +433,23 @@ function Slider89(target, config, replace) {
         matches.push(match);
       }
       appendElements(node.slider, matches);
+    })();
+
+    //Statically typed
+    (function() {
+      const track = node.track;
+      const thumb = node.thumb;
+      if (!track) node.track = assembleElement('track', 'div');
+      if (!thumb) node.thumb = assembleElement('thumb', 'div');
+      if (!track && !thumb) {
+        node.track.appendChild(node.thumb);
+        node.slider.appendChild(node.track);
+      } else if (!track && thumb) {
+        node.thumb.parentNode.appendChild(node.track);
+        node.track.appendChild(node.thumb);
+      } else if (track && !thumb) {
+        node.track.appendChild(node.thumb);
+      }
     })();
 
     return node;
