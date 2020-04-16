@@ -311,8 +311,7 @@ function Slider89(target, config, replace) {
       sheet.insertRule(styles[i], 0);
     }
   }
-  function parseStructure(structure) {
-    //TODO?: node order
+  function parseStructure(structureStr) {
     const node = {
       slider: document.createElement('div')
     };
@@ -361,32 +360,19 @@ function Slider89(target, config, replace) {
       for (var expr in rgx) rgx[expr] = new RegExp(rgx[expr], 'g');
     })();
 
-    let lastWrapper = new Array();
-    let parentLock = false;
-    while(rgx.multiTag.test(structure)) {
+    let structure = structureStr;
+
+    while (rgx.multiTag.test(structure)) {
       structure = structure.replace(rgx.multiTag, function(match, name, tag, inner, attributes, content) {
         const elem = assembleElement(name, tag, attributes, null);
         content = parseSingleTags(content, elem);
         if (inner) elem.textContent = inner;
-        if (parentLock) {
-          lastWrapper.forEach(function(el) {
-            elem.appendChild(el);
-          });
-          lastWrapper = new Array();
-          parentLock = false;
-        }
-        lastWrapper.push(elem);
         node[name] = elem;
         return content;
       });
-      parentLock = true;
     }
 
     structure = parseSingleTags(structure, node.slider);
-
-    lastWrapper.forEach(function(el) {
-      node.slider.appendChild(el);
-    });
 
     if (/\S+/g.test(structure)) {
       structure = structure.trim();
@@ -438,12 +424,30 @@ function Slider89(target, config, replace) {
       error((names.length > 1 ? 'several elements have' : 'an element has') + ' been declared wrongly and could not be parsed. ' + errorList, true, 'structure', true);
     }
 
+    (function() {
+      const matches = new Array();
+      let match;
+      while (match = rgx.general.exec(structureStr)) {
+        matches.push(match);
+      }
+      appendElements(node.slider, matches);
+    })();
+
     return node;
+
+    function appendElements(parent, childArr, i = 0) {
+      for (; i < childArr.length; i++) {
+        const elem = node[childArr[i][2]];
+        if (childArr[i][1] == ':') {
+          i = appendElements(elem, childArr, i + 1);
+        } else if (childArr[i][1] == '/') return i;
+        parent.appendChild(elem);
+      }
+    }
 
     function parseSingleTags(str, parent) {
       return str.replace(rgx.singleTag, function(match, name, tag, inner, attributes) {
         const elem = assembleElement(name, tag, attributes, inner);
-        parent.appendChild(elem);
         node[name] = elem;
         return '';
       });
