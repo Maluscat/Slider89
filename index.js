@@ -102,7 +102,8 @@ function Slider89(target, config, replace) {
           ]
         },
         { type: 'false' }
-      ]
+      ],
+      initial: true
     },
     classList: {
       default: false,
@@ -143,9 +144,11 @@ function Slider89(target, config, replace) {
       //and a new call of defineProperty (when creating a new instance) will throw an error for defining the same property twice
       Object.defineProperty(that, item, {
         set: function(val) {
-          checkTypes(val, item, obj.structure, errorMsg);
-          if (obj.setter) (obj.setter)(val, vals);
-          vals[item] = val;
+          if (!obj.initial || initial) {
+            checkTypes(val, item, obj.structure, errorMsg);
+            if (obj.setter) (obj.setter)(val, vals);
+            vals[item] = val;
+          } else error('property ‘' + item + '’ may only be set at init time but it was just set with the value ‘' + val + '’');
         },
         get: function() {
           return vals[item];
