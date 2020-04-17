@@ -92,7 +92,7 @@ function Slider89(target, config, replace) {
         { type: 'false' }
       ]
     },
-    structure: { //write only -> exception in the setter needed!
+    structure: {
       default: false,
       structure: [
         {
@@ -104,6 +104,10 @@ function Slider89(target, config, replace) {
         { type: 'false' }
       ],
       initial: true
+    },
+    node: {
+      default: {},
+      set: false
     },
     classList: {
       default: false,
@@ -135,8 +139,8 @@ function Slider89(target, config, replace) {
       const item = prop;
       const obj = properties[item];
 
-      let errorMsg = computeTypeMsg(obj.structure, obj.shape);
-      errorMsg += ' but it';
+      let errorMsg;
+      if (obj.set !== false) errorMsg = computeTypeMsg(obj.structure, obj.shape) + ' but it';
 
       //Calling Object.defineProperty on the `this` of the class function is nowhere documented
       //but it is necessary to be able to create multiple instances of the same class
@@ -144,18 +148,24 @@ function Slider89(target, config, replace) {
       //and a new call of defineProperty (when creating a new instance) will throw an error for defining the same property twice
       Object.defineProperty(that, item, {
         set: function(val) {
-          if (!obj.initial || initial) {
-            checkTypes(val, item, obj.structure, errorMsg);
-            if (obj.setter) (obj.setter)(val, vals);
-            vals[item] = val;
-          } else error('property ‘' + item + '’ may only be set at init time but it was just set with the value ‘' + val + '’');
+          if (obj.set !== false) {
+            if (!obj.initial || initial) {
+              checkTypes(val, item, obj.structure, errorMsg);
+              if (obj.setter) (obj.setter)(val, vals);
+              vals[item] = val;
+            } else error('property ‘' + item + '’ may only be set at init time but it was just set with the value ‘' + val + '’');
+          } else error('property ‘' + item + '’ may only be read from but it was just set with the value ‘' + val + '’');
         },
         get: function() {
           return vals[item];
         }
       });
 
-      that[prop] = config[prop] !== undefined ? config[prop] : properties[prop].default;
+      if (config[prop] !== undefined) that[prop] = config[prop];
+      else {
+        let assignObj = obj.set === false ? vals : that;
+        assignObj[prop] = properties[prop].default;
+      }
     }
     initial = false;
   })();
@@ -163,23 +173,23 @@ function Slider89(target, config, replace) {
   //Building the slider element
   (function() {
     //No result node yet
-    let node;
     if (vals.structure == false) {
       //In case no custom structure is defined, manually build the node to ensure best performance (parseStructure takes a while)
-      node = {};
-      node.slider = document.createElement('div');
-      node.track = document.createElement('div');
-      node.thumb = document.createElement('div');
+      vals.node.slider = document.createElement('div');
+      vals.node.track = document.createElement('div');
+      vals.node.thumb = document.createElement('div');
 
-      node.track.appendChild(node.thumb);
-      node.slider.appendChild(node.track);
+      vals.node.track.appendChild(vals.node.thumb);
+      vals.node.slider.appendChild(vals.node.track);
 
-      node.slider.classList.add('slider89');
-      for (var element in node)
-        if (element != 'slider') node[element].classList.add('sl89-' + element);
+      vals.node.slider.classList.add('slider89');
+      for (var element in vals.node)
+        if (element != 'slider') vals.node[element].classList.add('sl89-' + element);
     } else {
-      node = parseStructure(vals.structure);
+      vals.node = parseStructure(vals.structure);
     }
+
+    const node = vals.node;
 
     if (vals.classList) {
       let errorNodes = new Array();
@@ -207,7 +217,7 @@ function Slider89(target, config, replace) {
     else target.appendChild(node.slider);
 
     const distance = (function() {
-      const absWidth = node.thumb.parentNode.clientWidth - node.thumb.clientWidth;
+      const absWidth = node.track.clientWidth - node.thumb.clientWidth;
       const range = vals.range[1] - vals.range[0];
       return (vals.value - vals.range[0]) / range * absWidth;
     })();
@@ -219,8 +229,6 @@ function Slider89(target, config, replace) {
     node.thumb.addEventListener('touchcancel', touchEnd);
 
     node.thumb.addEventListener('mousedown', slideStart);
-
-    that.node = node;
   })();
 
 
@@ -288,7 +296,7 @@ function Slider89(target, config, replace) {
   }
   function slideMove(e) {
     //TODO?: check for non-x movement (-> returning)?
-    const absWidth = activeThumb.parentNode.clientWidth - activeThumb.clientWidth;
+    const absWidth = vals.node.track.clientWidth - activeThumb.clientWidth;
     const range = vals.range[1] - vals.range[0];
 
     let distance = e.clientX - mouseDownPos;
