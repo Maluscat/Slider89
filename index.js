@@ -517,7 +517,7 @@ function Slider89(target, config, replace) {
       if (Array.isArray(prevVal)) prevVal = '[' + prevVal.join(', ') + ']';
       msg += '.\nContinuing with the previous value (' + prevVal + ').';
     }
-    error(msg, initial);
+    error(msg, initial, false, true);
   }
 
   //Computing an automated error message regarding the property's types and conditions
