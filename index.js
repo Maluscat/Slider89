@@ -56,18 +56,27 @@ function Slider89(target, config, replace) {
         },
         { type: 'boolean' }
       ],
-      shape: '[minValue, maxValue]'
+      shape: '[minValue, maxValue]',
+      setter: function(val) {
+        if (!initial) {
+          //The same compution as mouseMove(), but no common function for performance reasons
+          const absWidth = vals.node.track.clientWidth - vals.node.thumb.clientWidth;
+          const distance = getTranslate(vals.node.thumb);
+          const newVal = distance / absWidth * (val[1] - val[0]) + val[0];
+          vals.value = Number(newVal.toFixed(vals.precision));
+        }
+      }
     },
     value: {
       default: 0,
       structure: [{
         type: 'number'
       }],
-      setter: function(val, vals) {
+      setter: function(val) {
         if (val < vals.range[0] || val > vals.range[1]) {
           const rangeStr = '[' + vals.range.join(', ') + ']';
           propError('value', 'in the given range of ' + rangeStr + ' but it exceeds it (' + val + ')');
-        }
+        } else if (!initial) translateThumb(val);
       }
     },
     precision: {
@@ -151,7 +160,7 @@ function Slider89(target, config, replace) {
           if (obj.set !== false) {
             if (!obj.initial || initial) {
               checkTypes(val, item, obj.structure, errorMsg);
-              if (obj.setter) (obj.setter)(val, vals);
+              if (obj.setter) (obj.setter)(val);
               vals[item] = val;
             } else error('property ‘' + item + '’ may only be set at init time but it was just set with the value ‘' + val + '’');
           } else error('property ‘' + item + '’ may only be read from but it was just set with the value ‘' + val + '’');
@@ -216,12 +225,7 @@ function Slider89(target, config, replace) {
     if (replace) target.parentNode.replaceChild(node.slider, target);
     else target.appendChild(node.slider);
 
-    const distance = (function() {
-      const absWidth = node.track.clientWidth - node.thumb.clientWidth;
-      const range = vals.range[1] - vals.range[0];
-      return (vals.value - vals.range[0]) / range * absWidth;
-    })();
-    node.thumb.style.transform = 'translateX(' + distance + 'px)';
+    translateThumb(vals.value);
 
     node.thumb.addEventListener('touchstart', touchStart);
     node.thumb.addEventListener('touchmove', touchMove);
@@ -260,6 +264,11 @@ function Slider89(target, config, replace) {
     if (!style) return false;
     const firstBracket = style.slice(style.indexOf('translateX(') + 'translateX('.length);
     return parseFloat(firstBracket.slice(0, firstBracket.indexOf(')')));
+  }
+  function translateThumb(value) {
+    const absWidth = vals.node.track.clientWidth - vals.node.thumb.clientWidth;
+    const distance = (value - vals.range[0]) / (vals.range[1] - vals.range[0]) * absWidth;
+    vals.node.thumb.style.transform = 'translateX(' + distance + 'px)';
   }
 
   // ------ Event functions ------
