@@ -1,15 +1,15 @@
 'use strict';
 function Slider89(target, config, replace) {
   if (!target) {
-    error('no target node has been passed (first argument of the constructor)', true, 'constructor');
-  } else if (target && (!target.nodeType || target.nodeType != 1)) {
-    error('the first argument of the constructor (slider target node) must be a DOM node ' + typeMsg(target), true, 'constructor');
+    error('no first argument has been supplied. It needs to be the DOM target node for the slider', true, 'constructor');
+  } else if (!target.nodeType || target.nodeType != 1) {
+    error('the first argument must be a valid DOM node the slider will be placed into ' + typeMsg(target), true, 'constructor');
   }
 
   if (config == undefined || config === false) {
     config = {};
   } else if (typeof config != 'object' || Array.isArray(config)) {
-    error('the configuration object (second argument of the constructor) should be an object ' + typeMsg(config), true, 'constructor');
+    error('the optional second argument needs to be an object for configuration ' + typeMsg(config), true, 'constructor');
   }
 
   const that = this;
@@ -123,14 +123,12 @@ function Slider89(target, config, replace) {
       structure: [
         {
           type: 'object',
-          structure: [
-            {
-              type: 'array',
-              structure: [
-                { type: 'string' }
-              ]
-            }
-          ]
+          structure: [{
+            type: 'array',
+            structure: [
+              { type: 'string' }
+            ]
+          }]
         },
         { type: 'false' }
       ],
@@ -148,9 +146,6 @@ function Slider89(target, config, replace) {
       const item = prop;
       const obj = properties[item];
 
-      let errorMsg;
-      if (obj.set !== false) errorMsg = computeTypeMsg(obj.structure, obj.shape) + ' but it';
-
       //Calling Object.defineProperty on the `this` of the class function is nowhere documented
       //but it is necessary to be able to create multiple instances of the same class
       //as {Class}.prototype will inherit the defined property to all instances
@@ -159,7 +154,7 @@ function Slider89(target, config, replace) {
         set: function(val) {
           if (obj.set !== false) {
             if (!obj.initial || initial) {
-              checkTypes(val, item, obj.structure, errorMsg);
+              checkTypes(val, item, obj.structure);
               if (obj.setter) (obj.setter)(val);
               vals[item] = val;
             } else error('property ‘' + item + '’ may only be set at init time but it was just set with the value ‘' + val + '’');
@@ -201,19 +196,13 @@ function Slider89(target, config, replace) {
     const node = vals.node;
 
     if (vals.classList) {
-      let errorNodes = new Array();
-      for (var key in vals.classList) {
-        const classes = vals.classList[key];
-        if (node[key] && errorNodes.length == 0) {
-          classes.forEach(function(str) {
-            node[key].classList.add(str);
-          });
-        } else errorNodes.push(key);
-      }
-      if (errorNodes.length > 0) {
+      const errNodes = checkArrayObject(vals.classList, node, function(str) {
+        node[key].classList.add(str);
+      });
+      if (errNodes.length > 0) {
         const msg =
           "property `classList` contains items which aren't nodes of this slider:\n- \"" +
-          errorNodes.join('.\n- "') +
+          errNodes.join('.\n- "') +
           "\"\nFollowing nodes are part of this slider's node pool:\n- \"" +
           Object.keys(node).join('"\n- "');
         error(msg + '"\n', true, false, true);
@@ -245,8 +234,29 @@ function Slider89(target, config, replace) {
     if (abort) msg += 'Aborting the slider construction.';
     throw new Error(msg);
   }
-  function typeMsg(variable) {
-    return 'but it is ' + (Array.isArray(variable) ? 'an array' : 'of type ' + typeof variable);
+  function typeMsg(variable, noIntro) {
+    let type = noIntro ? '' : 'but it is ';
+    if (Array.isArray(variable)) type += 'an array';
+    else if (polyIsNaN(variable)) type += 'NaN';
+    else if (variable === null) type += 'null';
+    else if (typeof variable == 'boolean') type += variable;
+    else type += 'of type ' + typeof variable;
+
+    return type;
+  }
+  function checkArrayObject(val, reference, fn) {
+    const errItems = new Array();
+    for (var key in val) {
+      const item = val[key];
+      if ((Array.isArray(reference) ? has(reference, key) : reference[key]) && errItems.length == 0) {
+        item.forEach(fn);
+      } else errItems.push(key);
+    }
+    return errItems;
+  }
+  //MDN Polyfill @ Number.isNaN
+  function polyIsNaN(val) {
+    return Number.isNaN && Number.isNaN(val) || !Number.isNaN && typeof val === 'number' && val !== val;
   }
   //Extended {Array, String}.prototype.includes() polyfill
   function has(array, val, loop) {
@@ -520,7 +530,7 @@ function Slider89(target, config, replace) {
 
   // -> Initialization
   function propError(prop, msg) {
-    msg = 'property ‘' + prop + '’ must be ' + msg;
+    msg = 'property ‘' + prop + '’ must be ' + computeTypeMsg(properties[prop].structure, properties[prop].shape) + ' but it' + msg;
     if (!initial) {
       let prevVal = vals[prop];
       if (Array.isArray(prevVal)) prevVal = '[' + prevVal.join(', ') + ']';
@@ -600,60 +610,62 @@ function Slider89(target, config, replace) {
   }
 
   //Checking a property for the correct type & format
-  function checkTypes(val, prop, structure, msg, plural) {
+  function checkTypes(val, prop, structure, plural) {
     for (var i = 0; i < structure.length; i++) {
       const typeObj = structure[i];
       const type = typeObj.type;
       if (
-        (type == 'boolean' || type == 'false' || type == 'true') && typeof val == 'boolean' ||
+        type == 'boolean' && typeof val == 'boolean' ||
+        type == 'true' && val === true ||
+        type == 'false' && val === false ||
         type == 'array' && Array.isArray(val) ||
-        type == 'object' && typeof val == 'object' && !Array.isArray(val) ||
+        type == 'object' && typeof val == 'object' && !Array.isArray(val) && val !== null ||
         type == 'number' && typeof val == 'number' ||
         type == 'string' && typeof val == 'string'
       ) {
         if (type == 'number') {
-          if ((!!Number.isNaN && Number.isNaN(val)) || isNaN(val)) propError(prop, msg + ' is NaN');
+          if (polyIsNaN(val)) propError(prop, ' is NaN');
         } else if (type == 'array') {
           for (var n = 0; n < val.length; n++) {
-            checkTypes(val[n], prop, typeObj.structure, msg, true);
+            checkTypes(val[n], prop, typeObj.structure, true);
           }
         } else if (type == 'object') {
           for (var key in val) {
-            checkTypes(val[key], prop, typeObj.structure, msg, true);
+            checkTypes(val[key], prop, typeObj.structure, true);
           }
         }
-        if (checkConditions(typeObj, prop, val, msg)) return true;
+        if (checkConditions(typeObj, prop, val)) return true;
       }
     }
-    propError(prop, msg + (plural ? 's values are ' : ' is ') +  'of type ' + typeof val);
+    propError(prop, (plural ? 's values are ' : ' is ') + typeMsg(val, true));
   }
-  function checkConditions(typeObj, prop, val, msg) {
+  function checkConditions(typeObj, prop, val) {
     if (typeObj.conditions) {
-      msg += ' is ';
+      const msg = ' is ';
       const type = typeObj.type;
       for (var i = 0; i < typeObj.conditions.length; i++) {
         const cond = typeObj.conditions[i];
         if (Array.isArray(cond)) {
           switch (cond[0]) {
             case 'length':
-            if (val.length !== cond[1])
-              propError(prop, msg + (type == 'array' ? 'an ' : 'a ') + type + ' of length ' + val.length);
-            break;
+              if (val.length !== cond[1])
+                propError(prop, msg + (type == 'array' ? 'an ' : 'a ') + type + ' of length ' + val.length);
+              break;
             case '>=':
-            if (val < cond[1])
-              propError(prop, msg + (cond[1] == 0 ? 'a negative number' : 'a number below ' + cond[1]));
-            break;
+              if (val < cond[1])
+                propError(prop, msg + (cond[1] == 0 ? 'a negative number' : 'a number below ' + cond[1]));
+              break;
           }
         } else {
           switch (cond) {
             case 'int':
-            if (val % 1 !== 0)
-              propError(prop, msg + 'a floating point number');
-            break;
+              if (val % 1 !== 0)
+                propError(prop, msg + 'a floating point number');
+              break;
             case 'not empty':
-            if (val.trim() === '')
-              propError(prop, msg + 'an empty string');
-            break;
+              if (val.trim() === '')
+                propError(prop, msg + 'an empty string');
+              break;
           }
         }
       }
