@@ -13,10 +13,18 @@ function Slider89(target, config, replace) {
   }
 
   const that = this;
+  const eventTypes = [
+    'start',
+    'change',
+    'end'
+  ];
+
   let initial = false;
   let activeThumb;
   let activeTouchID;
   let mouseDownPos;
+  let eventID = 0;
+  const eventList = {};
 
   //Style rule strings which will be inserted into a newly created stylesheet
   const styles = [
@@ -41,7 +49,36 @@ function Slider89(target, config, replace) {
     '}'
   ];
 
-  const methods = {};
+  const methods = {
+    addEvent: {
+      function: addEvent,
+      args: [
+        {
+          name: 'event type',
+          structure: [{
+            type: 'string'
+          }]
+        },
+        {
+          name: 'event function',
+          structure: [{
+            type: 'function'
+          }]
+        },
+        {
+          name: 'event namespace',
+          optional: true,
+          structure: [{
+            type: 'string',
+            conditions: [
+              'not empty',
+              'not number'
+            ]
+          }]
+        }
+      ],
+    }
+  };
 
   const properties = {
     range: {
@@ -135,6 +172,33 @@ function Slider89(target, config, replace) {
         { type: 'false' }
       ],
       shape: '{nodeName: [...classes]}'
+    },
+    events: {
+      default: {},
+      structure: [
+        {
+          type: 'object',
+          structure: [{
+            type: 'array',
+            structure: [{
+              type: 'function'
+            }]
+          }]
+        },
+        { type: 'false' }
+      ],
+      initial: true,
+      setter: function(val) {
+        const errTypes = checkArrayObject(val, eventTypes, function(fn) {
+          eventList[eventID++] = [fn];
+        });
+        if (errTypes.length > 0) {
+          const msg =
+            'property ‘events’ contains items which are no valid event types:' + enlistItems(errTypes) +
+            'Available event types are:' + enlistItems(eventTypes);
+          error(msg, true, false, true);
+        }
+      }
     }
   };
 
@@ -181,7 +245,7 @@ function Slider89(target, config, replace) {
       that[item] = function() {
         const args = Array.prototype.slice.call(arguments, 0, obj.args.length);
         checkMethod(item, args);
-        obj.function.apply(this, args);
+        return obj.function.apply(this, args);
       }
     }
 
@@ -235,6 +299,26 @@ function Slider89(target, config, replace) {
 
     node.thumb.addEventListener('mousedown', slideStart);
   })();
+
+
+  // ------ Class methods ------
+  function addEvent(type, fn, name) {
+    (function() {
+      for (var i = 0; i < eventTypes.length; i++) {
+        if (type == eventTypes[i]) return;
+      }
+      error('the specified type ‘' + type + '’ is not a valid event type. Available types are:' + enlistItems(eventTypes), null, 'addEvent', true);
+    })();
+    if (!Array.isArray(vals.events[type])) vals.events[type] = new Array();
+    const key = name || eventID;
+    if (eventList[key]) {
+      eventList[key].push(fn);
+    } else {
+      eventList[key] = [fn];
+    }
+    vals.events[type].push(fn);
+    return name || eventID++;
+  }
 
   // ------ Helper functions ------
   function error(msg, abort, target, noEnd) {
@@ -499,7 +583,8 @@ function Slider89(target, config, replace) {
 
     return node;
 
-    function appendElements(parent, childArr, i = 0) {
+    function appendElements(parent, childArr, i) {
+      if (i == null) i = 0;
       for (; i < childArr.length; i++) {
         const elem = node[childArr[i][2]];
         if (childArr[i][1] == ':') {
@@ -596,6 +681,7 @@ function Slider89(target, config, replace) {
       else if (type == 'string') {
         if (!deep) msg += 'a ';
         if (has(conditions, 'not empty')) msg += 'non-empty ';
+        if (has(conditions, 'not number')) msg += 'non-number ';
         msg += 'string';
         if (!deep && plural) msg += 's';
       }
@@ -717,6 +803,11 @@ function Slider89(target, config, replace) {
             case 'not empty':
               if (val.trim() === '') {
                 return 'an empty string';
+              }
+              break;
+            case 'not number':
+              if (!polyIsNaN(Number(val))) {
+                return 'a pure number string';
               }
               break;
           }
