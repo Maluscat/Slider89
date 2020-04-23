@@ -76,7 +76,31 @@ function Slider89(target, config, replace) {
             ]
           }]
         }
-      ],
+      ]
+    },
+    removeEvent: {
+      function: removeEvent,
+      args: [
+        {
+          name: 'event identifier/namespace',
+          structure: [
+            {
+              type: 'number',
+              conditions: [
+                ['>=', 0],
+                'int'
+              ]
+            },
+            {
+              type: 'string',
+              conditions: [
+                'not empty',
+                'not number'
+              ]
+            }
+          ]
+        }
+      ]
     }
   };
 
@@ -189,8 +213,8 @@ function Slider89(target, config, replace) {
       ],
       initial: true,
       setter: function(val) {
-        const errTypes = checkArrayObject(val, eventTypes, function(fn) {
-          eventList[eventID++] = [fn];
+        const errTypes = checkArrayObject(val, eventTypes, function(fn, i, arr, objKey) {
+          eventList[eventID++] = {type: objKey, fn: fn};
         });
         if (errTypes.length > 0) {
           const msg =
@@ -310,14 +334,31 @@ function Slider89(target, config, replace) {
       error('the specified type ‘' + type + '’ is not a valid event type. Available types are:' + enlistItems(eventTypes), null, 'addEvent', true);
     })();
     if (!Array.isArray(vals.events[type])) vals.events[type] = new Array();
-    const key = name || eventID;
-    if (eventList[key]) {
-      eventList[key].push(fn);
-    } else {
-      eventList[key] = [fn];
-    }
     vals.events[type].push(fn);
+    const key = name || eventID;
+    const obj = {
+      type: type,
+      fn: fn
+    };
+    if (name) {
+      if (!Array.isArray(eventList[key])) eventList[key] = new Array();
+      eventList[key].push(obj);
+    } else eventList[key] = obj;
     return name || eventID++;
+  }
+  function removeEvent(key) {
+    const listEntry = eventList[key];
+    if (!listEntry) return false;
+    delete eventList[key];
+    return Array.isArray(listEntry) ? listEntry.reduce(handleEvents, new Array()) : handleEvents(new Array(), listEntry);
+
+    function handleEvents(acc, entry) {
+      const typeEvents = vals.events[entry.type];
+      const deleted = typeEvents.splice(typeEvents.indexOf(entry.fn), 1)[0];
+      if (typeEvents.length === 0) delete vals.events[entry.type];
+      acc.push(deleted);
+      return acc;
+    }
   }
 
   // ------ Helper functions ------
@@ -347,7 +388,9 @@ function Slider89(target, config, replace) {
     for (var key in val) {
       const item = val[key];
       if ((Array.isArray(reference) ? !has(reference, key) : !reference[key])) errItems.push(key);
-      else if (errItems.length == 0) item.forEach(fn);
+      else if (errItems.length == 0)
+        for (var i = 0; i < item.length; i++)
+          fn(item[i], i, item, key, val);
     }
     return errItems;
   }
@@ -679,6 +722,7 @@ function Slider89(target, config, replace) {
       }
 
       else if (type == 'string') {
+        if (msg !== '') msg += ' or '; //TODO: better concatenation system
         if (!deep) msg += 'a ';
         if (has(conditions, 'not empty')) msg += 'non-empty ';
         if (has(conditions, 'not number')) msg += 'non-number ';
@@ -691,7 +735,7 @@ function Slider89(target, config, replace) {
         shape = false;
       }
 
-      if (msg !== '' && (type == 'boolean' || type == 'true' || type == 'false')) msg += ' or ';
+      if (msg !== '' && (type == 'boolean' || type == 'true' || type == 'false')) msg += ' or '; //TODO: better concatenation system
       if (type == 'boolean') {
         msg += 'a boolean';
       } else if (type == 'true') {
