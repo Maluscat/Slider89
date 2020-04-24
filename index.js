@@ -15,7 +15,7 @@ function Slider89(target, config, replace) {
   const that = this;
   const eventTypes = [
     'start',
-    'change',
+    'move',
     'end'
   ];
 
@@ -424,6 +424,17 @@ function Slider89(target, config, replace) {
   }
 
   // ------ Event functions ------
+  function invokeEvent(types) {
+    for (var i = 0; i < types.length; i++) {
+      const functions = vals.events[types[i]];
+      if (functions) {
+        for (var n = 0; n < functions.length; n++) {
+          functions[n].call(that);
+        }
+      }
+    }
+  }
+  // -> Event listeners
   //TODO: don't explicitly track index 0. It works in all my tests but especially on APIs like these, browsers and operating systems vary strongly
   function touchStart(e) {
     if (activeTouchID == null) {
@@ -452,6 +463,7 @@ function Slider89(target, config, replace) {
     that.node.thumb.classList.add('active');
     activeThumb = this;
     mouseDownPos = e.clientX - getTranslate(this);
+    invokeEvent(['start']);
     window.addEventListener('mouseup', slideEnd);
     window.addEventListener('mousemove', slideMove);
   }
@@ -467,12 +479,15 @@ function Slider89(target, config, replace) {
 
     const val = distance / absWidth * range + vals.range[0];
     vals.value = Number(val.toFixed(vals.precision));
+
+    invokeEvent(['move']);
   }
   function slideEnd() {
     window.removeEventListener('mouseup', slideEnd);
     window.removeEventListener('mousemove', slideMove);
     mouseDownPos = null;
     activeThumb = null;
+    invokeEvent(['end']);
     that.node.thumb.classList.remove('active');
     document.body.classList.remove('sl89-noselect');
   }
