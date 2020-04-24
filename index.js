@@ -477,10 +477,13 @@ function Slider89(target, config, replace) {
     if (distance < 0) distance = 0;
     that.node.thumb.style.transform = 'translateX(' + distance + 'px)';
 
-    const val = distance / absWidth * range + vals.range[0];
-    vals.value = Number(val.toFixed(vals.precision));
+    let val = distance / absWidth * range + vals.range[0];
+    val = Number(val.toFixed(vals.precision));
+    if (vals.value !== val) {
+      vals.value = val;
 
-    invokeEvent(['move']);
+      invokeEvent(['move']);
+    }
   }
   function slideEnd() {
     window.removeEventListener('mouseup', slideEnd);
