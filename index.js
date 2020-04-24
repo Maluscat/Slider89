@@ -256,10 +256,10 @@ function Slider89(target, config, replace) {
         }
       });
 
-      if (config[prop] !== undefined) that[prop] = config[prop];
-      else {
-        let assignObj = obj.set === false ? vals : that;
-        assignObj[prop] = properties[prop].default;
+      if (config[prop] !== undefined) {
+        that[prop] = config[prop];
+      } else {
+        (obj.set === false ? vals : that)[prop] = properties[prop].default;
       }
     }
 
@@ -460,7 +460,7 @@ function Slider89(target, config, replace) {
   }
   function slideStart(e) {
     document.body.classList.add('sl89-noselect');
-    that.node.thumb.classList.add('active');
+    vals.node.thumb.classList.add('active');
     activeThumb = this;
     mouseDownPos = e.clientX - getTranslate(this);
     invokeEvent(['start']);
@@ -468,14 +468,13 @@ function Slider89(target, config, replace) {
     window.addEventListener('mousemove', slideMove);
   }
   function slideMove(e) {
-    //TODO?: check for non-x movement (-> returning)?
     const absWidth = vals.node.track.clientWidth - activeThumb.clientWidth;
     const range = vals.range[1] - vals.range[0];
 
     let distance = e.clientX - mouseDownPos;
     if (distance > absWidth) distance = absWidth;
     if (distance < 0) distance = 0;
-    that.node.thumb.style.transform = 'translateX(' + distance + 'px)';
+    vals.node.thumb.style.transform = 'translateX(' + distance + 'px)';
 
     let val = distance / absWidth * range + vals.range[0];
     val = Number(val.toFixed(vals.precision));
@@ -491,7 +490,7 @@ function Slider89(target, config, replace) {
     mouseDownPos = null;
     activeThumb = null;
     invokeEvent(['end']);
-    that.node.thumb.classList.remove('active');
+    vals.node.thumb.classList.remove('active');
     document.body.classList.remove('sl89-noselect');
   }
 
