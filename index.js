@@ -298,7 +298,7 @@ function Slider89(target, config, replace) {
     const node = vals.node;
 
     if (vals.classList) {
-      const errNodes = checkArrayObject(vals.classList, node, function(str) {
+      const errNodes = checkArrayObject(vals.classList, node, function(str, i, arr, key) {
         node[key].classList.add(str);
       });
       if (errNodes.length > 0) {
@@ -387,6 +387,8 @@ function Slider89(target, config, replace) {
     const errItems = new Array();
     for (var key in val) {
       const item = val[key];
+      //If an item with index > 0 is errored, the loop will still have executed before it was reached
+      //For now, this function is only used to throw on error, but it's something to keep in mind
       if ((Array.isArray(reference) ? !has(reference, key) : !reference[key])) errItems.push(key);
       else if (errItems.length == 0)
         for (var i = 0; i < item.length; i++)
