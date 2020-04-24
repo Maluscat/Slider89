@@ -266,7 +266,7 @@ function Slider89(target, config, replace) {
     for (var method in methods) {
       const item = method;
       const obj = methods[item];
-      that[item] = function() {
+      Slider89.prototype[item] = function() {
         const args = Array.prototype.slice.call(arguments, 0, obj.args.length);
         checkMethod(item, args);
         return obj.function.apply(this, args);
