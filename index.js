@@ -517,7 +517,14 @@ function Slider89(target, config, replace) {
   // ------ Scope-specific functions ------
   // -> Element building
   function createStyleSheet() {
-    const sheet = document.head.appendChild(document.createElement('style')).sheet;
+    const sheet = (function() {
+      const firstHeadChild = document.head.firstElementChild;
+      if (firstHeadChild) {
+        return document.head.insertBefore(document.createElement('style'), firstHeadChild).sheet;
+      } else {
+        return document.head.appendChild(document.createElement('style')).sheet;
+      }
+    })();
     for (var i = 0; i < styles.length; i++) {
       sheet.insertRule(styles[i], 0);
     }
