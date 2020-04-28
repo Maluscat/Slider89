@@ -197,6 +197,7 @@ function Slider89(target, config, replace) {
         },
         { type: 'false' }
       ],
+      initial: true,
       shape: '{nodeName: [...classes]}'
     },
     events: {
