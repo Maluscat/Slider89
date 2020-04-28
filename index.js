@@ -181,7 +181,7 @@ function Slider89(target, config, replace) {
     },
     node: {
       default: {},
-      set: false
+      noSet: true
     },
     classList: {
       default: false,
@@ -246,7 +246,7 @@ function Slider89(target, config, replace) {
       //and a new call of defineProperty (when creating a new instance) will throw an error for defining the same property twice
       Object.defineProperty(that, item, {
         set: function(val) {
-          if (obj.set !== false) {
+          if (!obj.noSet) {
             if (!obj.initial || initial) {
               checkProp(item, val);
               const oldVal = vals[item];
@@ -264,7 +264,7 @@ function Slider89(target, config, replace) {
         that[prop] = config[prop];
       } else {
         const def = obj.default;
-        (obj.set === false ? vals : that)[prop] = typeof def == 'function' ? def() : def;
+        (obj.noSet ? vals : that)[prop] = typeof def == 'function' ? def() : def;
       }
     }
 
