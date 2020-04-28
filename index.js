@@ -38,7 +38,6 @@ function Slider89(target, config, replace) {
       'height: 100%;' +
       'background-color: hsl(0, 0%, 28%);' +
       'cursor: pointer;' +
-      'transition: background-color .15s ease-in-out;' +
     '}',
     '.sl89-noselect {' +
       '-webkit-user-select: none;' +
