@@ -119,19 +119,15 @@ function Slider89(target, config, replace) {
         },
         { type: 'boolean' }
       ],
-      shape: '[minValue, maxValue]',
-      setter: function(val) {
-        if (!initial) {
-          //The same compution as mouseMove(), but no common function for performance reasons
-          const absWidth = vals.node.track.clientWidth - vals.node.thumb.clientWidth;
-          const distance = getTranslate(vals.node.thumb);
-          const newVal = distance / absWidth * (val[1] - val[0]) + val[0];
-          vals.value = Number(newVal.toFixed(vals.precision));
-        }
-      }
+      setter: function() {
+        if (!initial) computeValue();
+      },
+      shape: '[minValue, maxValue]'
     },
     value: {
-      default: 0,
+      default: function() {
+        return vals.range[0];
+      },
       structure: [{
         type: 'number'
       }],
@@ -162,7 +158,13 @@ function Slider89(target, config, replace) {
           ]
         },
         { type: 'false' }
-      ]
+      ],
+      setter: function(val) {
+        if (val !== false && Number(val.toFixed(vals.precision)) !== val) {
+          //TODO: error overhaul
+          error('the given value of ' + val + ' exceeds the currently set precision of ' + vals.precision, initial, 'step');
+        } else if (!initial) computeValue();
+      }
     },
     structure: {
       default: false,
@@ -229,7 +231,7 @@ function Slider89(target, config, replace) {
   //`vals` is holding every property of the class
   const vals = {};
 
-  //Initializing basic class functionality
+  //Initializing properties and methods
   (function() {
     initial = true;
 
@@ -246,8 +248,9 @@ function Slider89(target, config, replace) {
           if (obj.set !== false) {
             if (!obj.initial || initial) {
               checkProp(item, val);
-              if (obj.setter) (obj.setter)(val);
+              const oldVal = vals[item];
               vals[item] = val;
+              if (obj.setter) (obj.setter)(val, oldVal);
             } else error('property ‘' + item + '’ may only be set at init time but it was just set with the value ‘' + val + '’');
           } else error('property ‘' + item + '’ may only be read from but it was just set with the value ‘' + val + '’');
         },
@@ -259,7 +262,8 @@ function Slider89(target, config, replace) {
       if (config[prop] !== undefined) {
         that[prop] = config[prop];
       } else {
-        (obj.set === false ? vals : that)[prop] = properties[prop].default;
+        const def = obj.default;
+        (obj.set === false ? vals : that)[prop] = typeof def == 'function' ? def() : def;
       }
     }
 
@@ -322,6 +326,11 @@ function Slider89(target, config, replace) {
     node.thumb.addEventListener('touchcancel', touchEnd);
 
     node.thumb.addEventListener('mousedown', slideStart);
+  })();
+
+  //Misc initialization
+  (function() {
+    computeValue();
   })();
 
 
@@ -424,6 +433,28 @@ function Slider89(target, config, replace) {
     const distance = (value - vals.range[0]) / (vals.range[1] - vals.range[0]) * absWidth;
     vals.node.thumb.style.transform = 'translateX(' + distance + 'px)';
   }
+  function computeValue(thumb, distance, events) {
+    if (!thumb) thumb = vals.node.thumb;
+    if (!distance) distance = getTranslate(vals.node.thumb);
+
+    const absWidth = vals.node.track.clientWidth - thumb.clientWidth;
+
+    if (distance > absWidth) distance = absWidth;
+    if (distance < 0) distance = 0;
+    if (vals.step) {
+      const relStep = absWidth / ((vals.range[1] - vals.range[0]) / vals.step);
+      distance = Math.round(distance / relStep) * relStep;
+    }
+
+    let val = distance / absWidth * (vals.range[1] - vals.range[0]) + vals.range[0];
+    val = Number(val.toFixed(vals.precision));
+    if (vals.value !== val) {
+      vals.node.thumb.style.transform = 'translateX(' + distance + 'px)';
+      vals.value = val;
+
+      if (events) invokeEvent(events); //TODO--------------------------------------
+    }
+  }
 
   // ------ Event functions ------
   function invokeEvent(types) {
@@ -470,21 +501,8 @@ function Slider89(target, config, replace) {
     window.addEventListener('mousemove', slideMove);
   }
   function slideMove(e) {
-    const absWidth = vals.node.track.clientWidth - activeThumb.clientWidth;
-    const range = vals.range[1] - vals.range[0];
-
-    let distance = e.clientX - mouseDownPos;
-    if (distance > absWidth) distance = absWidth;
-    if (distance < 0) distance = 0;
-    vals.node.thumb.style.transform = 'translateX(' + distance + 'px)';
-
-    let val = distance / absWidth * range + vals.range[0];
-    val = Number(val.toFixed(vals.precision));
-    if (vals.value !== val) {
-      vals.value = val;
-
-      invokeEvent(['move']);
-    }
+    const distance = e.clientX - mouseDownPos;
+    computeValue(activeThumb, distance, ['move']);
   }
   function slideEnd() {
     window.removeEventListener('mouseup', slideEnd);
