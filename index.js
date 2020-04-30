@@ -832,6 +832,7 @@ function Slider89(target, config, replace) {
   function computeTypeMsg(struct, shape, plural, deep) {
     let msg = '';
     for (var i = 0; i < struct.length; i++) {
+      if (msg) msg += ' or ';
       const type = struct[i].type;
       const conditions = struct[i].conditions;
 
@@ -880,7 +881,6 @@ function Slider89(target, config, replace) {
       }
 
       else if (type == 'string') {
-        if (msg !== '') msg += ' or '; //TODO: better concatenation system
         if (!deep) msg += 'a ';
         if (has(conditions, 'not empty')) msg += 'non-empty ';
         if (has(conditions, 'not number')) msg += 'non-number ';
@@ -893,7 +893,6 @@ function Slider89(target, config, replace) {
         shape = false;
       }
 
-      if (msg !== '' && (type == 'boolean' || type == 'true' || type == 'false')) msg += ' or '; //TODO: better concatenation system
       if (type == 'boolean') {
         msg += 'a boolean';
       } else if (type == 'true') {
