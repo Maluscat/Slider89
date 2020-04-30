@@ -119,10 +119,10 @@ function Slider89(target, config, replace) {
         },
         { type: 'boolean' }
       ],
-      setter: function() {
-        if (!initial) computeValue();
-      },
-      shape: '[minValue, maxValue]'
+      shape: '[minValue, maxValue]',
+      postSetter: function() {
+        computeValue();
+      }
     },
     value: {
       default: function() {
@@ -131,12 +131,13 @@ function Slider89(target, config, replace) {
       structure: [{
         type: 'number'
       }],
-      setter: function(val) {
+      preSetter: function(val) {
         if (val < vals.range[0] || val > vals.range[1]) {
           const rangeStr = '[' + vals.range.join(', ') + ']';
           propError('value', 'in the given range of ' + rangeStr + ' but it exceeds it (' + val + ')');
-        } else if (!initial) translateThumb(val);
-      }
+        }
+      },
+      postSetter: translateThumb
     },
     precision: {
       default: 0,
@@ -159,11 +160,14 @@ function Slider89(target, config, replace) {
         },
         { type: 'false' }
       ],
-      setter: function(val) {
+      preSetter: function(val) {
         if (val !== false && Number(val.toFixed(vals.precision)) !== val) {
           //TODO: error overhaul
           error('the given value of ' + val + ' exceeds the currently set precision of ' + vals.precision, initial, 'step');
-        } else if (!initial) computeValue();
+        }
+      },
+      postSetter: function() {
+        computeValue();
       }
     },
     structure: {
@@ -215,7 +219,7 @@ function Slider89(target, config, replace) {
         { type: 'false' }
       ],
       initial: true,
-      setter: function(val) {
+      preSetter: function(val) {
         const errTypes = checkArrayObject(val, eventTypes, function(fn, i, arr, objKey) {
           eventList[eventID++] = {type: objKey, fn: fn};
         });
@@ -246,9 +250,9 @@ function Slider89(target, config, replace) {
           if (!obj.noSet) {
             if (!obj.initial || initial) {
               checkProp(item, val);
-              const oldVal = vals[item];
+              if (obj.preSetter) (obj.preSetter)(val);
               vals[item] = val;
-              if (obj.setter) (obj.setter)(val, oldVal);
+              if (!initial && obj.postSetter) (obj.postSetter)(val);
             } else error('property ‘' + item + '’ may only be set at init time but it was just set with the value ‘' + val + '’');
           } else error('property ‘' + item + '’ may only be read from but it was just set with the value ‘' + val + '’');
         },
