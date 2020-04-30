@@ -25,6 +25,7 @@ function Slider89(target, config, replace) {
   let mouseDownPos;
   let eventID = 0;
   const eventList = {};
+  const vals = {}; //holding every property of the class
 
   //Style rule strings which will be inserted into a newly created stylesheet
   const styles = [
@@ -227,9 +228,6 @@ function Slider89(target, config, replace) {
       }
     }
   };
-
-  //`vals` is holding every property of the class
-  const vals = {};
 
   //Initializing properties and methods
   (function() {
@@ -445,11 +443,11 @@ function Slider89(target, config, replace) {
       const relStep = absWidth / ((vals.range[1] - vals.range[0]) / vals.step);
       distance = Math.round(distance / relStep) * relStep;
     }
+    vals.node.thumb.style.transform = 'translateX(' + distance + 'px)';
 
     let val = distance / absWidth * (vals.range[1] - vals.range[0]) + vals.range[0];
     val = Number(val.toFixed(vals.precision));
     if (vals.value !== val) {
-      vals.node.thumb.style.transform = 'translateX(' + distance + 'px)';
       vals.value = val;
 
       if (events) invokeEvent(events); //TODO--------------------------------------
@@ -832,9 +830,9 @@ function Slider89(target, config, replace) {
   function computeTypeMsg(struct, shape, plural, deep) {
     let msg = '';
     for (var i = 0; i < struct.length; i++) {
-      if (msg) msg += ' or ';
       const type = struct[i].type;
       const conditions = struct[i].conditions;
+      if (msg) msg += ' or ';
 
       if (type == 'number') {
         const limit = has(conditions, '>=', true);
