@@ -259,11 +259,11 @@ function Slider89(target, config, replace) {
         }
       });
 
-      if (config[prop] !== undefined) {
-        that[prop] = config[prop];
+      if (config[item] !== undefined) {
+        that[item] = config[item];
       } else {
         const def = obj.default;
-        (obj.noSet ? vals : that)[prop] = typeof def == 'function' ? def() : def;
+        (obj.noSet ? vals : that)[item] = typeof def == 'function' ? def() : def;
       }
     }
 
