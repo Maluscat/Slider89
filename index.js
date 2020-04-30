@@ -714,6 +714,120 @@ function Slider89(target, config, replace) {
     }
   }
 
+  //-> Methods & properties
+  function propError(prop, msg) {
+    msg = 'property ‘' + prop + '’ must be ' + computeTypeMsg(properties[prop].structure, properties[prop].shape) + ' but it' + msg;
+    if (!initial) {
+      let prevVal = vals[prop];
+      if (Array.isArray(prevVal)) prevVal = '[' + prevVal.join(', ') + ']';
+      msg += '.\nContinuing with the previous value (' + prevVal + ').';
+    }
+    error(msg, initial, false, !initial);
+  }
+  function methodError(method, argIdx, msg, omitError) {
+    const counts = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth'];
+    const arg = methods[method].args[argIdx];
+
+    let errMsg = 'the ' + (arg.optional ? 'optional ' : '') + counts[argIdx] + ' argument (' + arg.name + ') ';
+    if (omitError) errMsg += 'has been omitted but it is required. It ';
+    errMsg += 'must be ' + computeTypeMsg(arg.structure);
+    if (!omitError) errMsg += ' but it' + msg;
+
+    error(errMsg, false, method);
+  }
+
+  //Checking properties & methods for the correct type & format
+  function checkMethod(method, argList) {
+    const obj = methods[method];
+    //If the next argument (argList.length - 1 + 1) is not optional, a required arg is missing
+    for (var i in argList) {
+      const arg = argList[i];
+      const msg = checkTypes(arg, obj.args[i].structure, false);
+      if (msg) methodError(method, i, msg);
+    }
+    if (obj.args[argList.length] && !obj.args[argList.length].optional) {
+      methodError(method, argList.length, null, true);
+    }
+  }
+  function checkProp(prop, val) {
+    const msg = checkTypes(val, properties[prop].structure, false);
+    if (msg) propError(prop, msg);
+  }
+
+  function checkTypes(val, structure, plural) {
+    let msg = false;
+    for (var i = 0; i < structure.length; i++) {
+      const typeObj = structure[i];
+      const type = typeObj.type;
+      if (
+        type == 'boolean' && typeof val == 'boolean' ||
+        type == 'true' && val === true ||
+        type == 'false' && val === false ||
+        type == 'array' && Array.isArray(val) ||
+        type == 'object' && typeof val == 'object' && !Array.isArray(val) && val !== null ||
+        type == 'number' && typeof val == 'number' && !polyIsNaN(val) ||
+        type == 'function' && typeof val == 'function' ||
+        type == 'string' && typeof val == 'string'
+      ) {
+        if (type == 'array') {
+          for (var n = 0; n < val.length; n++) {
+            checkTypes(val[n], typeObj.structure, true);
+          }
+        } else if (type == 'object') {
+          for (var key in val) {
+            checkTypes(val[key], typeObj.structure, true);
+          }
+        }
+        msg = checkConditions(typeObj, val);
+        if (msg === false) return false;
+        else break;
+      }
+    }
+    return msg ? ' is ' + msg : (plural ? 's values are ' : ' is ') + typeMsg(val, true);
+
+    function checkConditions(typeObj, val) {
+      if (typeObj.conditions) {
+        const type = typeObj.type;
+        for (var i = 0; i < typeObj.conditions.length; i++) {
+          const cond = typeObj.conditions[i];
+          if (Array.isArray(cond)) {
+            switch (cond[0]) {
+              case 'length':
+              if (val.length !== cond[1]) {
+                return (type == 'array' ? 'an ' : 'a ') + type + ' of length ' + val.length;
+              }
+              break;
+              case '>=':
+              if (val < cond[1]) {
+                return (cond[1] == 0 ? 'a negative number' : 'a number below ' + cond[1]);
+              }
+              break;
+            }
+          } else {
+            switch (cond) {
+              case 'int':
+              if (val % 1 !== 0) {
+                return 'a floating point number';
+              }
+              break;
+              case 'not empty':
+              if (val.trim() === '') {
+                return 'an empty string';
+              }
+              break;
+              case 'not number':
+              if (!polyIsNaN(Number(val))) {
+                return 'a pure number string';
+              }
+              break;
+            }
+          }
+        }
+      }
+      return false;
+    }
+  }
+
   //Computing an automated error message regarding the property's types and conditions
   function computeTypeMsg(struct, shape, plural, deep) {
     let msg = '';
@@ -790,118 +904,5 @@ function Slider89(target, config, replace) {
     }
 
     return msg;
-  }
-
-  //-> Methods & properties
-  function propError(prop, msg) {
-    msg = 'property ‘' + prop + '’ must be ' + computeTypeMsg(properties[prop].structure, properties[prop].shape) + ' but it' + msg;
-    if (!initial) {
-      let prevVal = vals[prop];
-      if (Array.isArray(prevVal)) prevVal = '[' + prevVal.join(', ') + ']';
-      msg += '.\nContinuing with the previous value (' + prevVal + ').';
-    }
-    error(msg, initial, false, !initial);
-  }
-  function methodError(method, argIdx, msg, omitError) {
-    const counts = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth'];
-    const arg = methods[method].args[argIdx];
-
-    let errMsg = 'the ' + (arg.optional ? 'optional ' : '') + counts[argIdx] + ' argument (' + arg.name + ') ';
-    if (omitError) errMsg += 'has been omitted but it is required. It ';
-    errMsg += 'must be ' + computeTypeMsg(arg.structure);
-    if (!omitError) errMsg += ' but it' + msg;
-
-    error(errMsg, false, method);
-  }
-
-  //Checking properties & methods for the correct type & format
-  function checkMethod(method, argList) {
-    const obj = methods[method];
-    //If the next argument (argList.length - 1 + 1) is not optional, a required arg is missing
-    for (var i in argList) {
-      const arg = argList[i];
-      const msg = checkTypes(arg, obj.args[i].structure, false);
-      if (msg) methodError(method, i, msg);
-    }
-    if (obj.args[argList.length] && !obj.args[argList.length].optional) {
-      methodError(method, argList.length, null, true);
-    }
-  }
-  function checkProp(prop, val) {
-    const msg = checkTypes(val, properties[prop].structure, false);
-    if (msg) propError(prop, msg);
-  }
-
-  function checkTypes(val, structure, plural) {
-    let msg = false;
-    for (var i = 0; i < structure.length; i++) {
-      const typeObj = structure[i];
-      const type = typeObj.type;
-      if (
-        type == 'boolean' && typeof val == 'boolean' ||
-        type == 'true' && val === true ||
-        type == 'false' && val === false ||
-        type == 'array' && Array.isArray(val) ||
-        type == 'object' && typeof val == 'object' && !Array.isArray(val) && val !== null ||
-        type == 'number' && typeof val == 'number' && !polyIsNaN(val) ||
-        type == 'function' && typeof val == 'function' ||
-        type == 'string' && typeof val == 'string'
-      ) {
-        if (type == 'array') {
-          for (var n = 0; n < val.length; n++) {
-            checkTypes(val[n], typeObj.structure, true);
-          }
-        } else if (type == 'object') {
-          for (var key in val) {
-            checkTypes(val[key], typeObj.structure, true);
-          }
-        }
-        msg = checkConditions(typeObj, val);
-        if (msg === false) return false;
-        else break;
-      }
-    }
-    return msg ? ' is ' + msg : (plural ? 's values are ' : ' is ') + typeMsg(val, true);
-  }
-  function checkConditions(typeObj, val) {
-    if (typeObj.conditions) {
-      const type = typeObj.type;
-      for (var i = 0; i < typeObj.conditions.length; i++) {
-        const cond = typeObj.conditions[i];
-        if (Array.isArray(cond)) {
-          switch (cond[0]) {
-            case 'length':
-              if (val.length !== cond[1]) {
-                return (type == 'array' ? 'an ' : 'a ') + type + ' of length ' + val.length;
-              }
-              break;
-            case '>=':
-              if (val < cond[1]) {
-                return (cond[1] == 0 ? 'a negative number' : 'a number below ' + cond[1]);
-              }
-              break;
-          }
-        } else {
-          switch (cond) {
-            case 'int':
-              if (val % 1 !== 0) {
-                return 'a floating point number';
-              }
-              break;
-            case 'not empty':
-              if (val.trim() === '') {
-                return 'an empty string';
-              }
-              break;
-            case 'not number':
-              if (!polyIsNaN(Number(val))) {
-                return 'a pure number string';
-              }
-              break;
-          }
-        }
-      }
-    }
-    return false;
   }
 }
