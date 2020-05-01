@@ -119,7 +119,7 @@ function Slider89(target, config, replace) {
         },
         { type: 'boolean' }
       ],
-      shape: '[minValue, maxValue]',
+      shape: '[startValue, endValue]',
       postSetter: function() {
         computeValue();
       }
@@ -132,7 +132,10 @@ function Slider89(target, config, replace) {
         type: 'number'
       }],
       preSetter: function(val) {
-        if (val < vals.range[0] || val > vals.range[1]) {
+        if (
+          vals.range[0] > vals.range[1] && (val > vals.range[0] || val < vals.range[1]) ||
+          vals.range[1] > vals.range[0] && (val < vals.range[0] || val > vals.range[1])
+        ) {
           const rangeStr = '[' + vals.range.join(', ') + ']';
           propError('value', 'the given value of ' + val + ' exceeds the currently set range of ' + rangeStr);
         }
