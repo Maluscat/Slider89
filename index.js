@@ -446,7 +446,7 @@ function Slider89(target, config, replace) {
   }
   function computeValue(thumb, distance, events) {
     if (!thumb) thumb = vals.node.thumb;
-    if (!distance) distance = getTranslate(vals.node.thumb);
+    if (!distance) distance = getTranslate(thumb);
 
     const absWidth = vals.node.track.clientWidth - thumb.clientWidth;
 
@@ -456,7 +456,7 @@ function Slider89(target, config, replace) {
       const relStep = absWidth / ((vals.range[1] - vals.range[0]) / vals.step);
       distance = Math.round(distance / relStep) * relStep;
     }
-    vals.node.thumb.style.transform = 'translateX(' + distance + 'px)';
+    thumb.style.transform = 'translateX(' + distance + 'px)';
 
     let val = distance / absWidth * (vals.range[1] - vals.range[0]) + vals.range[0];
     val = Number(val.toFixed(vals.precision));
