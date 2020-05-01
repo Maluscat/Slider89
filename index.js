@@ -1,15 +1,15 @@
 'use strict';
 function Slider89(target, config, replace) {
   if (!target) {
-    error('no first argument has been supplied. It needs to be the DOM target node for the slider', true, 'constructor');
+    error('no first argument has been supplied. It needs to be the DOM target node for the slider', 'constructor', true);
   } else if (!target.nodeType || target.nodeType != 1) {
-    error('the first argument must be a valid DOM node the slider will be placed into ' + typeMsg(target), true, 'constructor');
+    error('the first argument must be a valid DOM node the slider will be placed into ' + typeMsg(target), 'constructor', true);
   }
 
   if (config == undefined || config === false) {
     config = {};
   } else if (typeof config != 'object' || Array.isArray(config)) {
-    error('the optional second argument needs to be an object for configuration ' + typeMsg(config), true, 'constructor');
+    error('the optional second argument needs to be an object for configuration ' + typeMsg(config), 'constructor', true);
   }
 
   const that = this;
@@ -134,7 +134,7 @@ function Slider89(target, config, replace) {
       preSetter: function(val) {
         if (val < vals.range[0] || val > vals.range[1]) {
           const rangeStr = '[' + vals.range.join(', ') + ']';
-          propError('value', 'in the given range of ' + rangeStr + ' but it exceeds it (' + val + ')');
+          propError('value', 'the given value of ' + val + ' exceeds the currently set range of ' + rangeStr);
         }
       },
       postSetter: translateThumb
@@ -162,8 +162,7 @@ function Slider89(target, config, replace) {
       ],
       preSetter: function(val) {
         if (val !== false && Number(val.toFixed(vals.precision)) !== val) {
-          //TODO: error overhaul
-          error('the given value of ' + val + ' exceeds the currently set precision of ' + vals.precision, initial, 'step');
+          propError('step', 'the given value of ' + val + ' exceeds the currently set precision of ' + vals.precision);
         }
       },
       postSetter: function() {
@@ -225,9 +224,9 @@ function Slider89(target, config, replace) {
         });
         if (errTypes.length > 0) {
           const msg =
-            'property ‘events’ contains items which are no valid event types:' + enlistItems(errTypes) +
+            'the given object contains items which are no valid event types:' + enlistItems(errTypes) +
             'Available event types are:' + enlistItems(eventTypes);
-          error(msg, true, false, true);
+          propError('events', msg);
         }
       }
     }
@@ -309,9 +308,9 @@ function Slider89(target, config, replace) {
       });
       if (errNodes.length > 0) {
         const msg =
-          "property `classList` contains items which aren't nodes of this slider:" + enlistItems(errNodes) +
+          "the given object contains items which aren't nodes of this slider:" + enlistItems(errNodes) +
           "Following nodes are part of this slider's node pool:" + enlistItems(Object.keys(node))
-        error(msg, true, false, true);
+        error(msg, 'classList', true);
       }
     }
 
@@ -342,7 +341,7 @@ function Slider89(target, config, replace) {
       for (var i = 0; i < eventTypes.length; i++) {
         if (type == eventTypes[i]) return;
       }
-      error('the specified type ‘' + type + '’ is not a valid event type. Available types are:' + enlistItems(eventTypes), null, 'addEvent', true);
+      error('the specified type ‘' + type + '’ is not a valid event type. Available types are:' + enlistItems(eventTypes), 'addEvent');
     })();
     if (!Array.isArray(vals.events[type])) vals.events[type] = new Array();
     vals.events[type].push(fn);
@@ -373,12 +372,11 @@ function Slider89(target, config, replace) {
   }
 
   // ------ Helper functions ------
-  function error(msg, abort, target, noEnd) {
+  function error(msg, target, abort) {
     //TODO: refer to docs
-    const intro = 'Slider89' + (target ? ' @ ' + target : '') + ': ';
-    msg = intro + msg;
-    if (!noEnd) msg += '.\n';
-    if (abort) msg += 'Aborting the slider construction.';
+    msg = 'Slider89' + (target ? ' @ ' + target : '') + ': ' + msg;
+    if (msg[msg.length - 1] != '\n') msg += '.\n';
+    if (initial || abort) msg += 'Aborting the slider construction.';
     throw new Error(msg);
   }
   function typeMsg(variable, noIntro) {
@@ -717,14 +715,17 @@ function Slider89(target, config, replace) {
   }
 
   //-> Methods & properties
-  function propError(prop, msg) {
+  function propTypeError(prop, msg) {
     msg = 'property ‘' + prop + '’ must be ' + computeTypeMsg(properties[prop].structure, properties[prop].shape) + ' but it' + msg;
+    propError(prop, msg, true);
+  }
+  function propError(prop, msg, noTarget) {
     if (!initial) {
       let prevVal = vals[prop];
       if (Array.isArray(prevVal)) prevVal = '[' + prevVal.join(', ') + ']';
       msg += '.\nContinuing with the previous value (' + prevVal + ').';
     }
-    error(msg, initial, false, !initial);
+    error(msg, noTarget ? false : prop);
   }
   function methodError(method, argIdx, msg, omitError) {
     const counts = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth'];
@@ -735,7 +736,7 @@ function Slider89(target, config, replace) {
     errMsg += 'must be ' + computeTypeMsg(arg.structure);
     if (!omitError) errMsg += ' but it' + msg;
 
-    error(errMsg, false, method);
+    error(errMsg, method);
   }
 
   //Checking properties & methods for the correct type & format
@@ -753,7 +754,7 @@ function Slider89(target, config, replace) {
   }
   function checkProp(prop, val) {
     const msg = checkTypes(val, properties[prop].structure, false);
-    if (msg) propError(prop, msg);
+    if (msg) propTypeError(prop, msg);
   }
 
   function checkTypes(val, structure, plural) {
