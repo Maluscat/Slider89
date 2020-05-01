@@ -375,7 +375,7 @@ function Slider89(target, config, replace) {
   function error(msg, target, abort) {
     //TODO: refer to docs
     msg = 'Slider89' + (target ? ' @ ' + target : '') + ': ' + msg;
-    if (msg[msg.length - 1] != '\n') msg += '.\n';
+    if (msg[msg.length - 1] != '\n' && msg[msg.length - 1] != '.') msg += '.\n';
     if (initial || abort) msg += 'Aborting the slider construction.';
     throw new Error(msg);
   }
