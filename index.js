@@ -120,6 +120,11 @@ function Slider89(target, config, replace) {
         { type: 'boolean' }
       ],
       shape: '[startValue, endValue]',
+      preSetter: function(val) {
+        if (val[0] === val[1]) {
+          propError('range', 'the given range of [' + val.join(', ') + '] defines the same value for both range start and end');
+        }
+      },
       postSetter: function() {
         computeValue();
       }
