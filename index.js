@@ -147,7 +147,10 @@ function Slider89(target, config, replace) {
           ['>=', 0],
           'int'
         ]
-      }]
+      }],
+      postSetter: function() {
+        computeValue();
+      }
     },
     step: {
       default: false,
