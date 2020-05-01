@@ -455,6 +455,7 @@ function Slider89(target, config, replace) {
     if (vals.step) {
       const relStep = absWidth / ((vals.range[1] - vals.range[0]) / vals.step);
       distance = Math.round(distance / relStep) * relStep;
+      if (distance > absWidth) return;
     }
     thumb.style.transform = 'translateX(' + distance + 'px)';
 
