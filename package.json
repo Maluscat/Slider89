@@ -1,7 +1,7 @@
 {
   "name": "slider89",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "./dist/slider89.js",
   "private": true,
   "repository": "https://github.com/Hallo89/Slider89",
   "author": "Hallo89 <hallo89@protonmail.com>",
