@@ -6,5 +6,12 @@
   "repository": "https://github.com/Hallo89/Slider89",
   "author": "Hallo89 <hallo89@protonmail.com>",
   "license": "MIT",
-  "devDependencies": {}
+  "scripts": {
+    "dev": "webpack --watch --mode=development",
+    "build": "webpack --mode=production"
+  },
+  "devDependencies": {
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.11"
+  }
 }
