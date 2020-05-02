@@ -1,5 +1,5 @@
 'use strict';
-function Slider89(target, config, replace) {
+export default function Slider89(target, config, replace) {
   if (!target) {
     error('no first argument has been supplied. It needs to be the DOM target node for the slider', 'constructor', true);
   } else if (!target.nodeType || target.nodeType != 1) {
