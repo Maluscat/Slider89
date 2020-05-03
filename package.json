@@ -7,8 +7,8 @@
   "author": "Hallo89 <hallo89@protonmail.com>",
   "license": "MIT",
   "scripts": {
-    "dev": "webpack --watch --mode=development",
-    "build": "webpack --mode=production"
+    "dev": "webpack --watch --config-name dev",
+    "build": "webpack --config-name prod"
   },
   "devDependencies": {
     "webpack": "^4.43.0",
