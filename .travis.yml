@@ -12,9 +12,9 @@ script:
 deploy:
   provider: pages
   skip_cleanup: true
-  keep_history: true
+  # keep_history: true
   github_token: $GH_TOKEN
   committer_from_gh: true
-  target_branch: $TRAVIS_BRANCH
+  target_branch: project-travispages
   on:
     branch: project-travis
