@@ -13,5 +13,8 @@ deploy:
   skip_cleanup: true
   keep_history: true
   github_token: $GH_TOKEN
+  committer_from_gh: true
   target_branch: $TRAVIS_BRANCH
   local_dir: ./dist
+  on:
+    branch: $TRAVIS_BRANCH
