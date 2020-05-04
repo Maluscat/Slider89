@@ -4,6 +4,7 @@ node_js:
 
 before_install:
   - yarn policies set-version berry
+  - yarn set version latest
 install:
   - skip #I'm using Yarn Zero-Installs
 script:
@@ -16,4 +17,4 @@ deploy:
   committer_from_gh: true
   target_branch: $TRAVIS_BRANCH
   on:
-    branch: $TRAVIS_BRANCH
+    branch: project-travis
