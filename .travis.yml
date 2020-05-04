@@ -7,6 +7,8 @@ before_install:
   - yarn -v
   - yarn set version berry
   - yarn -v
+  - rm -f .yarnrc
+  - yarn -v
   - yarn set version latest
   - yarn -v
   - ls -alhF
