@@ -3,13 +3,7 @@ node_js:
   - node
 
 before_install:
-  - yarn policies set-version berry
-  - cat .yarnrc
-  - cat .yarnrc.yml
-  - yarn --version
-  - yarn set version latest
-  - cat .yarnrc
-  - cat .yarnrc.yml
+  - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.22.4
   - yarn --version
 install:
   - skip #I'm using Yarn Zero-Installs
