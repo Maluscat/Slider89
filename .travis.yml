@@ -3,14 +3,11 @@ node_js:
   - node
 
 before_install:
-  - sudo apt-get install yarn
-  - yarn --version
-  - yarn set version berry
+  - yarn policies set-version berry
   - yarn --version
   - yarn set version latest
   - yarn --version
   - ls -alhF
-  - yarn --version
 install:
   - skip #I'm using Yarn Zero-Installs
 script:
