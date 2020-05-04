@@ -12,9 +12,8 @@ script:
 deploy:
   provider: pages
   skip_cleanup: true
-  # keep_history: true
   github_token: $GH_TOKEN
   committer_from_gh: true
-  target_branch: project-travispages
+  target_branch: edge-publishes
   on:
-    branch: project-travis
+    branch: project-rewrite
