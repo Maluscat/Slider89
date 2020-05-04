@@ -6,8 +6,10 @@ before_install:
   - yarn policies set-version berry
   - yarn --version
   - yarn set version latest
-  - yarn --version
   - ls -alhF
+  - rm -f .yarnrc
+  - ls -alhF
+  - yarn --version
 install:
   - skip #I'm using Yarn Zero-Installs
 script:
