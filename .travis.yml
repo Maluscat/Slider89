@@ -5,6 +5,8 @@ node_js:
 before_install:
   - yarn policies set-version berry
   - yarn set version latest
+  - yarn -v
+  - ls -alhF
 install:
   - skip #I'm using Yarn Zero-Installs
 script:
