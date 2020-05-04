@@ -4,7 +4,7 @@ node_js:
 
 before_install:
   - yarn policies set-version latest
-  - yarn policies set-version berry
+  - yarn set version berry
   - yarn set version latest
   - ls -alhF
   - yarn -v
