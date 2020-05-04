@@ -4,11 +4,12 @@ node_js:
 
 before_install:
   - yarn policies set-version berry
+  - cat .yarnrc
+  - cat .yarnrc.yml
   - yarn --version
   - yarn set version latest
-  - ls -alhF
-  - rm -f .yarnrc
-  - ls -alhF
+  - cat .yarnrc
+  - cat .yarnrc.yml
   - yarn --version
 install:
   - skip #I'm using Yarn Zero-Installs
