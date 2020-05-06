@@ -30,6 +30,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
     ],
     "fallbackPool": [
       [
+        "pnp-webpack-plugin",
+        "npm:1.6.4"
+      ],
+      [
         "webpack",
         "npm:4.43.0"
       ],
@@ -45,6 +49,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         [null, {
           "packageLocation": "./",
           "packageDependencies": [
+            ["pnp-webpack-plugin", "npm:1.6.4"],
             ["webpack", "npm:4.43.0"],
             ["webpack-cli", "virtual:34dd0e36160069c5c9d510de49816f66fc01bbd8c130c38147f28b0ef284720ddc623a2b4c8f674c9fa11d3c7beb6291f0668360a79d22e1cbc7402442b0a0e4#npm:3.3.11"]
           ],
@@ -3384,6 +3389,16 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
+      ["pnp-webpack-plugin", [
+        ["npm:1.6.4", {
+          "packageLocation": "./.yarn/cache/pnp-webpack-plugin-npm-1.6.4-c497046afc-3.zip/node_modules/pnp-webpack-plugin/",
+          "packageDependencies": [
+            ["pnp-webpack-plugin", "npm:1.6.4"],
+            ["ts-pnp", "virtual:c497046afcbefb679e3fe12575088ec12205b913a36c3d158b27e7cd646d448426540ab27ba98e54ddb75b1ed97de7e3ce5dc0158c9ba4e76ce942c87e5d02d8#npm:1.2.0"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
       ["posix-character-classes", [
         ["npm:0.1.1", {
           "packageLocation": "./.yarn/cache/posix-character-classes-npm-0.1.1-3e228a6e15-3.zip/node_modules/posix-character-classes/",
@@ -3920,6 +3935,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./",
           "packageDependencies": [
             ["slider89", "workspace:."],
+            ["pnp-webpack-plugin", "npm:1.6.4"],
             ["webpack", "npm:4.43.0"],
             ["webpack-cli", "virtual:34dd0e36160069c5c9d510de49816f66fc01bbd8c130c38147f28b0ef284720ddc623a2b4c8f674c9fa11d3c7beb6291f0668360a79d22e1cbc7402442b0a0e4#npm:3.3.11"]
           ],
@@ -4342,6 +4358,19 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["tough-cookie", "npm:2.5.0"],
             ["psl", "npm:1.8.0"],
             ["punycode", "npm:2.1.1"]
+          ],
+          "linkType": "HARD",
+        }]
+      ]],
+      ["ts-pnp", [
+        ["virtual:c497046afcbefb679e3fe12575088ec12205b913a36c3d158b27e7cd646d448426540ab27ba98e54ddb75b1ed97de7e3ce5dc0158c9ba4e76ce942c87e5d02d8#npm:1.2.0", {
+          "packageLocation": "./.yarn/$$virtual/ts-pnp-virtual-abd2827f29/0/cache/ts-pnp-npm-1.2.0-43620de7df-3.zip/node_modules/ts-pnp/",
+          "packageDependencies": [
+            ["ts-pnp", "virtual:c497046afcbefb679e3fe12575088ec12205b913a36c3d158b27e7cd646d448426540ab27ba98e54ddb75b1ed97de7e3ce5dc0158c9ba4e76ce942c87e5d02d8#npm:1.2.0"],
+            ["typescript", null]
+          ],
+          "packagePeers": [
+            "typescript"
           ],
           "linkType": "HARD",
         }]
