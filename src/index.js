@@ -28,26 +28,7 @@ export default function Slider89(target, config, replace) {
   const vals = {}; //holding every property of the class
 
   //Style rule strings which will be inserted into a newly created stylesheet
-  const styles = [
-    '.sl89-track {' +
-      'width: 200px;' + //216?
-      'height: 25px;' +
-      'background-color: hsl(0, 0%, 18%);' +
-    '}',
-    '.sl89-thumb {' +
-      'width: 16px;' +
-      'height: 100%;' +
-      'background-color: hsl(0, 0%, 28%);' +
-      'cursor: pointer;' +
-    '}',
-    '.sl89-noselect {' +
-      '-webkit-user-select: none;' +
-      '-moz-user-select: none;' +
-      '-ms-user-select: none;' +
-      'user-select: none;' +
-      'pointer-events: none' +
-    '}'
-  ];
+  const styles = require('./default-styles.css');
 
   const methods = {
     addEvent: {

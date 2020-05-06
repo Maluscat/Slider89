@@ -1,0 +1,18 @@
+.sl89-track {
+  width: 200px;
+  height: 25px;
+  background-color: hsl(0, 0%, 18%);
+}
+.sl89-thumb {
+  width: 16px;
+  height: 100%;
+  background-color: hsl(0, 0%, 28%);
+  cursor: pointer;
+}
+.sl89-noselect {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  pointer-events: none
+}
