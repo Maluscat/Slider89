@@ -548,7 +548,8 @@ export default function Slider89(target, config, replace) {
       },
       all: '[\\d\\D]',
       tabSpace: '[ \\t]+',
-      name: '[\\w-]+'
+      name: '[\\w-]+',
+      singleAmplfr: ':'
     };
     reg.capName = '(' + reg.name + ')';
     reg.glbMatch = '(?:' + reg.tabSpace + '(?:(?!<).)*?)?>';
@@ -564,8 +565,8 @@ export default function Slider89(target, config, replace) {
     const rgx = {
       general: reg.general.inner + '|' + reg.general.noEnd + '|' + reg.general.noBeginning,
       attributes: '\\s+(' + reg.attr.name + ')\\((' + reg.attr.value + ')\\)\\s*?',
-      singleTag: '<' + reg.base + '>',
-      multiTag: '<:' + reg.base + '>((?:'+reg.all+'(?!<:' + reg.capName + '(?:\\s+' + reg.name + ')*(?:\\s+"'+reg.all+'+?")*' + reg.attribs + '\\s*?>'+reg.all+'*?<\\/\\6\\s*>))*?)<\\/\\1\\s*>'
+      singleTag: '<' + reg.singleAmplfr + reg.base + '>',
+      multiTag: '<' + reg.base + '>((?:'+reg.all+'(?!<' + reg.capName + '(?:\\s+' + reg.name + ')*(?:\\s+"'+reg.all+'+?")*' + reg.attribs + '\\s*?>'+reg.all+'*?<\\/\\6\\s*>))*?)<\\/\\1\\s*>'
     };
     (function() {
       for (var expr in rgx) rgx[expr] = new RegExp(rgx[expr], 'g');
@@ -593,8 +594,8 @@ export default function Slider89(target, config, replace) {
         structure.replace(rgx.general, function(match, amplifier, name, content, name2, name3) {
           let nameObj = {};
           nameObj.name = name || name2 || name3;
-          if (amplifier == ':') nameObj.error = 'isWrapper';
-          else if (amplifier == '/') nameObj.error = 'isClosing';
+          if (amplifier == '/') nameObj.error = 'isClosing';
+          else if (!amplifier) nameObj.error = 'isOpen';
           else if (content != null) nameObj.error = 'emptyContent';
           else if (name2) nameObj.error = 'noEnd';
           else if (name3) nameObj.error = 'noBeginning';
@@ -610,10 +611,10 @@ export default function Slider89(target, config, replace) {
             info += '- "' + name.name + '" => ';
             switch (name.error) {
               case 'isClosing':
-                info += 'Closing tag finding no beginning (is the beginning marked with a ‘:’?)';
+                info += 'Closing tag finding no beginning';
                 break;
-              case 'isWrapper':
-                info += 'Opening tag finding no end';
+              case 'isOpen':
+                info += 'Opening tag finding no end (should it be a single tag marked with ‘:’?)';
                 break;
               case 'emptyContent':
                 info += 'Redundant empty text content (‘""’)';
@@ -667,7 +668,7 @@ export default function Slider89(target, config, replace) {
       if (i == null) i = 0;
       for (; i < childArr.length; i++) {
         const elem = node[childArr[i][2]];
-        if (childArr[i][1] == ':') {
+        if (childArr[i][1] === '') {
           i = appendElements(elem, childArr, i + 1);
         } else if (childArr[i][1] == '/') return i;
         parent.appendChild(elem);
