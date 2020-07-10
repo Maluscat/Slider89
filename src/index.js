@@ -632,7 +632,7 @@ export default function Slider89(target, config, replace) {
         } else info += 'Leftover structure:\n- "' + structure + '"\n';
         return info;
       })();
-      error((names.length > 1 ? 'several elements have' : 'an element has') + ' been declared wrongly and could not be parsed. ' + errorList, true, 'structure', true);
+      error((names.length > 1 ? 'several elements have' : 'an element has') + ' been declared wrongly and could not be parsed. ' + errorList, 'structure', true);
     }
 
     (function() {
