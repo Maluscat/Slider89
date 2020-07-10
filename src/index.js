@@ -559,7 +559,7 @@ export default function Slider89(target, config, replace) {
       noBeginning: '(?:^|' + reg.tabSpace + ')' + reg.capName + reg.glbMatch,
     };
     reg.content = '(?:\\s+"('+reg.all+'+?)")*';
-    reg.tag = '(?:\\s+' + reg.capName + ')*';
+    reg.tag = '(?:\\s+' + reg.capName + ')?';
     reg.attribs = '(?:\\s+' + reg.attr.name + '\\(' + reg.attr.value + '\\))*';
     reg.base = reg.capName + reg.tag + reg.content + '(' + reg.attribs + ')\\s*?';
     const rgx = {
