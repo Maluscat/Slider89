@@ -561,8 +561,8 @@ export default function Slider89(target, config, replace) {
       general: (function() {
         const parts = {
           inner: '<([:/]?)' + reg.capName + '(?:' + reg.tabSpace + reg.name + ')?(?:' + reg.tabSpace + '(""))?' + reg.glbMatch,
-          noEnd: '<:?' + reg.capName + '.*?',
-          noBeginning: '(?:^|' + reg.tabSpace + ')' + reg.capName + reg.glbMatch
+          noEnd: '<' + reg.singleAmplfr + '?' + reg.capName + '.*?',
+          noBeginning: '(?:^|' + reg.tabSpace + ')' + reg.singleAmplfr + '?' + reg.capName + reg.glbMatch
         };
         return parts.inner + '|' + parts.noEnd + '|' + parts.noBeginning;
       })(),
