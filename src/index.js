@@ -586,54 +586,32 @@ export default function Slider89(target, config, replace) {
 
     structure = parseSingleTags(structure, node.slider);
 
+    structure = structure.trim();
     if (/\S+/g.test(structure)) {
-      structure = structure.trim();
-      const names = new Array();
-      let leftover = false;
-      if (rgx.general.test(structure)) {
-        structure.replace(rgx.general, function(match, amplifier, name, content, name2, name3) {
-          let nameObj = {};
-          nameObj.name = name || name2 || name3;
-          if (amplifier == '/') nameObj.error = 'isClosing';
-          else if (!amplifier) nameObj.error = 'isOpen';
-          else if (content != null) nameObj.error = 'emptyContent';
-          else if (name2) nameObj.error = 'noEnd';
-          else if (name3) nameObj.error = 'noBeginning';
-          names.push(nameObj);
-        });
-      } else leftover = true;
-
-      const errorList = (function() {
-        let info = '';
-        if (!leftover) {
-          info = 'Found errors:\n';
-          names.forEach(function(name) {
-            info += '- "' + name.name + '" => ';
-            switch (name.error) {
-              case 'isClosing':
-                info += 'Closing tag finding no beginning';
-                break;
-              case 'isOpen':
-                info += 'Opening tag finding no end (should it be a single tag marked with ‘:’?)';
-                break;
-              case 'emptyContent':
-                info += 'Redundant empty text content (‘""’)';
-                break;
-              case 'noEnd':
-                info += 'Missing ending character (‘>’)';
-                break;
-              case 'noBeginning':
-                info += 'Missing beginning character (‘<’)';
-                break;
-              default:
-                info += 'Unidentified error. Please check the element for syntax errors';
-            }
-            info += '.\n';
+      const errorList = new Array();
+      (function() {
+        if (rgx.general.test(structure)) {
+          structure.replace(rgx.general, function(match, amplifier, name, content, name2, name3) {
+            let info = '- "' + (name || name2 || name3) + '" => ';
+            if (amplifier == '/')
+              info += 'Closing tag finding no beginning';
+            else if (amplifier === '')
+              info += 'Opening tag finding no end (should it be a single tag marked with ‘:’?)';
+            else if (content != null)
+              info += 'Redundant empty text content (‘""’)';
+            else if (name2)
+              info += 'Missing ending character (‘>’)';
+            else if (name3)
+              info += 'Missing beginning character (‘<’)';
+            else
+              info += 'Unidentified error. Please check the element for syntax errors';
+            errorList.push(info);
           });
-        } else info += 'Leftover structure:\n- "' + structure + '"\n';
-        return info;
-      })();
-      error((names.length > 1 ? 'several elements have' : 'an element has') + ' been declared wrongly and could not be parsed. ' + errorList, 'structure', true);
+        } else {
+          errorList.push('Leftover unparsable structure:\n- "' + structure + '"\n');
+        }
+      }());
+      error((errorList.length > 1 ? 'several elements have' : 'an element has') + ' been declared wrongly and could not be parsed.\n' + errorList.join('.\n'), 'structure', true);
     }
 
     (function() {
