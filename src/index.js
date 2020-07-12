@@ -553,17 +553,19 @@ export default function Slider89(target, config, replace) {
     };
     reg.capName = '(' + reg.name + ')';
     reg.glbMatch = '(?:' + reg.tabSpace + '(?:(?!<).)*?)?>';
-    reg.general = {
-      inner: '<([:/]?)' + reg.capName + '(?:' + reg.tabSpace + reg.name + ')?(?:' + reg.tabSpace + '(""))?' + reg.glbMatch,
-      noEnd: '<' + reg.capName + '.*?',
-      noBeginning: '(?:^|' + reg.tabSpace + ')' + reg.capName + reg.glbMatch,
-    };
     reg.content = '(?:\\s+"('+reg.all+'+?)")*';
     reg.tag = '(?:\\s+' + reg.capName + ')?';
     reg.attribs = '(?:\\s+' + reg.attr.name + '\\(' + reg.attr.value + '\\))*';
     reg.base = reg.capName + reg.tag + reg.content + '(' + reg.attribs + ')\\s*?';
     const rgx = {
-      general: reg.general.inner + '|' + reg.general.noEnd + '|' + reg.general.noBeginning,
+      general: (function() {
+        const parts = {
+          inner: '<([:/]?)' + reg.capName + '(?:' + reg.tabSpace + reg.name + ')?(?:' + reg.tabSpace + '(""))?' + reg.glbMatch,
+          noEnd: '<' + reg.capName + '.*?',
+          noBeginning: '(?:^|' + reg.tabSpace + ')' + reg.capName + reg.glbMatch
+        };
+        return parts.inner + '|' + parts.noEnd + '|' + parts.noBeginning;
+      })(),
       attributes: '\\s+(' + reg.attr.name + ')\\((' + reg.attr.value + ')\\)\\s*?',
       singleTag: '<' + reg.singleAmplfr + reg.base + '>',
       multiTag: '<' + reg.base + '>((?:'+reg.all+'(?!<' + reg.capName + '(?:\\s+' + reg.name + ')*(?:\\s+"'+reg.all+'+?")*' + reg.attribs + '\\s*?>'+reg.all+'*?<\\/\\6\\s*>))*?)<\\/\\1\\s*>'
