@@ -541,6 +541,8 @@ export default function Slider89(target, config, replace) {
       });
     })();
 
+    const variables = {};
+
     const reg = {
       attr: {
         name: '[\\w-]+',
@@ -566,6 +568,7 @@ export default function Slider89(target, config, replace) {
         };
         return parts.inner + '|' + parts.noEnd + '|' + parts.noBeginning;
       })(),
+      variable: '\\$(\\w+)',
       attributes: '\\s+(' + reg.attr.name + ')\\((' + reg.attr.value + ')\\)\\s*?',
       singleTag: '<' + reg.singleAmplfr + reg.base + '>',
       multiTag: '<' + reg.base + '>((?:'+reg.all+'(?!<' + reg.capName + '(?:\\s+' + reg.name + ')*(?:\\s+"'+reg.all+'+?")*' + reg.attribs + '\\s*?>'+reg.all+'*?<\\/\\6\\s*>))*?)<\\/\\1\\s*>'
@@ -578,9 +581,8 @@ export default function Slider89(target, config, replace) {
 
     while (rgx.multiTag.test(structure)) {
       structure = structure.replace(rgx.multiTag, function(match, name, tag, inner, attributes, content) {
-        const elem = assembleElement(name, tag, attributes);
+        const elem = assembleElement(name, tag, attributes, inner);
         content = parseSingleTags(content, elem);
-        if (inner) elem.textContent = inner;
         node[name] = elem;
         return content;
       });
@@ -642,6 +644,50 @@ export default function Slider89(target, config, replace) {
       }
     })();
 
+    //Registering `vals` setters for structure variables
+    (function() {
+      if (Object.keys(variables).length != 0) {
+        const altVals = {};
+        //It's not enumerable this way
+        Object.defineProperty(vals, '_', {
+          value: altVals //doesn't need to be writable
+        });
+
+        for (var property in variables) {
+          let prop = property;
+          Object.defineProperty(altVals, prop, {
+            value: vals[prop],
+            writable: true
+          });
+          Object.defineProperty(vals, prop, {
+            get: function() {
+              return altVals[prop];
+            },
+            set: function(val) {
+              altVals[prop] = val;
+              updateVariable(prop);
+            }
+          });
+
+          updateVariable(prop);
+        }
+
+        function updateVariable(prop, value) {
+          for (var i in variables[prop]) {
+            const item = variables[prop][i];
+            let str = item.str.replace(rgx.variable, function(match, varName) {
+              return altVals[varName];
+            });
+            if (item.attr) {
+              item.node.setAttribute(item.attr, str);
+            } else {
+              item.node.textContent = str;
+            }
+          }
+        }
+      }
+    }());
+
     return node;
 
     function appendElements(parent, childArr, i) {
@@ -669,13 +715,17 @@ export default function Slider89(target, config, replace) {
       }
       let elem = document.createElement(tag || 'div');
       const hasAttribs = !!attribs[name];
-      if (content) elem.textContent = content;
+      if (content) {
+        elem.textContent = content;
+        registerVariables(content, elem, false);
+      }
       if (attributes) {
         attributes.replace(rgx.attributes, function(attrib, attribName, value) {
-          //Tailored for space-separated values (check for duplicates in value vs. default structue style)
+          //Tailored for space-separated values (check for duplicates in value vs. default structure style)
           if (hasAttribs && attribs[name][attribName] && value.split(' ').indexOf(attribs[name][attribName]) == -1) {
             value += ' ' + attribs[name][attribName];
           }
+          registerVariables(value, elem, attribName);
           elem.setAttribute(attribName, value || '');
         });
       }
@@ -685,6 +735,20 @@ export default function Slider89(target, config, replace) {
         }
       }
       return elem;
+    }
+
+    function registerVariables(str, node, attribName) {
+      if (rgx.variable.test(str)) {
+        str.replace(rgx.variable, function(match, varName) {
+          if (variables[varName] == null) variables[varName] = new Array();
+          const obj = {
+            str: str,
+            node: node
+          };
+          if (attribName) obj.attr = attribName;
+          variables[varName].push(obj);
+        });
+      }
     }
   }
 
