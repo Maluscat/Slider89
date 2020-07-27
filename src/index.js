@@ -176,7 +176,7 @@ export default function Slider89(target, config, replace) {
     },
     node: {
       default: {},
-      noSet: true
+      static: true
     },
     classList: {
       default: false,
@@ -238,7 +238,7 @@ export default function Slider89(target, config, replace) {
       //and a new call of defineProperty (when creating a new instance) will throw an error for defining the same property twice
       Object.defineProperty(that, item, {
         set: function(val) {
-          if (!obj.noSet) {
+          if (!obj.static) {
             if (!obj.initial || initial) {
               checkProp(item, val);
               if (obj.preSetter) (obj.preSetter)(val);
@@ -256,7 +256,7 @@ export default function Slider89(target, config, replace) {
         that[item] = config[item];
       } else {
         const def = obj.default;
-        (obj.noSet ? vals : that)[item] = typeof def == 'function' ? def() : def;
+        vals[item] = typeof def == 'function' ? def() : def;
       }
     }
 
@@ -445,7 +445,7 @@ export default function Slider89(target, config, replace) {
     if (vals.value !== val) {
       vals.value = val;
 
-      if (events) invokeEvent(events); //TODO--------------------------------------
+      if (events) invokeEvent(events); //TODO --------------------------------------
     }
   }
 
