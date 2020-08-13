@@ -228,22 +228,23 @@ export default function Slider89(target, config, replace) {
   (function() {
     initial = true;
 
-    for (var prop in properties) {
-      const item = prop;
-      const obj = properties[item];
+    for (var _ in properties) {
+      const item = _;
+      const prop = properties[item];
 
-      //Calling Object.defineProperty on the `this` of the class function is nowhere documented
-      //but it is necessary to be able to create multiple instances of the same class
-      //as {Class}.prototype will inherit the defined property to all instances
-      //and a new call of defineProperty (when creating a new instance) will throw an error for defining the same property twice
+      /*
+        Calling Object.defineProperty on the class instance (`this`) is necessary to be able to create multiple instances
+        as Class.prototype as target will inherit the defined property to all instances
+        and a new call of defineProperty (when creating a new instance) would throw an error for defining the same property twice
+      */
       Object.defineProperty(that, item, {
         set: function(val) {
-          if (!obj.static) {
-            if (!obj.initial || initial) {
+          if (!prop.static) {
+            if (!prop.initial || initial) {
               checkProp(item, val);
-              if (obj.preSetter) (obj.preSetter)(val);
+              if (prop.preSetter) (prop.preSetter)(val);
               vals[item] = val;
-              if (!initial && obj.postSetter) (obj.postSetter)(val);
+              if (!initial && prop.postSetter) (prop.postSetter)(val);
             } else error('property ‘' + item + '’ may only be set at init time but it was just set with the value ‘' + val + '’');
           } else error('property ‘' + item + '’ may only be read from but it was just set with the value ‘' + val + '’');
         },
@@ -252,21 +253,32 @@ export default function Slider89(target, config, replace) {
         }
       });
 
-      if (config[item] !== undefined) {
+      if (item in config) {
         that[item] = config[item];
+        delete config[item];
       } else {
-        const def = obj.default;
+        const def = prop.default;
         vals[item] = typeof def == 'function' ? def() : def;
       }
     }
 
-    for (var method in methods) {
-      const item = method;
-      const obj = methods[item];
+    for (var _ in config) {
+      const item = _;
+
+      if (item[0] == '_') {
+        that[item] = config[item];
+      } else {
+        error('‘' + item + '’ is not a valid property name. Check its spelling or prefix it with an underscore to use it as custom property (‘_' + item + '’)');
+      }
+    }
+
+    for (var _ in methods) {
+      const item = _;
+      const method = methods[item];
       Slider89.prototype[item] = function() {
-        const args = Array.prototype.slice.call(arguments, 0, obj.args.length);
+        const args = Array.prototype.slice.call(arguments, 0, method.args.length);
         checkMethod(item, args);
-        return obj.function.apply(this, args);
+        return method.function.apply(this, args);
       }
     }
 
@@ -644,39 +656,50 @@ export default function Slider89(target, config, replace) {
       }
     })();
 
-    //Registering `vals` setters for structure variables
     (function() {
       if (Object.keys(variables).length != 0) {
-        const altVals = {};
-        //It's not enumerable this way
-        Object.defineProperty(vals, '_', {
-          value: altVals //doesn't need to be writable
-        });
+        for (var _ in variables) {
+          const prop = _;
 
-        for (var property in variables) {
-          let prop = property;
-          Object.defineProperty(altVals, prop, {
-            value: vals[prop],
+          let target, endpoint;
+          if (Object.prototype.hasOwnProperty.call(properties, prop)) {
+            //Redefining internal properties used as structure variables as getter/setter and moving their endpoint to `vals.$`
+            if (!vals.$) {
+              //Object.defineProperty needed for non-enumerability
+              Object.defineProperty(vals, '$', {
+                value: {}
+              });
+            }
+            target = vals;
+            endpoint = vals.$;
+          } else {
+            //Registering a getter/setter on `this` for structure variables not defined by the class
+            target = that;
+            endpoint = vals;
+          }
+          Object.defineProperty(endpoint, prop, {
+            value: target[prop],
             writable: true
           });
-          Object.defineProperty(vals, prop, {
+          Object.defineProperty(target, prop, {
             get: function() {
-              return altVals[prop];
+              return endpoint[prop];
             },
             set: function(val) {
-              altVals[prop] = val;
+              endpoint[prop] = val;
               updateVariable(prop);
-            }
+            },
+            enumerable: true
           });
 
           updateVariable(prop);
         }
 
-        function updateVariable(prop, value) {
+        function updateVariable(prop) {
           for (var i in variables[prop]) {
             const item = variables[prop][i];
             let str = item.str.replace(rgx.variable, function(match, varName) {
-              return altVals[varName];
+              return vals[varName];
             });
             if (item.attr) {
               item.node.setAttribute(item.attr, str);
@@ -741,12 +764,12 @@ export default function Slider89(target, config, replace) {
       if (rgx.variable.test(str)) {
         str.replace(rgx.variable, function(match, varName) {
           if (variables[varName] == null) variables[varName] = new Array();
-          const obj = {
+          const item = {
             str: str,
             node: node
           };
-          if (attribName) obj.attr = attribName;
-          variables[varName].push(obj);
+          if (attribName) item.attr = attribName;
+          variables[varName].push(item);
         });
       }
     }
