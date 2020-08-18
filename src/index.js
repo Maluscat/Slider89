@@ -840,7 +840,7 @@ export default function Slider89(target, config, replace) {
         type == 'true' && val === true ||
         type == 'false' && val === false ||
         type == 'array' && Array.isArray(val) ||
-        type == 'object' && typeof val == 'object' && !Array.isArray(val) && val !== null ||
+        type == 'object' && Object.prototype.toString.call(val) == '[object Object]' ||
         type == 'number' && typeof val == 'number' && !polyIsNaN(val) ||
         type == 'function' && typeof val == 'function' ||
         type == 'string' && typeof val == 'string'
