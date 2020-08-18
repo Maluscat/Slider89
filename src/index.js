@@ -137,6 +137,15 @@ export default function Slider89(target, config, replace) {
           'int'
         ]
       }],
+      preSetter: function(val) {
+        if (val !== false) {
+          for (var i = 0; i < vals.range.length; i++) {
+            if (Number(vals.range[i].toFixed(val)) !== vals.range[i]) {
+              propError('range', 'the given range ' + ['start', 'end'][i] + ' of `' + vals.range[i] + '` exceeds the currently set precision of ' + val);
+            }
+          }
+        }
+      },
       postSetter: function() {
         computeValue();
       }
