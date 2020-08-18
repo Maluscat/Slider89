@@ -129,14 +129,17 @@ export default function Slider89(target, config, replace) {
       postSetter: translateThumb
     },
     precision: {
-      default: 0,
-      structure: [{
-        type: 'number',
-        conditions: [
-          ['>=', 0],
-          'int'
-        ]
-      }],
+      default: false,
+      structure: [
+        {
+          type: 'number',
+          conditions: [
+            ['>=', 0],
+            'int'
+          ]
+        },
+        { type: 'false' }
+      ],
       preSetter: function(val) {
         if (val !== false) {
           for (var i = 0; i < vals.range.length; i++) {
@@ -462,7 +465,7 @@ export default function Slider89(target, config, replace) {
     thumb.style.transform = 'translateX(' + distance + 'px)';
 
     let val = distance / absWidth * (vals.range[1] - vals.range[0]) + vals.range[0];
-    val = Number(val.toFixed(vals.precision));
+    if (vals.precision !== false) val = Number(val.toFixed(vals.precision));
     if (vals.value !== val) {
       vals.value = val;
 
