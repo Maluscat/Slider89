@@ -569,14 +569,14 @@ export default function Slider89(target, config, replace) {
 
     const reg = {
       attr: {
-        name: '[\\w-]+',
-        value: '[^()]*?'
+        name: '[\\w-]+'
       },
       all: '[\\d\\D]',
       tabSpace: '[ \\t]+',
       name: '[\\w-]+',
       singleAmplfr: ':'
     };
+    reg.attr.value = reg.all + '*?';
     reg.capName = '(' + reg.name + ')';
     reg.glbMatch = '(?:' + reg.tabSpace + '(?:(?!<).)*?)?>';
     reg.content = '(?:\\s+"('+reg.all+'+?)")?';
@@ -593,9 +593,9 @@ export default function Slider89(target, config, replace) {
         return parts.inner + '|' + parts.noEnd + '|' + parts.noBeginning;
       })(),
       variable: '\\$(\\w+)',
-      attributes: '\\s+(' + reg.attr.name + ')\\((' + reg.attr.value + ')\\)\\s*?',
+      attributes: '(' + reg.attr.name + ')\\((' + reg.attr.value + ')\\)(?:\\s+|$)',
       singleTag: '<' + reg.singleAmplfr + reg.base + '>',
-      multiTag: '<' + reg.base + '>((?:'+reg.all+'(?!<' + reg.capName + '(?:\\s+' + reg.name + ')*(?:\\s+"'+reg.all+'+?")*' + reg.attribs + '\\s*?>'+reg.all+'*?<\\/\\6\\s*>))*?)<\\/\\1\\s*>'
+      multiTag: '<' + reg.base + '>((?:'+reg.all+'(?!<' + reg.capName + '(?:\\s+' + reg.name + ')?(?:\\s+"'+reg.all+'+?")?' + reg.attribs + '\\s*?>'+reg.all+'*?<\\/\\6\\s*>))*?)<\\/\\1\\s*>'
     };
     (function() {
       for (var expr in rgx) rgx[expr] = new RegExp(rgx[expr], 'g');
