@@ -750,9 +750,8 @@ export default function Slider89(target, config, replace) {
       }
       let elem = document.createElement(tag || 'div');
       const hasAttribs = !!attribs[name];
-      if (content) {
+      if (content && !registerVariables(content, elem, false)) {
         elem.textContent = content;
-        registerVariables(content, elem, false);
       }
       if (attributes) {
         attributes.replace(rgx.attributes, function(attrib, attribName, value) {
@@ -760,8 +759,9 @@ export default function Slider89(target, config, replace) {
           if (hasAttribs && attribs[name][attribName] && value.split(' ').indexOf(attribs[name][attribName]) == -1) {
             value += ' ' + attribs[name][attribName];
           }
-          registerVariables(value, elem, attribName);
-          elem.setAttribute(attribName, value || '');
+          if (!registerVariables(value, elem, attribName)) {
+            elem.setAttribute(attribName, value || '');
+          }
         });
       }
       if (hasAttribs) {
@@ -783,6 +783,8 @@ export default function Slider89(target, config, replace) {
           if (attribName) item.attr = attribName;
           variables[varName].push(item);
         });
+        //To prevent an unnecessary attrib/content set during element building (variables are set separately afterwards)
+        return true;
       }
     }
   }
