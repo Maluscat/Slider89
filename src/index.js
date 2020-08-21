@@ -592,7 +592,7 @@ export default function Slider89(target, config, replace) {
         };
         return parts.inner + '|' + parts.noEnd + '|' + parts.noBeginning;
       })(),
-      variable: '\\$(\\w+)',
+      variable: '\\{\\$(\\w+)\\}|\\$(\\w+)',
       attributes: '(' + reg.attr.name + ')\\((' + reg.attr.value + ')\\)(?:\\s+|$)',
       singleTag: '<' + reg.singleAmplfr + reg.base + '>',
       multiTag: '<' + reg.base + '>((?:'+reg.all+'(?!<' + reg.capName + '(?:\\s+' + reg.name + ')?(?:\\s+"'+reg.all+'+?")?' + reg.attribs + '\\s*?>'+reg.all+'*?<\\/\\6\\s*>))*?)<\\/\\1\\s*>'
@@ -710,8 +710,8 @@ export default function Slider89(target, config, replace) {
         function updateVariable(prop) {
           for (var i in variables[prop]) {
             const item = variables[prop][i];
-            let str = item.str.replace(rgx.variable, function(match, varName) {
-              return vals[varName];
+            const str = item.str.replace(rgx.variable, function(match, variableDelimit, variable) {
+              return vals[variableDelimit || variable];
             });
             if (item.attr) {
               item.node.setAttribute(item.attr, str);
@@ -774,7 +774,8 @@ export default function Slider89(target, config, replace) {
 
     function registerVariables(str, node, attribName) {
       if (rgx.variable.test(str)) {
-        str.replace(rgx.variable, function(match, varName) {
+        str.replace(rgx.variable, function(match, variableDelimit, variable) {
+          const varName = variableDelimit || variable;
           if (variables[varName] == null) variables[varName] = new Array();
           const item = {
             str: str,
