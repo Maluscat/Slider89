@@ -872,33 +872,33 @@ export default function Slider89(target, config, replace) {
           if (Array.isArray(cond)) {
             switch (cond[0]) {
               case 'length':
-              if (val.length !== cond[1]) {
-                return (type == 'array' ? 'an ' : 'a ') + type + ' of length ' + val.length;
-              }
-              break;
+                if (val.length !== cond[1]) {
+                  return (type == 'array' ? 'an ' : 'a ') + type + ' of length ' + val.length;
+                }
+                break;
               case '>=':
-              if (val < cond[1]) {
-                return (cond[1] == 0 ? 'a negative number' : 'a number below ' + cond[1]);
-              }
-              break;
+                if (val < cond[1]) {
+                  return (cond[1] == 0 ? 'a negative number' : 'a number below ' + cond[1]);
+                }
+                break;
             }
           } else {
             switch (cond) {
               case 'int':
-              if (val % 1 !== 0) {
-                return 'a floating point number';
-              }
-              break;
+                if (val % 1 !== 0) {
+                  return 'a floating point number';
+                }
+                break;
               case 'not empty':
-              if (val.trim() === '') {
-                return 'an empty string';
-              }
-              break;
+                if (val.trim() === '') {
+                  return 'an empty string';
+                }
+                break;
               case 'not number':
-              if (!polyIsNaN(Number(val))) {
-                return 'a pure number string';
-              }
-              break;
+                if (!polyIsNaN(Number(val))) {
+                  return 'a pure number string';
+                }
+                break;
             }
           }
         }
