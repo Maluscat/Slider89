@@ -832,7 +832,7 @@ export default function Slider89(target, config, replace) {
   }
 
   function checkTypes(val, structure, plural) {
-    let msg = false;
+    let msg;
     for (var i = 0; i < structure.length; i++) {
       const typeObj = structure[i];
       const type = typeObj.type;
@@ -848,17 +848,17 @@ export default function Slider89(target, config, replace) {
       ) {
         if (type == 'array') {
           for (var n = 0; n < val.length; n++) {
-            checkTypes(val[n], typeObj.structure, true);
+            msg = checkTypes(val[n], typeObj.structure, true);
           }
         } else if (type == 'object') {
           for (var key in val) {
-            checkTypes(val[key], typeObj.structure, true);
+            msg = checkTypes(val[key], typeObj.structure, true);
           }
         }
-        msg = checkConditions(typeObj, val);
-        if (msg === false) return false;
-        else break;
-      }
+        if (msg) return msg;
+        if (msg = checkConditions(typeObj, val)) break;
+        else return false;
+      } else break;
     }
     return msg ? ' is ' + msg : (plural ? 's values are ' : ' is ') + typeMsg(val, true);
 
