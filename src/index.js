@@ -236,10 +236,9 @@ export default function Slider89(target, config, replace) {
     }
   };
 
+  initial = true;
   //Initializing properties and methods
   (function() {
-    initial = true;
-
     for (var _ in properties) {
       const item = _;
       const prop = properties[item];
@@ -293,8 +292,6 @@ export default function Slider89(target, config, replace) {
         return method.function.apply(this, args);
       }
     }
-
-    initial = false;
   })();
 
   //Building the slider element
@@ -326,7 +323,7 @@ export default function Slider89(target, config, replace) {
         const msg =
           "the given object contains items which aren't nodes of this slider:" + enlistItems(errNodes) +
           "Following nodes are part of this slider's node pool:" + enlistItems(Object.keys(node))
-        error(msg, 'classList', true);
+        propError('classList', msg);
       }
     }
 
@@ -349,6 +346,8 @@ export default function Slider89(target, config, replace) {
   (function() {
     computeValue();
   })();
+
+  initial = false;
 
 
   // ------ Class methods ------
@@ -639,7 +638,7 @@ export default function Slider89(target, config, replace) {
           errorList.push('Leftover unparsable structure:\n- "' + structure + '"\n');
         }
       }());
-      error((errorList.length > 1 ? 'several elements have' : 'an element has') + ' been declared wrongly and could not be parsed.\n' + errorList.join('.\n'), 'structure', true);
+      propError('structure', (errorList.length > 1 ? 'several elements have' : 'an element has') + ' been declared wrongly and could not be parsed.\n' + errorList.join('.\n'));
     }
 
     (function() {
@@ -746,7 +745,7 @@ export default function Slider89(target, config, replace) {
 
     function assembleElement(name, tag, attributes, content) {
       if (node[name]) {
-        error('Every element must have a unique name but there are mutiple elements called ‘' + name + '’', true, 'structure');
+        propError('structure', 'Every element must have a unique name but there are mutiple elements called ‘' + name + '’');
       }
       let elem = document.createElement(tag || 'div');
       const hasAttribs = !!attribs[name];
@@ -791,10 +790,6 @@ export default function Slider89(target, config, replace) {
   }
 
   //-> Methods & properties
-  function propTypeError(prop, msg) {
-    msg = 'property ‘' + prop + '’ must be ' + computeTypeMsg(properties[prop].structure, properties[prop].shape) + ' but it' + msg;
-    propError(prop, msg, true);
-  }
   function propError(prop, msg, noTarget) {
     if (!initial) {
       let prevVal = vals[prop];
@@ -829,8 +824,11 @@ export default function Slider89(target, config, replace) {
     }
   }
   function checkProp(prop, val) {
-    const msg = checkTypes(val, properties[prop].structure, false);
-    if (msg) propTypeError(prop, msg);
+    const item = properties[prop];
+    const msg = checkTypes(val, item.structure, false);
+    if (msg) {
+      propError(prop, 'property ‘' + prop + '’ must be ' + computeTypeMsg(item.structure, item.shape) + ' but it' + msg, true);
+    }
   }
 
   function checkTypes(val, structure, plural) {
