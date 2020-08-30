@@ -165,7 +165,7 @@ export default function Slider89(target, config, replace) {
         { type: 'false' }
       ],
       preSetter: function(val) {
-        if (val !== false && Number(val.toFixed(vals.precision)) !== val) {
+        if (vals.precision !== false && val !== false && Number(val.toFixed(vals.precision)) !== val) {
           propError('step', 'the given value of ' + val + ' exceeds the currently set precision of ' + vals.precision);
         }
       },
