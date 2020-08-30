@@ -51,10 +51,10 @@ export default function Slider89(target, config, replace) {
           optional: true,
           structure: [{
             type: 'string',
-            conditions: [
-              'not empty',
-              'not number'
-            ]
+            conditions: {
+              filled: true,
+              wordChar: true
+            }
           }]
         }
       ]
@@ -67,17 +67,17 @@ export default function Slider89(target, config, replace) {
           structure: [
             {
               type: 'number',
-              conditions: [
-                ['>=', 0],
-                'int'
-              ]
+              conditions: {
+                nonnegative: true,
+                integer: true
+              }
             },
             {
               type: 'string',
-              conditions: [
-                'not empty',
-                'not number'
-              ]
+              conditions: {
+                filled: true,
+                wordChar: true
+              }
             }
           ]
         }
@@ -91,9 +91,9 @@ export default function Slider89(target, config, replace) {
       structure: [
         {
           type: 'array',
-          conditions: [
-            ['length', 2]
-          ],
+          conditions: {
+            length: 2
+          },
           structure: [
             { type: 'number' }
           ]
@@ -133,10 +133,10 @@ export default function Slider89(target, config, replace) {
       structure: [
         {
           type: 'number',
-          conditions: [
-            ['>=', 0],
-            'int'
-          ]
+          conditions: {
+            nonnegative: true,
+            integer: true
+          }
         },
         { type: 'false' }
       ],
@@ -158,9 +158,9 @@ export default function Slider89(target, config, replace) {
       structure: [
         {
           type: 'number',
-          conditions: [
-            ['>=', 0]
-          ]
+          conditions: {
+            nonnegative: true
+          }
         },
         { type: 'false' }
       ],
@@ -178,9 +178,9 @@ export default function Slider89(target, config, replace) {
       structure: [
         {
           type: 'string',
-          conditions: [
-            'not empty'
-          ]
+          conditions: {
+            filled: true
+          }
         },
         { type: 'false' }
       ],
@@ -228,8 +228,8 @@ export default function Slider89(target, config, replace) {
         });
         if (errTypes.length > 0) {
           const msg =
-            'the given object contains items which are no valid event types:' + enlistItems(errTypes) +
-            'Available event types are:' + enlistItems(eventTypes);
+            'the given object contains items which are no valid event types:' + enlistArray(errTypes) +
+            'Available event types are:' + enlistArray(eventTypes);
           propError('events', msg);
         }
       }
@@ -321,8 +321,8 @@ export default function Slider89(target, config, replace) {
       });
       if (errNodes.length > 0) {
         const msg =
-          "the given object contains items which aren't nodes of this slider:" + enlistItems(errNodes) +
-          "Following nodes are part of this slider's node pool:" + enlistItems(Object.keys(node))
+          "the given object contains items which aren't nodes of this slider:" + enlistArray(errNodes) +
+          "Following nodes are part of this slider's node pool:" + enlistArray(Object.keys(node))
         propError('classList', msg);
       }
     }
@@ -356,7 +356,7 @@ export default function Slider89(target, config, replace) {
       for (var i = 0; i < eventTypes.length; i++) {
         if (type == eventTypes[i]) return;
       }
-      error('the specified type ‘' + type + '’ is not a valid event type. Available types are:' + enlistItems(eventTypes), 'addEvent');
+      error('the specified type ‘' + type + '’ is not a valid event type. Available types are:' + enlistArray(eventTypes), 'addEvent');
     })();
     if (!Array.isArray(vals.events[type])) vals.events[type] = new Array();
     vals.events[type].push(fn);
@@ -395,28 +395,31 @@ export default function Slider89(target, config, replace) {
     throw new Error(msg);
   }
   function typeMsg(variable, noIntro) {
-    let type = noIntro ? '' : 'but it is ';
-    if (Array.isArray(variable)) type += 'an array';
-    else if (polyIsNaN(variable)) type += 'NaN';
-    else if (variable === null) type += 'null';
-    else if (typeof variable == 'boolean') type += variable;
-    else type += 'of type ' + typeof variable;
+    let msg = noIntro ? '' : 'but it is ';
+    if (Array.isArray(variable))
+      msg += 'an array';
+    else if (polyIsNaN(variable))
+      msg += 'NaN';
+    else if (variable === null)
+      msg += 'null';
+    else if (typeof variable == 'boolean')
+      msg += variable;
+    else
+      msg += 'of type ' + typeof variable;
 
-    return type;
+    return msg;
   }
-  function enlistItems(arr) {
+  function enlistArray(arr) {
     return '\n - "' + arr.join('"\n - "') + '"\n';
   }
-  function checkArrayObject(val, reference, fn) {
+  function checkArrayObject(target, reference, loopFn) {
     const errItems = new Array();
-    for (var key in val) {
-      const item = val[key];
-      //If an item with index > 0 is errored, the loop will still have executed before it was reached
-      //For now, this function is only used to throw on error, but it's something to keep in mind
-      if ((Array.isArray(reference) ? !has(reference, key) : !reference[key])) errItems.push(key);
+    for (var key in target) {
+      const item = target[key];
+      if ((Array.isArray(reference) ? reference.indexOf(key) == -1 : !reference[key])) errItems.push(key);
       else if (errItems.length == 0)
         for (var i = 0; i < item.length; i++)
-          fn(item[i], i, item, key, val);
+          loopFn(item[i], i, item, key, target);
     }
     return errItems;
   }
@@ -424,17 +427,6 @@ export default function Slider89(target, config, replace) {
   //MDN Polyfill @ Number.isNaN
   function polyIsNaN(val) {
     return Number.isNaN && Number.isNaN(val) || !Number.isNaN && typeof val === 'number' && val !== val;
-  }
-  //Extended {Array, String}.prototype.includes() polyfill
-  function has(array, val, loop) {
-    if (!Array.isArray(array)) return false;
-    if (loop) {
-      for (var i = 0; i < array.length; i++) {
-        if (array[i].indexOf(val) != -1) {
-          return array[i];
-        }
-      }
-    } else return array.indexOf(val) != -1;
   }
 
   function getTranslate(node) {
@@ -856,52 +848,30 @@ export default function Slider89(target, config, replace) {
           }
         }
         if (msg) return msg;
-        if (msg = checkConditions(typeObj, val)) break;
+        if (msg = checkConditions(typeObj.conditions, val)) break;
         else return false;
-      } else break;
+      }
     }
     return msg ? ' is ' + msg : (plural ? 's values are ' : ' is ') + typeMsg(val, true);
 
-    function checkConditions(typeObj, val) {
-      if (typeObj.conditions) {
-        const type = typeObj.type;
-        for (var i = 0; i < typeObj.conditions.length; i++) {
-          const cond = typeObj.conditions[i];
-          if (Array.isArray(cond)) {
-            switch (cond[0]) {
-              case 'length':
-                if (val.length !== cond[1]) {
-                  return (type == 'array' ? 'an ' : 'a ') + type + ' of length ' + val.length;
-                }
-                break;
-              case '>=':
-                if (val < cond[1]) {
-                  return (cond[1] == 0 ? 'a negative number' : 'a number below ' + cond[1]);
-                }
-                break;
-            }
-          } else {
-            switch (cond) {
-              case 'int':
-                if (val % 1 !== 0) {
-                  return 'a floating point number';
-                }
-                break;
-              case 'not empty':
-                if (val.trim() === '') {
-                  return 'an empty string';
-                }
-                break;
-              case 'not number':
-                if (!polyIsNaN(Number(val))) {
-                  return 'a pure number string';
-                }
-                break;
-            }
-          }
+    function checkConditions(conditions, val) {
+      if (conditions) {
+        if (conditions.nonnegative && val < 0) {
+          return 'a negative number';
+        }
+        if (conditions.integer && val % 1 !== 0) {
+          return 'a floating point number';
+        }
+        if (conditions.filled && val.trim() === '') {
+          return 'an empty string';
+        }
+        if (conditions.wordChar && !polyIsNaN(Number(val))) {
+          return 'a pure number string';
+        }
+        if (conditions.length && val.length !== conditions.length) {
+          return (type == 'array' ? 'an ' : 'a ') + type + ' of length ' + val.length;
         }
       }
-      return false;
     }
   }
 
@@ -910,45 +880,41 @@ export default function Slider89(target, config, replace) {
     let msg = '';
     for (var i = 0; i < struct.length; i++) {
       const type = struct[i].type;
-      const conditions = struct[i].conditions;
+      const cond = struct[i].conditions;
       if (msg) msg += ' or ';
 
       if (type == 'number') {
-        const limit = has(conditions, '>=', true);
-        const hasInt = has(conditions, 'int');
-        if (limit && limit[1] === 0) {
+        const nonnegative = cond && cond.nonnegative;
+        const isInt = cond && cond.integer;
+
+        if (nonnegative) {
           if (!plural) msg += 'a ';
           msg += 'non-negative';
-        } else if (hasInt && !plural) {
+        } else if (isInt && !plural) {
           msg += 'an';
         } else msg += 'any';
-        if (hasInt) {
-          msg += ' integer';
-        } else {
-          msg += ' number';
-        }
+        msg += ' ' + (isInt ? 'integer' : 'number');
         if (plural) msg += 's';
-        if (limit && limit[1] !== 0) msg += ' which ' + (plural ? 'are' : 'is') + ' greater than or equal to ' + limit[1];
       }
 
       else if (type == 'array') {
-        const len = has(conditions, 'length', true);
+        const len = cond && cond.length;
+        const msgRes = computeTypeMsg(struct[i].structure, false, len !== 1, true);
 
-        const msgRes = computeTypeMsg(struct[i].structure, false, len && len[1] == 1 ? false : true, true);
         if (!plural) msg += 'a';
         if (deep) {
           msg += msgRes;
         } else if (!plural) {
           msg += 'n';
         }
-        msg += ' array' + (plural ? 's' : '');
-        if (len) msg += ' of length ' + len[1];
+        msg += ' array';
+        if (plural) msg += 's';
+        if (len) msg += ' of length ' + len;
         if (!deep) msg += ' with ' + msgRes + ' as values';
       }
 
       else if (type == 'object') {
-        msg += 'an object';
-        msg += ' with ' + computeTypeMsg(struct[i].structure, false, true, true) + ' as values';
+        msg += 'an object with ' + computeTypeMsg(struct[i].structure, false, true, true) + ' as values';
       }
 
       else if (type == 'function') {
@@ -959,23 +925,22 @@ export default function Slider89(target, config, replace) {
 
       else if (type == 'string') {
         if (!deep) msg += 'a ';
-        if (has(conditions, 'not empty')) msg += 'non-empty ';
-        if (has(conditions, 'not number')) msg += 'non-number ';
+        if (cond && cond.filled) msg += 'non-empty ';
+        if (cond && cond.wordChar) msg += 'non-number ';
         msg += 'string';
         if (!deep && plural) msg += 's';
+      }
+
+      else if (type == 'boolean') {
+        msg += 'a boolean';
+      }
+      else if (type == 'true' || type == 'false') {
+        msg += type;
       }
 
       if (shape) {
         msg += ' (' + shape + ')';
         shape = false;
-      }
-
-      if (type == 'boolean') {
-        msg += 'a boolean';
-      } else if (type == 'true') {
-        msg += 'true';
-      } else if (type == 'false') {
-        msg += 'false';
       }
     }
 
