@@ -107,7 +107,7 @@ export default function Slider89(target, config, replace) {
         }
       },
       postSetter: function() {
-        computeValue();
+        recomputeValue();
       }
     },
     value: {
@@ -126,7 +126,7 @@ export default function Slider89(target, config, replace) {
           propError('value', 'the given value of ' + val + ' exceeds the currently set range of ' + rangeStr);
         }
       },
-      postSetter: translateThumb
+      postSetter: recomputeDistance
     },
     precision: {
       default: false,
@@ -150,7 +150,7 @@ export default function Slider89(target, config, replace) {
         }
       },
       postSetter: function() {
-        computeValue();
+        recomputeValue();
       }
     },
     step: {
@@ -170,7 +170,7 @@ export default function Slider89(target, config, replace) {
         }
       },
       postSetter: function() {
-        computeValue();
+        recomputeValue();
       }
     },
     structure: {
@@ -332,7 +332,7 @@ export default function Slider89(target, config, replace) {
     if (replace) target.parentNode.replaceChild(node.slider, target);
     else target.appendChild(node.slider);
 
-    translateThumb(vals.value);
+    recomputeDistance();
 
     node.thumb.addEventListener('touchstart', touchStart);
     node.thumb.addEventListener('touchmove', touchMove);
@@ -340,11 +340,6 @@ export default function Slider89(target, config, replace) {
     node.thumb.addEventListener('touchcancel', touchEnd);
 
     node.thumb.addEventListener('mousedown', slideStart);
-  })();
-
-  //Misc initialization
-  (function() {
-    computeValue();
   })();
 
   initial = false;
@@ -429,38 +424,46 @@ export default function Slider89(target, config, replace) {
     return Number.isNaN && Number.isNaN(val) || !Number.isNaN && typeof val === 'number' && val !== val;
   }
 
-  function getTranslate(node) {
+  function getDistance(node) {
     const style = node.style.transform;
-    if (!style) return false;
-    const firstBracket = style.slice(style.indexOf('translateX(') + 'translateX('.length);
-    return parseFloat(firstBracket.slice(0, firstBracket.indexOf(')')));
+    if (!style) {
+      return node.offsetLeft;
+    } else {
+      const firstBracket = style.slice(style.indexOf('translateX(') + 'translateX('.length);
+      return parseFloat(firstBracket.slice(0, firstBracket.indexOf(')')));
+    }
   }
-  function translateThumb(value) {
+  function moveThumb(distance, transform) {
+    if (transform)
+      vals.node.thumb.style.transform = 'translateX(' + distance + 'px)';
+    else
+      vals.node.thumb.style.left = 'calc(' + (distance * 100) + '% - ' + (vals.node.thumb.clientWidth * distance) + 'px )';
+  }
+  function recomputeDistance() {
     const absWidth = vals.node.track.clientWidth - vals.node.thumb.clientWidth;
+    const value = vals.step ? Math.round(vals.value / vals.step) * vals.step : vals.value;
     const distance = (value - vals.range[0]) / (vals.range[1] - vals.range[0]) * absWidth;
-    vals.node.thumb.style.transform = 'translateX(' + distance + 'px)';
+    moveThumb(distance / absWidth);
   }
-  function computeValue(thumb, distance, events) {
-    if (!thumb) thumb = vals.node.thumb;
-    if (!distance) distance = getTranslate(thumb);
+  function recomputeValue(newDistance, skipCheck) {
+    const absWidth = vals.node.track.clientWidth - vals.node.thumb.clientWidth;
 
-    const absWidth = vals.node.track.clientWidth - thumb.clientWidth;
-
+    let distance = newDistance != null ? newDistance : getDistance(vals.node.thumb);
     if (distance > absWidth) distance = absWidth;
-    if (distance < 0) distance = 0;
+    else if (distance < 0) distance = 0;
     if (vals.step) {
       const relStep = absWidth / ((vals.range[1] - vals.range[0]) / vals.step);
       distance = Math.round(distance / relStep) * relStep;
       if (distance > absWidth) return;
     }
-    thumb.style.transform = 'translateX(' + distance + 'px)';
 
+    //TODO: apply `precision` in a getter, instead of statically here
     let val = distance / absWidth * (vals.range[1] - vals.range[0]) + vals.range[0];
     if (vals.precision !== false) val = Number(val.toFixed(vals.precision));
-    if (vals.value !== val) {
-      vals.value = val;
 
-      if (events) invokeEvent(events); //TODO --------------------------------------
+    if (vals.value !== val || skipCheck) {
+      vals.value = val;
+      newDistance != null ? moveThumb(distance, true) : moveThumb(distance / absWidth);
     }
   }
 
@@ -503,18 +506,22 @@ export default function Slider89(target, config, replace) {
     document.body.classList.add('sl89-noselect');
     vals.node.thumb.classList.add('active');
     activeThumb = this;
-    mouseDownPos = e.clientX - getTranslate(this);
-    invokeEvent(['start']);
+    mouseDownPos = e.clientX - activeThumb.offsetLeft;
+    moveThumb(activeThumb.offsetLeft, true);
+    activeThumb.style.removeProperty('left');
+    invokeEvent(['start'])
     window.addEventListener('mouseup', slideEnd);
     window.addEventListener('mousemove', slideMove);
   }
   function slideMove(e) {
-    const distance = e.clientX - mouseDownPos;
-    computeValue(activeThumb, distance, ['move']);
+    recomputeValue(e.clientX - mouseDownPos);
+    invokeEvent(['move']);
   }
   function slideEnd() {
     window.removeEventListener('mouseup', slideEnd);
     window.removeEventListener('mousemove', slideMove);
+    recomputeValue(null, true);
+    activeThumb.style.removeProperty('transform');
     mouseDownPos = null;
     activeThumb = null;
     invokeEvent(['end']);
