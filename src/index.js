@@ -105,9 +105,7 @@ export default function Slider89(target, config, replace) {
         if (val[0] === val[1]) {
           propError('range', 'the given range of [' + val.join(', ') + '] defines the same value for both range start and end');
         }
-      },
-      postSetter: function() {
-        recomputeValue();
+        if (!initial) computeRatioDistance({range: val});
       }
     },
     value: {
@@ -125,8 +123,8 @@ export default function Slider89(target, config, replace) {
           const rangeStr = '[' + vals.range.join(', ') + ']';
           propError('value', 'the given value of ' + val + ' exceeds the currently set range of ' + rangeStr);
         }
+        if (!initial) computeRatioDistance({value: val});
       },
-      postSetter: recomputeDistance
     },
     precision: {
       default: false,
@@ -148,9 +146,7 @@ export default function Slider89(target, config, replace) {
             }
           }
         }
-      },
-      postSetter: function() {
-        recomputeValue();
+        if (!initial) computeRatioDistance({precision: val});
       }
     },
     step: {
@@ -168,9 +164,7 @@ export default function Slider89(target, config, replace) {
         if (vals.precision !== false && val !== false && Number(val.toFixed(vals.precision)) !== val) {
           propError('step', 'the given value of ' + val + ' exceeds the currently set precision of ' + vals.precision);
         }
-      },
-      postSetter: function() {
-        recomputeValue();
+        if (!initial) computeRatioDistance({step: val})
       }
     },
     structure: {
@@ -332,7 +326,7 @@ export default function Slider89(target, config, replace) {
     if (replace) target.parentNode.replaceChild(node.slider, target);
     else target.appendChild(node.slider);
 
-    recomputeDistance();
+    computeRatioDistance();
 
     node.thumb.addEventListener('touchstart', touchStart);
     node.thumb.addEventListener('touchmove', touchMove);
@@ -424,14 +418,14 @@ export default function Slider89(target, config, replace) {
     return Number.isNaN && Number.isNaN(val) || !Number.isNaN && typeof val === 'number' && val !== val;
   }
 
-  function getDistance(node) {
-    const style = node.style.transform;
-    if (!style) {
-      return node.offsetLeft;
-    } else {
-      const firstBracket = style.slice(style.indexOf('translateX(') + 'translateX('.length);
-      return parseFloat(firstBracket.slice(0, firstBracket.indexOf(')')));
-    }
+  function getDistance() {
+    const style = vals.node.thumb.style.transform;
+    const firstBracket = style.slice(style.indexOf('translateX(') + 'translateX('.length);
+    return parseFloat(firstBracket.slice(0, firstBracket.indexOf(')')));
+  }
+  function computeDistanceValue(distance, absWidth) {
+    if (absWidth == null) absWidth = vals.node.track.clientWidth - vals.node.thumb.clientWidth;
+    return distance / absWidth * (vals.range[1] - vals.range[0]) + vals.range[0];
   }
   function moveThumb(distance, transform) {
     if (transform)
@@ -439,32 +433,34 @@ export default function Slider89(target, config, replace) {
     else
       vals.node.thumb.style.left = 'calc(' + (distance * 100) + '% - ' + (vals.node.thumb.clientWidth * distance) + 'px )';
   }
-  function recomputeDistance() {
-    const absWidth = vals.node.track.clientWidth - vals.node.thumb.clientWidth;
-    const value = vals.step ? Math.round(vals.value / vals.step) * vals.step : vals.value;
-    const distance = (value - vals.range[0]) / (vals.range[1] - vals.range[0]) * absWidth;
-    moveThumb(distance / absWidth);
-  }
-  function recomputeValue(newDistance, skipCheck) {
-    const absWidth = vals.node.track.clientWidth - vals.node.thumb.clientWidth;
-
-    let distance = newDistance != null ? newDistance : getDistance(vals.node.thumb);
-    if (distance > absWidth) distance = absWidth;
-    else if (distance < 0) distance = 0;
-    if (vals.step) {
-      const relStep = absWidth / ((vals.range[1] - vals.range[0]) / vals.step);
-      distance = Math.round(distance / relStep) * relStep;
-      if (distance > absWidth) return;
+  function computeRatioDistance(newVals) {
+    let value, ratio;
+    if (!newVals) {
+      newVals = vals;
+      value = vals.value;
+    } else {
+      const props = ['range', 'precision', 'step'];
+      for (var i in props) {
+        if (newVals[props[i]] == null) newVals[props[i]] = vals[props[i]];
+      }
+      if (newVals.value != null) {
+        value = newVals.value;
+      } else {
+        ratio = (vals.value - vals.range[0]) / (vals.range[1] - vals.range[0]);
+        value = (newVals.range[1] - newVals.range[0]) * ratio + newVals.range[0];
+      }
     }
-
-    //TODO: apply `precision` in a getter, instead of statically here
-    let val = distance / absWidth * (vals.range[1] - vals.range[0]) + vals.range[0];
-    if (vals.precision !== false) val = Number(val.toFixed(vals.precision));
-
-    if (vals.value !== val || skipCheck) {
-      vals.value = val;
-      newDistance != null ? moveThumb(distance, true) : moveThumb(distance / absWidth);
+    //Round value to a given step
+    if (newVals.step !== false) {
+      value = Math.round(value / newVals.step) * newVals.step;
     }
+    //Cull value to a given precision (TODO: This should happen in a getter)
+    if (newVals.precision !== false) {
+      value = Number(value.toFixed(newVals.precision));
+    }
+    const newRatio = (value - newVals.range[0]) / (newVals.range[1] - newVals.range[0]);
+    if (value !== vals.value) vals.value = value;
+    if (newRatio !== ratio) moveThumb(newRatio);
   }
 
   // ------ Event functions ------
@@ -505,25 +501,48 @@ export default function Slider89(target, config, replace) {
   function slideStart(e) {
     document.body.classList.add('sl89-noselect');
     vals.node.thumb.classList.add('active');
+    invokeEvent(['start']);
+
     activeThumb = this;
     mouseDownPos = e.clientX - activeThumb.offsetLeft;
     moveThumb(activeThumb.offsetLeft, true);
     activeThumb.style.removeProperty('left');
-    invokeEvent(['start'])
+
     window.addEventListener('mouseup', slideEnd);
     window.addEventListener('mousemove', slideMove);
   }
   function slideMove(e) {
-    recomputeValue(e.clientX - mouseDownPos);
-    invokeEvent(['move']);
+    const absWidth = vals.node.track.clientWidth - activeThumb.clientWidth;
+    let distance = e.clientX - mouseDownPos;
+
+    if (distance > absWidth) distance = absWidth;
+    else if (distance < 0) distance = 0;
+
+    if (vals.step) {
+      const relStep = absWidth / ((vals.range[1] - vals.range[0]) / vals.step);
+      distance = Math.round(distance / relStep) * relStep;
+      if (distance > absWidth) return;
+    }
+    let value = computeDistanceValue(distance, absWidth);
+    //TODO: apply `precision` in a getter, instead of statically here
+    if (vals.precision !== false) value = Number(value.toFixed(vals.precision));
+
+    if (vals.value !== value) {
+      vals.value = value;
+      moveThumb(distance, true);
+      invokeEvent(['move']);
+    }
   }
   function slideEnd() {
     window.removeEventListener('mouseup', slideEnd);
     window.removeEventListener('mousemove', slideMove);
-    recomputeValue(null, true);
+
+    const value = computeDistanceValue(getDistance());
+    computeRatioDistance({value: value});
     activeThumb.style.removeProperty('transform');
     mouseDownPos = null;
     activeThumb = null;
+
     invokeEvent(['end']);
     vals.node.thumb.classList.remove('active');
     document.body.classList.remove('sl89-noselect');
