@@ -101,11 +101,13 @@ export default function Slider89(target, config, replace) {
         { type: 'boolean' }
       ],
       shape: '[startValue, endValue]',
-      preSetter: function(val) {
+      setter: function(val) {
         if (val[0] === val[1]) {
           propError('range', 'the given range of [' + val.join(', ') + '] defines the same value for both range start and end');
         }
-        if (!initial) computeRatioDistance({range: val});
+        if (!initial) {
+          computeRatioDistance({range: val});
+        }
       }
     },
     value: {
@@ -115,7 +117,7 @@ export default function Slider89(target, config, replace) {
       structure: [{
         type: 'number'
       }],
-      preSetter: function(val) {
+      setter: function(val) {
         if (
           vals.range[0] > vals.range[1] && (val > vals.range[0] || val < vals.range[1]) ||
           vals.range[1] > vals.range[0] && (val < vals.range[0] || val > vals.range[1])
@@ -123,8 +125,10 @@ export default function Slider89(target, config, replace) {
           const rangeStr = '[' + vals.range.join(', ') + ']';
           propError('value', 'the given value of ' + val + ' exceeds the currently set range of ' + rangeStr);
         }
-        if (!initial) computeRatioDistance({value: val});
-      },
+        if (!initial) {
+          computeRatioDistance({value: val});
+        }
+      }
     },
     precision: {
       default: false,
@@ -138,7 +142,7 @@ export default function Slider89(target, config, replace) {
         },
         { type: 'false' }
       ],
-      preSetter: function(val) {
+      setter: function(val) {
         if (val !== false) {
           for (var i = 0; i < vals.range.length; i++) {
             if (Number(vals.range[i].toFixed(val)) !== vals.range[i]) {
@@ -146,7 +150,9 @@ export default function Slider89(target, config, replace) {
             }
           }
         }
-        if (!initial) computeRatioDistance({precision: val});
+        if (!initial) {
+          computeRatioDistance({precision: val});
+        }
       }
     },
     step: {
@@ -160,11 +166,13 @@ export default function Slider89(target, config, replace) {
         },
         { type: 'false' }
       ],
-      preSetter: function(val) {
+      setter: function(val) {
         if (vals.precision !== false && val !== false && Number(val.toFixed(vals.precision)) !== val) {
           propError('step', 'the given value of ' + val + ' exceeds the currently set precision of ' + vals.precision);
         }
-        if (!initial) computeRatioDistance({step: val})
+        if (!initial) {
+          computeRatioDistance({step: val})
+        }
       }
     },
     structure: {
@@ -216,7 +224,7 @@ export default function Slider89(target, config, replace) {
         { type: 'false' }
       ],
       initial: true,
-      preSetter: function(val) {
+      setter: function(val) {
         const errTypes = checkArrayObject(val, eventTypes, function(fn, i, arr, objKey) {
           eventList[eventID++] = {type: objKey, fn: fn};
         });
@@ -247,9 +255,8 @@ export default function Slider89(target, config, replace) {
           if (!prop.static) {
             if (!prop.initial || initial) {
               checkProp(item, val);
-              if (prop.preSetter) (prop.preSetter)(val);
+              if (prop.setter) (prop.setter)(val);
               vals[item] = val;
-              if (!initial && prop.postSetter) (prop.postSetter)(val);
             } else error('property ‘' + item + '’ may only be set at init time but it was just set with the value ‘' + val + '’');
           } else error('property ‘' + item + '’ may only be read from but it was just set with the value ‘' + val + '’');
         },
