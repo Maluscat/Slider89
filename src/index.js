@@ -136,6 +136,9 @@ export default function Slider89(target, config, replace) {
         if (!initial) {
           computeRatioDistance({value: val});
         }
+      },
+      getter: function(val) {
+        return vals.precision !== false ? Number(val.toFixed(vals.precision)) : val;
       }
     },
     precision: {
@@ -269,7 +272,8 @@ export default function Slider89(target, config, replace) {
           } else error('property ‘' + item + '’ may only be read from but it was just set with the value ‘' + val + '’');
         },
         get: function() {
-          return vals[item];
+          const val = prop.getter ? prop.getter(vals[item]) : vals[item];
+          return val;
         }
       });
 
@@ -454,7 +458,7 @@ export default function Slider89(target, config, replace) {
       for (var i in structureVars[prop]) {
         const item = structureVars[prop][i];
         const str = item.str.replace(structureRgx.variable, function(match, variableDelimit, variable) {
-          return vals[variableDelimit || variable];
+          return that[variableDelimit || variable];
         });
         if (item.attr) {
           item.node.setAttribute(item.attr, str);
@@ -500,10 +504,6 @@ export default function Slider89(target, config, replace) {
     //Round value to a given step
     if (newVals.step !== false) {
       value = Math.round(value / newVals.step) * newVals.step;
-    }
-    //Cull value to a given precision (TODO: This should happen in a getter)
-    if (newVals.precision !== false) {
-      value = Number(value.toFixed(newVals.precision));
     }
     const newRatio = (value - newVals.range[0]) / (newVals.range[1] - newVals.range[0]);
     if (value !== vals.value) vals.value = value;
@@ -571,8 +571,6 @@ export default function Slider89(target, config, replace) {
       if (distance > absWidth) return;
     }
     let value = computeDistanceValue(distance, absWidth);
-    //TODO: apply `precision` in a getter, instead of statically here
-    if (vals.precision !== false) value = Number(value.toFixed(vals.precision));
 
     if (vals.value !== value) {
       vals.value = value;
@@ -792,7 +790,7 @@ export default function Slider89(target, config, replace) {
           if (attribName) item.attr = attribName;
           structureVars[varName].push(item);
 
-          return vals[variableDelimit || variable];
+          return that[variableDelimit || variable];
         });
       }
       return str;
