@@ -24,8 +24,16 @@ export default function Slider89(target, config, replace) {
   let activeTouchID;
   let mouseDownPos;
   let eventID = 0;
+  let structureRgx; //Pointer to `rgx` in parseStructure
+  const structureVars = {};
   const eventList = {};
   const vals = {}; //holding every property of the class
+
+  //`$` is a fixed endpoint for all properties, only to be accessed by a bubbling getter/setter
+  //Object.defineProperty is used for non-enumerability of `$` inside `vals`
+  Object.defineProperty(vals, '$', {
+    value: {}
+  });
 
   //Style rule strings which will be inserted into a newly created stylesheet
   const styles = require('./default-styles.css');
@@ -265,6 +273,8 @@ export default function Slider89(target, config, replace) {
         }
       });
 
+      defineDeepProperty(vals, item, vals.$);
+
       if (item in config) {
         that[item] = config[item];
         delete config[item];
@@ -278,7 +288,8 @@ export default function Slider89(target, config, replace) {
       const item = _;
 
       if (item[0] == '_') {
-        that[item] = config[item];
+        defineDeepProperty(that, item, vals);
+        vals[item] = config[item];
       } else {
         error('‘' + item + '’ is not a valid property name. Check its spelling or prefix it with an underscore to use it as custom property (‘_' + item + '’)');
       }
@@ -423,6 +434,35 @@ export default function Slider89(target, config, replace) {
   //MDN Polyfill @ Number.isNaN
   function polyIsNaN(val) {
     return Number.isNaN && Number.isNaN(val) || !Number.isNaN && typeof val === 'number' && val !== val;
+  }
+
+  function defineDeepProperty(target, item, endpoint) {
+    Object.defineProperty(target, item, {
+      set: function(val) {
+        endpoint[item] = val;
+        if (Object.prototype.hasOwnProperty.call(structureVars, item)) {
+          updateVariable(item);
+        }
+      },
+      get: function() {
+        return endpoint[item];
+      },
+      enumerable: true
+    });
+
+    function updateVariable(prop) {
+      for (var i in structureVars[prop]) {
+        const item = structureVars[prop][i];
+        const str = item.str.replace(structureRgx.variable, function(match, variableDelimit, variable) {
+          return vals[variableDelimit || variable];
+        });
+        if (item.attr) {
+          item.node.setAttribute(item.attr, str);
+        } else {
+          item.node.textContent = str;
+        }
+      }
+    }
   }
 
   function getDistance() {
@@ -625,6 +665,7 @@ export default function Slider89(target, config, replace) {
       for (var expr in rgx) rgx[expr] = new RegExp(rgx[expr], 'g');
     })();
 
+    structureRgx = rgx;
     let structure = structureStr;
 
     while (rgx.multiTag.test(structure)) {
@@ -692,61 +733,6 @@ export default function Slider89(target, config, replace) {
       }
     })();
 
-    (function() {
-      if (Object.keys(variables).length != 0) {
-        for (var _ in variables) {
-          const prop = _;
-
-          let target, endpoint;
-          if (Object.prototype.hasOwnProperty.call(properties, prop)) {
-            //Redefining internal properties used as structure variables as getter/setter and moving their endpoint to `vals.$`
-            if (!vals.$) {
-              //Object.defineProperty needed for non-enumerability
-              Object.defineProperty(vals, '$', {
-                value: {}
-              });
-            }
-            target = vals;
-            endpoint = vals.$;
-          } else {
-            //Registering a getter/setter on `this` for structure variables not defined by the class
-            target = that;
-            endpoint = vals;
-          }
-          Object.defineProperty(endpoint, prop, {
-            value: target[prop],
-            writable: true
-          });
-          Object.defineProperty(target, prop, {
-            get: function() {
-              return endpoint[prop];
-            },
-            set: function(val) {
-              endpoint[prop] = val;
-              updateVariable(prop);
-            },
-            enumerable: true
-          });
-
-          updateVariable(prop);
-        }
-
-        function updateVariable(prop) {
-          for (var i in variables[prop]) {
-            const item = variables[prop][i];
-            const str = item.str.replace(rgx.variable, function(match, variableDelimit, variable) {
-              return vals[variableDelimit || variable];
-            });
-            if (item.attr) {
-              item.node.setAttribute(item.attr, str);
-            } else {
-              item.node.textContent = str;
-            }
-          }
-        }
-      }
-    }());
-
     return node;
 
     function appendElements(parent, childArr, i) {
@@ -774,8 +760,8 @@ export default function Slider89(target, config, replace) {
       }
       let elem = document.createElement(tag || 'div');
       const hasAttribs = !!attribs[name];
-      if (content && !registerVariables(content, elem, false)) {
-        elem.textContent = content;
+      if (content) {
+        elem.textContent = registerVariables(content, elem, false);
       }
       if (attributes) {
         attributes.replace(rgx.attributes, function(attrib, attribName, value) {
@@ -783,9 +769,7 @@ export default function Slider89(target, config, replace) {
           if (hasAttribs && attribs[name][attribName] && value.split(' ').indexOf(attribs[name][attribName]) == -1) {
             value += ' ' + attribs[name][attribName];
           }
-          if (!registerVariables(value, elem, attribName)) {
-            elem.setAttribute(attribName, value || '');
-          }
+          elem.setAttribute(attribName, registerVariables(value, elem, attribName));
         });
       }
       if (hasAttribs) {
@@ -798,19 +782,20 @@ export default function Slider89(target, config, replace) {
 
     function registerVariables(str, node, attribName) {
       if (rgx.variable.test(str)) {
-        str.replace(rgx.variable, function(match, variableDelimit, variable) {
+        str = str.replace(rgx.variable, function(match, variableDelimit, variable) {
           const varName = variableDelimit || variable;
-          if (variables[varName] == null) variables[varName] = new Array();
+          if (structureVars[varName] == null) structureVars[varName] = new Array();
           const item = {
             str: str,
             node: node
           };
           if (attribName) item.attr = attribName;
-          variables[varName].push(item);
+          structureVars[varName].push(item);
+
+          return vals[variableDelimit || variable];
         });
-        //To prevent an unnecessary attrib/content set during element building (variables are set separately afterwards)
-        return true;
       }
+      return str;
     }
   }
 
