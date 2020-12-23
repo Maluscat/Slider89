@@ -393,7 +393,9 @@ export default function Slider89(target, config, replace) {
     const listEntry = eventList[key];
     if (!listEntry) return false;
     delete eventList[key];
-    return Array.isArray(listEntry) ? listEntry.reduce(handleEvents, new Array()) : handleEvents(new Array(), listEntry);
+    return Array.isArray(listEntry) ?
+      listEntry.reduce(handleEvents, new Array()) :
+      handleEvents(new Array(), listEntry);
 
     function handleEvents(acc, entry) {
       const typeEvents = vals.events[entry.type];
