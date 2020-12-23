@@ -16,7 +16,8 @@ export default function Slider89(target, config, replace) {
   const eventTypes = [
     'start',
     'move',
-    'end'
+    'end',
+    'change:$property'
   ];
 
   let initial = false;
@@ -363,12 +364,16 @@ export default function Slider89(target, config, replace) {
 
   // ------ Class methods ------
   function addEvent(type, fn, name) {
-    (function() {
-      for (var i = 0; i < eventTypes.length; i++) {
-        if (type == eventTypes[i]) return;
+    if (type.indexOf('change:') == 0) {
+      //Edge case for 'change:$property'
+      const customProp = type.slice('change:'.length);
+      if (!Object.prototype.hasOwnProperty.call(vals, customProp)) {
+        error("‘" + type + "’ refers to ‘" + customProp + "’, which isn't a property of the slider instance. Check its spelling and be aware that custom properties need to be initialized", 'addEvent');
       }
+    } else if (eventTypes.indexOf(type) == -1) {
       error('the specified type ‘' + type + '’ is not a valid event type. Available types are:' + enlistArray(eventTypes), 'addEvent');
-    })();
+    }
+
     if (!Array.isArray(vals.events[type])) vals.events[type] = new Array();
     vals.events[type].push(fn);
     const key = name || eventID;
@@ -379,7 +384,9 @@ export default function Slider89(target, config, replace) {
     if (name) {
       if (!Array.isArray(eventList[key])) eventList[key] = new Array();
       eventList[key].push(obj);
-    } else eventList[key] = obj;
+    } else {
+      eventList[key] = obj;
+    }
     return name || eventID++;
   }
   function removeEvent(key) {
@@ -447,6 +454,7 @@ export default function Slider89(target, config, replace) {
         if (Object.prototype.hasOwnProperty.call(structureVars, item)) {
           updateVariable(item);
         }
+        if (!initial) invokeEvent(['change:' + item]);
       },
       get: function() {
         return endpoint[item];
