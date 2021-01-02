@@ -368,7 +368,7 @@ export default function Slider89(target, config, replace) {
       //Edge case for 'change:$property'
       const customProp = type.slice('change:'.length);
       if (!Object.prototype.hasOwnProperty.call(vals, customProp)) {
-        error("‘" + type + "’ refers to ‘" + customProp + "’, which isn't a property of the slider instance. Check its spelling and be aware that custom properties need to be initialized", 'addEvent');
+        error("‘" + type + "’ refers to ‘" + customProp + "’, which isn't a recognized property. Check its spelling and be aware that custom properties need to be initialized", 'addEvent');
       }
     } else if (eventTypes.indexOf(type) == -1) {
       error('the specified type ‘' + type + '’ is not a valid event type. Available types are:' + enlistArray(eventTypes), 'addEvent');
@@ -792,6 +792,10 @@ export default function Slider89(target, config, replace) {
       if (rgx.variable.test(str)) {
         str = str.replace(rgx.variable, function(match, variableDelimit, variable) {
           const varName = variableDelimit || variable;
+          if (!Object.prototype.hasOwnProperty.call(vals, varName)) {
+            propError('structure', "‘" + varName + "’ is not a recognized property. Please check its spelling or initialize it in the constructor");
+          }
+
           if (structureVars[varName] == null) structureVars[varName] = new Array();
           const item = {
             str: str,
