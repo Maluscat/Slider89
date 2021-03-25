@@ -268,8 +268,11 @@ export default function Slider89(target, config, replace) {
           if (!prop.static) {
             if (!prop.initial || initial) {
               checkProp(item, val);
+              const previousVal = vals[item];
               if (prop.setter) (prop.setter)(val);
-              vals[item] = val;
+              if (vals[item] === previousVal) {
+                vals[item] = val;
+              }
             } else error('property ‘' + item + '’ may only be set at init time but it was just set with the value ‘' + val + '’');
           } else error('property ‘' + item + '’ may only be read from but it was just set with the value ‘' + val + '’');
         },
