@@ -26,6 +26,7 @@ export default function Slider89(target, config, replace) {
   let mouseDownPos;
   let eventID = 0;
   let structureRgx; //Pointer to `rgx` in parseStructure
+  let trackStyle; //The live computed style of vals.node.track
   const structureVars = {};
   const eventList = {};
   const vals = {}; //holding every property of the class
@@ -313,7 +314,6 @@ export default function Slider89(target, config, replace) {
 
   //Building the slider element
   (function() {
-    //No result node yet
     if (vals.structure == false) {
       //In case no custom structure is defined, manually build the node to ensure best performance (parseStructure takes a while)
       vals.node.slider = document.createElement('div');
@@ -345,6 +345,8 @@ export default function Slider89(target, config, replace) {
     }
 
     createStyleSheet();
+
+    trackStyle = getComputedStyle(node.track);
 
     if (replace) target.parentNode.replaceChild(node.slider, target);
     else target.appendChild(node.slider);
@@ -484,15 +486,26 @@ export default function Slider89(target, config, replace) {
     const firstBracket = style.slice(style.indexOf('translateX(') + 'translateX('.length);
     return parseFloat(firstBracket.slice(0, firstBracket.indexOf(')')));
   }
+  function getAbsoluteTrackWidth() {
+    return (vals.node.track.clientWidth - parseFloat(trackStyle.paddingLeft) - parseFloat(trackStyle.paddingRight)) -
+      vals.node.thumb.clientWidth;
+  }
   function computeDistanceValue(distance, absWidth) {
-    if (absWidth == null) absWidth = vals.node.track.clientWidth - vals.node.thumb.clientWidth;
+    if (absWidth == null) absWidth = getAbsoluteTrackWidth();
     return distance / absWidth * (vals.range[1] - vals.range[0]) + vals.range[0];
   }
-  function moveThumb(distance, transform) {
-    if (transform)
+  function moveThumb(distance, useTransform) {
+    if (useTransform) {
       vals.node.thumb.style.transform = 'translateX(' + distance + 'px)';
-    else
-      vals.node.thumb.style.left = 'calc(' + (distance * 100) + '% - ' + (vals.node.thumb.clientWidth * distance) + 'px )';
+    } else {
+      const paddingLeft = parseFloat(trackStyle.paddingLeft);
+      const paddingRight = parseFloat(trackStyle.paddingRight);
+
+      let subtract = (vals.node.thumb.clientWidth * distance) + 'px';
+      if (paddingRight) subtract += ' - ' + (paddingRight * distance) + 'px';
+      if (paddingLeft) subtract += ' + ' + (paddingLeft * (1 - distance)) + 'px';
+      vals.node.thumb.style.left = 'calc(' + (distance * 100) + '% - ' + subtract + ')';
+    }
   }
   function computeRatioDistance(newVals) {
     let value, ratio;
@@ -561,15 +574,16 @@ export default function Slider89(target, config, replace) {
     invokeEvent(['start']);
 
     activeThumb = this;
-    mouseDownPos = e.clientX - activeThumb.offsetLeft;
-    moveThumb(activeThumb.offsetLeft, true);
+    const thumbOffset = activeThumb.offsetLeft - parseFloat(trackStyle.paddingLeft);
+    mouseDownPos = e.clientX - thumbOffset;
+    moveThumb(thumbOffset, true);
     activeThumb.style.removeProperty('left');
 
     window.addEventListener('mouseup', slideEnd);
     window.addEventListener('mousemove', slideMove);
   }
   function slideMove(e) {
-    const absWidth = vals.node.track.clientWidth - activeThumb.clientWidth;
+    const absWidth = getAbsoluteTrackWidth();
     let distance = e.clientX - mouseDownPos;
 
     if (distance > absWidth) distance = absWidth;
