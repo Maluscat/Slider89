@@ -665,7 +665,7 @@ export default function Slider89(target, config, replace) {
       name: '[\\w-]+',
       singleAmplfr: ':'
     };
-    reg.attr.value = reg.all + '*?';
+    reg.attr.value = '(?:(?!<)' + reg.all + ')*?';
     reg.capName = '(' + reg.name + ')';
     reg.glbMatch = '(?:' + reg.tabSpace + '(?:(?!<).)*?)?>';
     reg.content = '(?:\\s+"('+reg.all+'+?)")?';
