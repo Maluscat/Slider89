@@ -532,7 +532,11 @@ export default function Slider89(target, config, replace) {
     }
     //Round value to a given step
     if (newVals.step !== false) {
-      value = newVals.range[0] + Math.round((value - newVals.range[0]) / newVals.step) * newVals.step;
+      if (newVals.range[1] - newVals.range[0] < newVals.step) {
+        value = newVals.range[0];
+      } else {
+        value = newVals.range[0] + Math.round((value - newVals.range[0]) / newVals.step) * newVals.step;
+      }
     }
     const newRatio = (value - newVals.range[0]) / (newVals.range[1] - newVals.range[0]);
     if (value !== vals.value) vals.value = value;
