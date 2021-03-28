@@ -28,7 +28,7 @@ export default function Slider89(target, config, replace) {
   let structureRgx; //Pointer to `rgx` in parseStructure
   let trackStyle; //The live computed style of vals.node.track
   const structureVars = {};
-  const eventList = {};
+  const eventList = {}; //Storing event data (most notably the identifier) for event removability
   const vals = {}; //holding every property of the class
 
   //`$` is a fixed endpoint for all properties, only to be accessed by a bubbling getter/setter
@@ -239,9 +239,10 @@ export default function Slider89(target, config, replace) {
       ],
       initial: true,
       setter: function(val) {
-        const errTypes = checkArrayObject(val, eventTypes, function(fn, i, arr, objKey) {
-          eventList[eventID++] = {type: objKey, fn: fn};
-        });
+        const errTypes = new Array();
+        for (var eventType in val) {
+          if (!checkEventType(eventType)) errTypes.push(eventType);
+        }
         if (errTypes.length > 0) {
           const msg =
             'the given object contains items which are no valid event types:' + enlistArray(errTypes) +
@@ -339,9 +340,18 @@ export default function Slider89(target, config, replace) {
     const node = vals.node;
 
     if (vals.classList) {
-      const errNodes = checkArrayObject(vals.classList, node, function(str, i, arr, key) {
-        node[key].classList.add(str);
-      });
+      // Adding the specified classes and collecting all nonexistent nodes in `errNodes`
+      const errNodes = new Array();
+      for (var key in vals.classList) {
+        const item = vals.classList[key];
+        if (!Object.prototype.hasOwnProperty.call(node, key)) {
+          errNodes.push(key);
+        } else if (errNodes.length == 0) {
+          for (var i = 0; i < item.length; i++) {
+            node[key].classList.add(item[i]);
+          }
+        }
+      }
       if (errNodes.length > 0) {
         const msg =
           "the given object contains items which aren't nodes of this slider:" + enlistArray(errNodes) +
@@ -372,13 +382,7 @@ export default function Slider89(target, config, replace) {
 
   // ------ Class methods ------
   function addEvent(type, fn, name) {
-    if (type.indexOf('change:') == 0) {
-      //Edge case for 'change:$property'
-      const customProp = type.slice('change:'.length);
-      if (!Object.prototype.hasOwnProperty.call(vals, customProp)) {
-        error("‘" + type + "’ refers to ‘" + customProp + "’, which isn't a recognized property. Check its spelling and be aware that custom properties need to be initialized", 'addEvent');
-      }
-    } else if (eventTypes.indexOf(type) == -1) {
+    if (!checkEventType(type)) {
       error('the specified type ‘' + type + '’ is not a valid event type. Available types are:' + enlistArray(eventTypes), 'addEvent');
     }
 
@@ -440,16 +444,15 @@ export default function Slider89(target, config, replace) {
   function enlistArray(arr) {
     return '\n - "' + arr.join('"\n - "') + '"\n';
   }
-  function checkArrayObject(target, reference, loopFn) {
-    const errItems = new Array();
-    for (var key in target) {
-      const item = target[key];
-      if ((Array.isArray(reference) ? reference.indexOf(key) == -1 : !reference[key])) errItems.push(key);
-      else if (errItems.length == 0)
-        for (var i = 0; i < item.length; i++)
-          loopFn(item[i], i, item, key, target);
-    }
-    return errItems;
+  function checkEventType(type) {
+    if (type.indexOf('change:') == 0) {
+      //Edge case for 'change:$property'
+      const customProp = type.slice('change:'.length);
+      if (!Object.prototype.hasOwnProperty.call(vals, customProp)) {
+        error("‘" + type + "’ refers to ‘" + customProp + "’, which isn't a recognized property. Check its spelling and be aware that custom properties need to be initialized", 'addEvent');
+      }
+    } else if (eventTypes.indexOf(type) == -1) return false;
+    return true;
   }
 
   //MDN Polyfill @ Number.isNaN
