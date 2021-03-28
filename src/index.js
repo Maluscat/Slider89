@@ -897,11 +897,11 @@ export default function Slider89(target, config, replace) {
       ) {
         if (type == 'array') {
           for (var n = 0; n < val.length; n++) {
-            msg = checkTypes(val[n], typeObj.structure, true);
+            if (msg = checkTypes(val[n], typeObj.structure, true)) break;
           }
         } else if (type == 'object') {
           for (var key in val) {
-            msg = checkTypes(val[key], typeObj.structure, true);
+            if (msg = checkTypes(val[key], typeObj.structure, true)) break;
           }
         }
         if (msg) return msg;
