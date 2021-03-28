@@ -137,6 +137,7 @@ export default function Slider89(target, config, replace) {
         }
         if (!initial) {
           computeRatioDistance({value: val});
+          return true;
         }
       },
       getter: function(val) {
@@ -268,9 +269,11 @@ export default function Slider89(target, config, replace) {
           if (!prop.static) {
             if (!prop.initial || initial) {
               checkProp(item, val);
-              const previousVal = vals[item];
-              if (prop.setter) (prop.setter)(val);
-              if (vals[item] === previousVal) {
+              let setterResult;
+              if (prop.setter) {
+                setterResult = (prop.setter)(val);
+              }
+              if (setterResult === undefined) {
                 vals[item] = val;
               }
             } else error('property ‘' + item + '’ may only be set at init time but it was just set with the value ‘' + val + '’');
