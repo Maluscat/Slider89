@@ -330,14 +330,20 @@ export default function Slider89(target, config, replace) {
       vals.node.track.appendChild(vals.node.thumb);
       vals.node.slider.appendChild(vals.node.track);
 
-      vals.node.slider.classList.add('slider89');
       for (var element in vals.node)
         if (element != 'slider') vals.node[element].classList.add('sl89-' + element);
     } else {
       vals.node = parseStructure(vals.structure);
     }
-
     const node = vals.node;
+
+    if (replace) {
+      const targetAttr = target.attributes;
+      for (var i = 0; i < targetAttr.length; i++) {
+        node.slider.setAttribute(targetAttr[i].name, targetAttr[i].value);
+      }
+    }
+    node.slider.classList.add('slider89');
 
     if (vals.classList) {
       // Adding the specified classes and collecting all nonexistent nodes in `errNodes`
@@ -362,10 +368,12 @@ export default function Slider89(target, config, replace) {
 
     createStyleSheet();
 
-    trackStyle = getComputedStyle(node.track);
+    if (replace)
+      target.parentNode.replaceChild(node.slider, target);
+    else
+      target.appendChild(node.slider);
 
-    if (replace) target.parentNode.replaceChild(node.slider, target);
-    else target.appendChild(node.slider);
+    trackStyle = getComputedStyle(node.track);
 
     computeRatioDistance();
 
@@ -649,7 +657,6 @@ export default function Slider89(target, config, replace) {
     const node = {
       slider: document.createElement('div')
     };
-    node.slider.classList.add('slider89');
 
     const attribs = {};
     (function() {
