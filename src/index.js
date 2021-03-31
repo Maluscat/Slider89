@@ -206,6 +206,18 @@ export default function Slider89(target, config, replace) {
       default: {},
       static: true
     },
+    orientation: {
+      default: 'horizontal',
+      structure: [{
+        type: 'string',
+        conditions: {
+          keywords: [
+            'horizontal',
+            'vertical'
+          ]
+        }
+      }]
+    },
     classList: {
       default: false,
       structure: [
@@ -344,6 +356,7 @@ export default function Slider89(target, config, replace) {
       }
     }
     node.slider.classList.add('slider89');
+    if (vals.orientation == 'vertical') node.slider.classList.add('vertical');
 
     if (vals.classList) {
       // Adding the specified classes and collecting all nonexistent nodes in `errNodes`
@@ -498,30 +511,47 @@ export default function Slider89(target, config, replace) {
     }
   }
 
+  // ------ Thumb moving functions ------
+  function getTrackPadding(direction) {
+    return parseFloat(trackStyle['padding' + direction]);
+  }
   function getDistance() {
     const style = vals.node.thumb.style.transform;
-    const firstBracket = style.slice(style.indexOf('translateX(') + 'translateX('.length);
+    const translateStr = vals.orientation == 'vertical' ? 'translateY(' : 'translateX(';
+    const firstBracket = style.slice(style.indexOf(translateStr) + translateStr.length);
     return parseFloat(firstBracket.slice(0, firstBracket.indexOf(')')));
   }
-  function getAbsoluteTrackWidth() {
-    return (vals.node.track.clientWidth - parseFloat(trackStyle.paddingLeft) - parseFloat(trackStyle.paddingRight)) -
-      vals.node.thumb.clientWidth;
+  function getAbsoluteTrackSize() {
+    if (vals.orientation == 'vertical') {
+      return (vals.node.track.clientHeight - getTrackPadding('Top') - getTrackPadding('Bottom')) - vals.node.thumb.clientHeight;
+    } else {
+      return (vals.node.track.clientWidth - getTrackPadding('Left') - getTrackPadding('Right')) - vals.node.thumb.clientWidth;
+    }
   }
-  function computeDistanceValue(distance, absWidth) {
-    if (absWidth == null) absWidth = getAbsoluteTrackWidth();
-    return distance / absWidth * (vals.range[1] - vals.range[0]) + vals.range[0];
+  function computeDistanceValue(distance, absSize) {
+    if (absSize == null) absSize = getAbsoluteTrackSize();
+    return distance / absSize * (vals.range[1] - vals.range[0]) + vals.range[0];
   }
   function moveThumb(distance, useTransform) {
     if (useTransform) {
-      vals.node.thumb.style.transform = 'translateX(' + distance + 'px)';
+      vals.node.thumb.style.transform = 'translate' + (vals.orientation == 'vertical' ? 'Y' : 'X') + '(' + distance + 'px)';
     } else {
-      const paddingLeft = parseFloat(trackStyle.paddingLeft);
-      const paddingRight = parseFloat(trackStyle.paddingRight);
+      if (vals.orientation == 'vertical') {
+        var paddingStart = getTrackPadding('Top');
+        var paddingEnd = getTrackPadding('Bottom');
+        var thumbDim = vals.node.thumb.clientHeight;
+        var posAnchor = 'top';
+      } else {
+        var paddingStart = getTrackPadding('Left');
+        var paddingEnd = getTrackPadding('Right');
+        var thumbDim = vals.node.thumb.clientWidth;
+        var posAnchor = 'left';
+      }
 
-      let subtract = (vals.node.thumb.clientWidth * distance) + 'px';
-      if (paddingRight) subtract += ' - ' + (paddingRight * distance) + 'px';
-      if (paddingLeft) subtract += ' + ' + (paddingLeft * (1 - distance)) + 'px';
-      vals.node.thumb.style.left = 'calc(' + (distance * 100) + '% - ' + subtract + ')';
+      let subtract = (thumbDim * distance) + 'px';
+      if (paddingEnd) subtract += ' - ' + (paddingEnd * distance) + 'px';
+      if (paddingStart) subtract += ' + ' + (paddingStart * (1 - distance)) + 'px';
+      vals.node.thumb.style[posAnchor] = 'calc(' + (distance * 100) + '% - ' + subtract + ')';
     }
   }
   function computeRatioDistance(newVals) {
@@ -595,27 +625,36 @@ export default function Slider89(target, config, replace) {
     invokeEvent(['start']);
 
     activeThumb = this;
-    const thumbOffset = activeThumb.offsetLeft - parseFloat(trackStyle.paddingLeft);
-    mouseDownPos = e.clientX - thumbOffset;
+    if (vals.orientation == 'vertical') {
+      var startDir = 'Top';
+      var posAnchor = 'top';
+      var clientDim = e.clientY;
+    } else {
+      var startDir = 'Left';
+      var posAnchor = 'left';
+      var clientDim = e.clientX;
+    }
+    const thumbOffset = activeThumb['offset' + startDir] - getTrackPadding(startDir);
+    mouseDownPos = clientDim - thumbOffset;
     moveThumb(thumbOffset, true);
-    activeThumb.style.removeProperty('left');
+    activeThumb.style.removeProperty(posAnchor);
 
     window.addEventListener('mouseup', slideEnd);
     window.addEventListener('mousemove', slideMove);
   }
   function slideMove(e) {
-    const absWidth = getAbsoluteTrackWidth();
-    let distance = e.clientX - mouseDownPos;
+    const absSize = getAbsoluteTrackSize();
+    let distance = (vals.orientation == 'vertical' ? e.clientY : e.clientX) - mouseDownPos;
 
-    if (distance > absWidth) distance = absWidth;
+    if (distance > absSize) distance = absSize;
     else if (distance < 0) distance = 0;
 
     if (vals.step) {
-      const relStep = absWidth / ((vals.range[1] - vals.range[0]) / vals.step);
+      const relStep = absSize / ((vals.range[1] - vals.range[0]) / vals.step);
       distance = Math.round(distance / relStep) * relStep;
-      if (distance > absWidth) return;
+      if (distance > absSize) return;
     }
-    let value = computeDistanceValue(distance, absWidth);
+    const value = computeDistanceValue(distance, absSize);
 
     if (vals.value !== value) {
       vals.value = value;
