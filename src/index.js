@@ -929,6 +929,9 @@ export default function Slider89(target, config, replace) {
         if (conditions.filled && val.trim() === '') {
           return 'an empty string';
         }
+        if (conditions.keywords && conditions.keywords.indexOf(val) == -1) {
+          return 'a different string';
+        }
         if (conditions.wordChar && !polyIsNaN(Number(val))) {
           return 'a pure number string';
         }
@@ -988,15 +991,30 @@ export default function Slider89(target, config, replace) {
       }
 
       else if (type == 'string') {
-        if (!deep) msg += 'a ';
-        if (cond && cond.filled) msg += 'non-empty ';
-        if (cond && cond.wordChar) msg += 'non-number ';
-        msg += 'string';
-        if (!deep && plural) msg += 's';
+        if (cond && cond.keywords) {
+          if (cond.keywords.length > 1) {
+            msg += 'one of the keywords';
+          } else {
+            msg += 'the keyword';
+          }
+          cond.keywords.forEach(function(val, n, arr) {
+            if (n != 0 && n == arr.length - 1) msg += ' or';
+            else if (n != 0) msg += ',';
+            msg += ' "' + val + '"';
+          });
+        } else {
+          if (!deep) msg += 'a ';
+          if (cond && cond.filled) msg += 'non-empty ';
+          if (cond && cond.wordChar) msg += 'non-number ';
+          msg += 'string';
+          if (!deep && plural) msg += 's';
+        }
       }
 
       else if (type == 'boolean') {
-        msg += 'a boolean';
+        if (!deep) msg += 'a ';
+        msg += 'boolean';
+        if (!deep && plural) msg += 's';
       }
       else if (type == 'true' || type == 'false') {
         msg += type;
