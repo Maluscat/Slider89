@@ -3,7 +3,7 @@ module.exports = function(css) {
     .split('}')
     .map(rule => {
       rule = '"' + rule + '"';
-      return rule.replace(/\s/g, '');
+      return rule.replace(/(?! \.)\s/g, '');
     });
   rules.splice(rules.length - 1, 1);
 
