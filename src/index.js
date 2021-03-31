@@ -560,7 +560,7 @@ export default function Slider89(target, config, replace) {
       newVals = vals;
       value = vals.value;
     } else {
-      const props = ['range', 'precision', 'step'];
+      const props = ['range', 'step'];
       for (var i in props) {
         if (newVals[props[i]] == null) newVals[props[i]] = vals[props[i]];
       }
