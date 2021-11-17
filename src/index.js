@@ -391,10 +391,6 @@ export default function Slider89(target, config, replace) {
     computeRatioDistance();
 
     node.thumb.addEventListener('touchstart', touchStart);
-    node.thumb.addEventListener('touchmove', touchMove);
-    node.thumb.addEventListener('touchend', touchEnd);
-    node.thumb.addEventListener('touchcancel', touchEnd);
-
     node.thumb.addEventListener('mousedown', slideStart);
   })();
 
@@ -596,30 +592,41 @@ export default function Slider89(target, config, replace) {
     }
   }
   // -> Event listeners
-  //TODO: don't explicitly track index 0. It works in all my tests but especially on APIs like these, browsers and operating systems vary strongly
   function touchStart(e) {
+    e.preventDefault();
     if (activeTouchID == null) {
-      e.preventDefault();
-      activeTouchID = e.touches[0].identifier;
-      slideStart.call(this, e.touches[0]);
+      activeTouchID = e.changedTouches[0].identifier;
+      slideStart.call(this, e.changedTouches[0], true);
+
+      vals.node.thumb.addEventListener('touchmove', touchMove);
+      vals.node.thumb.addEventListener('touchend', touchEnd);
+      vals.node.thumb.addEventListener('touchcancel', touchEnd);
     }
   }
   function touchMove(e) {
-    if (e.touches[0].identifier == activeTouchID) {
-      e.preventDefault();
-      slideMove.call(this, e.touches[0]);
-    }
-  }
-  function touchEnd(e) {
-    if (activeTouchID != null) {
-      e.preventDefault();
-      if (e.touches.length == 0 || e.touches.length > 0 && e.touches[0].identifier !== activeTouchID) {
-        slideEnd.call(this, e.touches[0]);
-        activeTouchID = null;
+    e.preventDefault();
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === activeTouchID) {
+        slideMove.call(this, e.changedTouches[i], true);
+        break;
       }
     }
   }
-  function slideStart(e) {
+  function touchEnd(e) {
+    e.preventDefault();
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === activeTouchID) {
+        vals.node.thumb.removeEventListener('touchmove', touchMove);
+        vals.node.thumb.removeEventListener('touchend', touchEnd);
+        vals.node.thumb.removeEventListener('touchcancel', touchEnd);
+
+        slideEnd.call(this, e.changedTouches[i], true);
+        activeTouchID = null;
+        break;
+      }
+    }
+  }
+  function slideStart(e, isTouch) {
     document.body.classList.add('sl89-noselect');
     vals.node.thumb.classList.add('active');
     invokeEvent(['start']);
@@ -639,8 +646,10 @@ export default function Slider89(target, config, replace) {
     moveThumb(thumbOffset, true);
     activeThumb.style.removeProperty(posAnchor);
 
-    window.addEventListener('mouseup', slideEnd);
-    window.addEventListener('mousemove', slideMove);
+    if (!isTouch) {
+      window.addEventListener('mouseup', slideEnd);
+      window.addEventListener('mousemove', slideMove);
+    }
   }
   function slideMove(e) {
     const absSize = getAbsoluteTrackSize();
@@ -662,9 +671,11 @@ export default function Slider89(target, config, replace) {
       invokeEvent(['move']);
     }
   }
-  function slideEnd() {
-    window.removeEventListener('mouseup', slideEnd);
-    window.removeEventListener('mousemove', slideMove);
+  function slideEnd(e, isTouch) {
+    if (!isTouch) {
+      window.removeEventListener('mouseup', slideEnd);
+      window.removeEventListener('mousemove', slideMove);
+    }
 
     const value = computeDistanceValue(getDistance());
     computeRatioDistance({value: value});
