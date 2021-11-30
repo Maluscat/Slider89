@@ -708,18 +708,11 @@ export default function Slider89(target, config, replace) {
       slider: document.createElement('div')
     };
 
-    const attribs = {};
-    (function() {
-      const defNodes = [
-        'track',
-        'thumb'
-      ];
-      defNodes.forEach(function(node) {
-        attribs[node] = {
-          class: 'sl89-' + node
-        };
-      });
-    })();
+    // Set the default CSS classes for the two default elements
+    const defaultClasses = {};
+    ['track', 'thumb'].forEach(function(nodeName) {
+      defaultClasses[nodeName] = 'sl89-' + nodeName;
+    });
 
     const variables = {};
 
@@ -728,87 +721,64 @@ export default function Slider89(target, config, replace) {
         name: '[\\w-]+'
       },
       all: '[\\d\\D]',
-      tabSpace: '[ \\t]+',
-      name: '[\\w-]+',
-      singleAmplfr: ':'
+      capName: '([\\w-]+)',
     };
     reg.attr.value = '(?:(?!<)' + reg.all + ')*?';
-    reg.capName = '(' + reg.name + ')';
-    reg.glbMatch = '(?:' + reg.tabSpace + '(?:(?!<).)*?)?>';
-    reg.content = '(?:\\s+"('+reg.all+'+?)")?';
-    reg.tag = '(?:\\s+' + reg.capName + ')?';
+    reg.tagType = '(?:\\s+' + reg.capName + ')?';
+    reg.content = '(?:\\s+"(' + reg.all + '+?)")?';
     reg.attribs = '(?:\\s+' + reg.attr.name + '\\(' + reg.attr.value + '\\))*';
-    reg.base = reg.capName + reg.tag + reg.content + '(' + reg.attribs + ')\\s*?';
     const rgx = {
-      general: (function() {
-        const parts = {
-          inner: '<([:/]?)' + reg.capName + '(?:' + reg.tabSpace + reg.name + ')?(?:' + reg.tabSpace + '(""))?' + reg.glbMatch,
-          noEnd: '<' + reg.singleAmplfr + '?' + reg.capName + '.*?',
-          noBeginning: '(?:^|' + reg.tabSpace + ')' + reg.singleAmplfr + '?' + reg.capName + reg.glbMatch
-        };
-        return parts.inner + '|' + parts.noEnd + '|' + parts.noBeginning;
-      })(),
       variable: '\\{\\$(\\w+)\\}|\\$(\\w+)',
       attributes: '(' + reg.attr.name + ')\\((' + reg.attr.value + ')\\)(?:\\s+|$)',
-      singleTag: '<' + reg.singleAmplfr + reg.base + '>',
-      multiTag: '<' + reg.base + '>((?:'+reg.all+'(?!<' + reg.capName + '(?:\\s+' + reg.name + ')?(?:\\s+"'+reg.all+'+?")?' + reg.attribs + '\\s*?>'+reg.all+'*?<\\/\\6\\s*>))*?)<\\/\\1\\s*>'
+      tag: '<([/:])?' + reg.capName + reg.tagType + reg.content + '(' + reg.attribs + ')\\s*?>\\s*'
     };
-    (function() {
-      for (var expr in rgx) rgx[expr] = new RegExp(rgx[expr], 'g');
-    })();
+    for (let expr in rgx) rgx[expr] = new RegExp(rgx[expr], 'g');
 
     structureRgx = rgx;
-    let structure = structureStr;
+    structureStr = structureStr.trim();
 
-    while (rgx.multiTag.test(structure)) {
-      structure = structure.replace(rgx.multiTag, function(match, name, tag, inner, attributes, content) {
-        const elem = assembleElement(name, tag, attributes, inner);
-        content = parseSingleTags(content, elem);
-        node[name] = elem;
-        return content;
-      });
-    }
-
-    structure = parseSingleTags(structure, node.slider);
-
-    structure = structure.trim();
-    if (/\S+/g.test(structure)) {
-      const errorList = new Array();
-      (function() {
-        if (rgx.general.test(structure)) {
-          structure.replace(rgx.general, function(match, amplifier, name, content, name2, name3) {
-            let info = '- "' + (name || name2 || name3) + '" => ';
-            if (amplifier == '/')
-              info += 'Closing tag finding no beginning';
-            else if (amplifier === '')
-              info += 'Opening tag finding no end (should it be a single tag marked with ‘:’?)';
-            else if (content != null)
-              info += 'Redundant empty text content (‘""’)';
-            else if (name2)
-              info += 'Missing ending character (‘>’)';
-            else if (name3)
-              info += 'Missing beginning character (‘<’)';
-            else
-              info += 'Unidentified error. Please check the element for syntax errors';
-            errorList.push(info);
-          });
-        } else {
-          errorList.push('Leftover unparsable structure:\n- "' + structure + '"\n');
-        }
-      }());
-      propError('structure', (errorList.length > 1 ? 'several elements have' : 'an element has') + ' been declared wrongly and could not be parsed.\n' + errorList.join('.\n'));
-    }
-
-    (function() {
-      const matches = new Array();
-      let match;
-      while (match = rgx.general.exec(structureStr)) {
-        matches.push(match);
+    const stack = new Array();
+    let currentIndex = 0;
+    let match;
+    // match: [matchedStr, type, name, tag, innerContent, attributes]
+    while (match = rgx.tag.exec(structureStr)) {
+      if (match.index != currentIndex) {
+        parseError(
+          'tag ‘<' + (match[1] || '') + match[2] + '>’',
+          structureStr.slice(currentIndex, match.index).trim()
+        );
       }
-      appendElements(node.slider, matches);
-    })();
+      currentIndex = rgx.tag.lastIndex;
 
-    //Statically typed
+      if (match[1] !== '/') {
+        const elem = assembleElement(match[2], match[3], match[4], match[5]);
+        node[match[2]] = elem;
+        node[stack[stack.length - 1] || 'slider'].appendChild(elem);
+        if (match[1] == null) {
+          stack.push(match[2]);
+        }
+      } else {
+        const lastItem = stack.pop();
+        if (lastItem !== match[2]) {
+          if (stack.indexOf(match[2]) !== -1) {
+            closingTagError(lastItem);
+          } else {
+            propError('structure', "the closing tag ‘</" + match[2] + ">’ couldn't find a matching opening tag");
+          }
+        }
+      }
+    }
+
+    if (currentIndex !== structureStr.length) {
+      parseError('end of string', structureStr.slice(currentIndex));
+    }
+    if (stack.length > 1) {
+      propError('structure', "couldn't find a matching closing tag for following elements:" + enlistArray(stack));
+    } else if (stack.length === 1) {
+      closingTagError(stack[0]);
+    }
+
+    // Statically typed
     (function() {
       const track = node.track;
       const thumb = node.thumb;
@@ -827,47 +797,42 @@ export default function Slider89(target, config, replace) {
 
     return node;
 
-    function appendElements(parent, childArr, i) {
-      if (i == null) i = 0;
-      for (; i < childArr.length; i++) {
-        const elem = node[childArr[i][2]];
-        if (childArr[i][1] === '') {
-          i = appendElements(elem, childArr, i + 1);
-        } else if (childArr[i][1] == '/') return i;
-        parent.appendChild(elem);
-      }
+    function parseError(endPoint, failedStructure) {
+      propError('structure',
+        "something has been declared wrongly and couldn't be parsed. Point of failure before " +
+        endPoint + ":\n  " + failedStructure + '\n');
+    }
+    function closingTagError(tagName) {
+      propError('structure',
+        "couldn't find a matching closing tag for the element ‘<" + tagName + ">’ (Should it be a self-closing tag marked with ‘:’?)");
     }
 
-    function parseSingleTags(str, parent) {
-      return str.replace(rgx.singleTag, function(match, name, tag, inner, attributes) {
-        const elem = assembleElement(name, tag, attributes, inner);
-        node[name] = elem;
-        return '';
-      });
-    }
-
-    function assembleElement(name, tag, attributes, content) {
-      if (node[name]) {
+    function assembleElement(name, tag, content, attributes) {
+      if (name in node) {
         propError('structure', 'Every element must have a unique name but there are mutiple elements called ‘' + name + '’');
       }
-      let elem = document.createElement(tag || 'div');
-      const hasAttribs = !!attribs[name];
+      const elem = document.createElement(tag || 'div');
       if (content) {
         elem.textContent = registerVariables(content, elem, false);
       }
       if (attributes) {
-        attributes.replace(rgx.attributes, function(attrib, attribName, value) {
-          //Tailored for space-separated values (check for duplicates in value vs. default structure style)
-          if (hasAttribs && attribs[name][attribName] && value.split(' ').indexOf(attribs[name][attribName]) == -1) {
-            value += ' ' + attribs[name][attribName];
+        let match;
+        while (match = rgx.attributes.exec(attributes)) {
+          const attribName = match[1];
+          let value = match[2];
+          // Don't override classes for the default elements (track, thumb), but complement them
+          if (
+            name in defaultClasses
+            && attribName === 'class'
+            && value.split(' ').indexOf(defaultClasses[name]) == -1
+          ) {
+            value += ' ' + defaultClasses[name];
           }
           elem.setAttribute(attribName, registerVariables(value, elem, attribName));
-        });
-      }
-      if (hasAttribs) {
-        for (var attr in attribs[name]) {
-          if (!elem.getAttribute(attr)) elem.setAttribute(attr, attribs[name][attr]);
         }
+      }
+      if (name in defaultClasses && !elem.getAttribute('class')) {
+        elem.setAttribute('class', defaultClasses[name]);
       }
       return elem;
     }
@@ -877,7 +842,7 @@ export default function Slider89(target, config, replace) {
         str = str.replace(rgx.variable, function(match, variableDelimit, variable) {
           const varName = variableDelimit || variable;
           if (!Object.prototype.hasOwnProperty.call(vals, varName)) {
-            propError('structure', "‘" + varName + "’ is not a recognized property. Please check its spelling or initialize it in the constructor");
+            propError('structure', "‘" + varName + "’ is not a recognized property and cannot be used as variable. Please check its spelling or initialize it in the constructor");
           }
 
           if (structureVars[varName] == null) structureVars[varName] = new Array();
@@ -888,7 +853,7 @@ export default function Slider89(target, config, replace) {
           if (attribName) item.attr = attribName;
           structureVars[varName].push(item);
 
-          return that[variableDelimit || variable];
+          return that[varName];
         });
       }
       return str;
