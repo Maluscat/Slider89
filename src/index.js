@@ -726,10 +726,10 @@ export default function Slider89(target, config, replace) {
     reg.attr.value = '(?:(?!<)' + reg.all + ')*?';
     reg.tagType = '(?:\\s+' + reg.capName + ')?';
     reg.content = '(?:\\s+"(' + reg.all + '+?)")?';
-    reg.attribs = '(?:\\s+' + reg.attr.name + '\\(' + reg.attr.value + '\\))*';
+    reg.attribs = '(?:\\s+' + reg.attr.name + '=\\[' + reg.attr.value + '\\])*';
     const rgx = {
       variable: '\\{\\$(\\w+)\\}|\\$(\\w+)',
-      attributes: '(' + reg.attr.name + ')\\((' + reg.attr.value + ')\\)(?:\\s+|$)',
+      attributes: '(' + reg.attr.name + ')=\\[(' + reg.attr.value + ')\\](?:\\s+|$)',
       tag: '<([/:])?' + reg.capName + reg.tagType + reg.content + '(' + reg.attribs + ')\\s*?>\\s*'
     };
     for (let expr in rgx) rgx[expr] = new RegExp(rgx[expr], 'g');
