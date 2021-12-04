@@ -492,11 +492,11 @@ export default function Slider89(target, config, replace) {
       enumerable: true
     });
 
-    function updateVariable(prop) {
-      for (var i in structureVars[prop]) {
-        const item = structureVars[prop][i];
+    function updateVariable(propName) {
+      for (var i in structureVars[propName]) {
+        const item = structureVars[propName][i];
         const str = item.str.replace(structureRgx.variable, function(match, variableDelimit, variable) {
-          return that[variableDelimit || variable];
+          return getValueFromVariableObject(propName, item);
         });
         if (item.attr) {
           item.node.setAttribute(item.attr, str);
@@ -505,6 +505,16 @@ export default function Slider89(target, config, replace) {
         }
       }
     }
+  }
+
+  function getValueFromVariableObject(propName, varObject) {
+    let value = that[propName];
+    if (varObject.descenders) {
+      for (let i = 0; i < varObject.descenders.length; i++) {
+        value = value[varObject.descenders[i]];
+      }
+    }
+    return value;
   }
 
   // ------ Thumb moving functions ------
@@ -727,8 +737,9 @@ export default function Slider89(target, config, replace) {
     reg.tagType = '(?:\\s+' + reg.capName + ')?';
     reg.content = '(?:\\s+"(' + reg.all + '+?)")?';
     reg.attribs = '(?:\\s+' + reg.attr.name + '=\\[' + reg.attr.value + '\\])*';
+    reg.varContent = '\\$((?:\\w+(?:\\.(?=\\w))?)+)';
     const rgx = {
-      variable: '\\{\\$(\\w+)\\}|\\$(\\w+)',
+      variable: '\\{' + reg.varContent + '\\}|' + reg.varContent,
       attributes: '(' + reg.attr.name + ')=\\[(' + reg.attr.value + ')\\](?:\\s+|$)',
       tag: '<([/:])?' + reg.capName + reg.tagType + reg.content + '(' + reg.attribs + ')\\s*?>\\s*'
     };
@@ -840,20 +851,22 @@ export default function Slider89(target, config, replace) {
     function registerVariables(str, node, attribName) {
       if (rgx.variable.test(str)) {
         str = str.replace(rgx.variable, function(match, variableDelimit, variable) {
-          const varName = variableDelimit || variable;
-          if (!Object.prototype.hasOwnProperty.call(vals, varName)) {
-            propError('structure', "‘" + varName + "’ is not a recognized property and cannot be used as variable. Please check its spelling or initialize it in the constructor");
+          const recursiveVar = (variableDelimit || variable).split('.');
+          const propName = recursiveVar.shift();
+          if (!Object.prototype.hasOwnProperty.call(vals, propName)) {
+            propError('structure', "‘" + propName + "’ is not a recognized property and cannot be used as variable. Please check its spelling or initialize it in the constructor");
           }
 
-          if (structureVars[varName] == null) structureVars[varName] = new Array();
+          if (structureVars[propName] == null) structureVars[propName] = new Array();
           const item = {
             str: str,
             node: node
           };
           if (attribName) item.attr = attribName;
-          structureVars[varName].push(item);
+          if (recursiveVar.length > 0) item.descenders = recursiveVar;
+          structureVars[propName].push(item);
 
-          return that[varName];
+          return getValueFromVariableObject(propName, item);
         });
       }
       return str;
