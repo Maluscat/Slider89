@@ -850,23 +850,32 @@ export default function Slider89(target, config, replace) {
 
     function registerVariables(str, node, attribName) {
       if (rgx.variable.test(str)) {
+        // Memorize & skip already handled variables for the current string
+        const cache = {};
         str = str.replace(rgx.variable, function(match, variableDelimit, variable) {
-          const recursiveVar = (variableDelimit || variable).split('.');
+          const varName = variableDelimit || variable;
+          const recursiveVar = varName.split('.');
           const propName = recursiveVar.shift();
-          if (!Object.prototype.hasOwnProperty.call(vals, propName)) {
-            propError('structure', "‘" + propName + "’ is not a recognized property and cannot be used as variable. Please check its spelling or initialize it in the constructor");
+          let varObject;
+          if (!cache.hasOwnProperty(varName)) {
+            if (!Object.prototype.hasOwnProperty.call(vals, propName)) {
+              propError('structure', "‘" + propName + "’ is not a recognized property and cannot be used as variable. Please check its spelling or initialize it in the constructor");
+            }
+
+            if (structureVars[propName] == null) structureVars[propName] = new Array();
+            varObject = {
+              str: str,
+              node: node
+            };
+            if (attribName) varObject.attr = attribName;
+            if (recursiveVar.length > 0) varObject.descenders = recursiveVar;
+            structureVars[propName].push(varObject);
+
+            cache[varName] = varObject;
+          } else {
+            varObject = cache[varName];
           }
-
-          if (structureVars[propName] == null) structureVars[propName] = new Array();
-          const item = {
-            str: str,
-            node: node
-          };
-          if (attribName) item.attr = attribName;
-          if (recursiveVar.length > 0) item.descenders = recursiveVar;
-          structureVars[propName].push(item);
-
-          return getValueFromVariableObject(propName, item);
+          return getValueFromVariableObject(propName, varObject);
         });
       }
       return str;
