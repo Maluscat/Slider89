@@ -496,7 +496,7 @@ export default function Slider89(target, config, replace) {
       for (var i in structureVars[propName]) {
         const item = structureVars[propName][i];
         const str = item.str.replace(structureRgx.variable, function(match, variableDelimit, variable) {
-          return getValueFromVariableObject(propName, item);
+          return getValueFromVariable(variableDelimit || variable);
         });
         if (item.attr) {
           item.node.setAttribute(item.attr, str);
@@ -507,11 +507,12 @@ export default function Slider89(target, config, replace) {
     }
   }
 
-  function getValueFromVariableObject(propName, varObject) {
-    let value = that[propName];
-    if (varObject.descenders) {
-      for (let i = 0; i < varObject.descenders.length; i++) {
-        value = value[varObject.descenders[i]];
+  function getValueFromVariable(varName) {
+    const recursiveVar = varName.split('.');
+    let value = that[recursiveVar[0]];
+    if (recursiveVar.length > 1) {
+      for (let i = 1; i < recursiveVar.length; i++) {
+        value = value[recursiveVar[i]];
       }
     }
     return value;
@@ -854,28 +855,23 @@ export default function Slider89(target, config, replace) {
         const cache = {};
         str = str.replace(rgx.variable, function(match, variableDelimit, variable) {
           const varName = variableDelimit || variable;
-          const recursiveVar = varName.split('.');
-          const propName = recursiveVar.shift();
-          let varObject;
           if (!cache.hasOwnProperty(varName)) {
+            const propName = varName.indexOf('.') !== -1 ? varName.slice(0, varName.indexOf('.')) : varName;
             if (!Object.prototype.hasOwnProperty.call(vals, propName)) {
               propError('structure', "‘" + propName + "’ is not a recognized property and cannot be used as variable. Please check its spelling or initialize it in the constructor");
             }
 
             if (structureVars[propName] == null) structureVars[propName] = new Array();
-            varObject = {
+            const item = {
               str: str,
               node: node
             };
-            if (attribName) varObject.attr = attribName;
-            if (recursiveVar.length > 0) varObject.descenders = recursiveVar;
-            structureVars[propName].push(varObject);
+            if (attribName) item.attr = attribName;
+            structureVars[propName].push(item);
 
-            cache[varName] = varObject;
-          } else {
-            varObject = cache[varName];
+            cache[varName] = item;
           }
-          return getValueFromVariableObject(propName, varObject);
+          return getValueFromVariable(varName);
         });
       }
       return str;
