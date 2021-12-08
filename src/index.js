@@ -8,6 +8,28 @@ export default (function() {
     'end',
     'change:$property'
   ];
+  const structureRgx = (function() {
+    const reg = {
+      attr: {
+        name: '[\\w-]+'
+      },
+      all: '[\\d\\D]',
+      capName: '([\\w-]+)',
+    };
+    reg.attr.value = '(?:(?!<)' + reg.all + ')*?';
+    reg.tagType = '(?:\\s+' + reg.capName + ')?';
+    reg.content = '(?:\\s+"(' + reg.all + '+?)")?';
+    reg.attribs = '(?:\\s+' + reg.attr.name + '=\\[' + reg.attr.value + '\\])*';
+    reg.varContent = '\\$((?:\\w+(?:\\.(?=\\w))?)+)';
+    const rgx = {
+      variable: '\\{' + reg.varContent + '\\}|' + reg.varContent,
+      attributes: '(' + reg.attr.name + ')=\\[(' + reg.attr.value + ')\\](?:\\s+|$)',
+      tag: '<([/:])?' + reg.capName + reg.tagType + reg.content + '(' + reg.attribs + ')\\s*?>\\s*'
+    };
+    for (let expr in rgx) rgx[expr] = new RegExp(rgx[expr], 'g');
+
+    return rgx;
+  }());
 
   function Slider89(target, config, replace) {
     if (!target) {
@@ -29,7 +51,6 @@ export default (function() {
     let activeTouchID;
     let mouseDownPos;
     let eventID = 0;
-    let structureRgx; //Pointer to `rgx` in parseStructure
     let trackStyle; //The live computed style of vals.node.track
     const structureVars = {};
     const eventList = {}; //Storing event data (most notably the identifier) for event removability
@@ -705,40 +726,20 @@ export default (function() {
 
       const variables = {};
 
-      const reg = {
-        attr: {
-          name: '[\\w-]+'
-        },
-        all: '[\\d\\D]',
-        capName: '([\\w-]+)',
-      };
-      reg.attr.value = '(?:(?!<)' + reg.all + ')*?';
-      reg.tagType = '(?:\\s+' + reg.capName + ')?';
-      reg.content = '(?:\\s+"(' + reg.all + '+?)")?';
-      reg.attribs = '(?:\\s+' + reg.attr.name + '=\\[' + reg.attr.value + '\\])*';
-      reg.varContent = '\\$((?:\\w+(?:\\.(?=\\w))?)+)';
-      const rgx = {
-        variable: '\\{' + reg.varContent + '\\}|' + reg.varContent,
-        attributes: '(' + reg.attr.name + ')=\\[(' + reg.attr.value + ')\\](?:\\s+|$)',
-        tag: '<([/:])?' + reg.capName + reg.tagType + reg.content + '(' + reg.attribs + ')\\s*?>\\s*'
-      };
-      for (let expr in rgx) rgx[expr] = new RegExp(rgx[expr], 'g');
-
-      structureRgx = rgx;
       structureStr = structureStr.trim();
 
       const stack = new Array();
       let currentIndex = 0;
       let match;
       // match: [matchedStr, type, name, tag, innerContent, attributes]
-      while (match = rgx.tag.exec(structureStr)) {
+      while (match = structureRgx.tag.exec(structureStr)) {
         if (match.index != currentIndex) {
           parseError(
             'tag ‘<' + (match[1] || '') + match[2] + '>’',
             structureStr.slice(currentIndex, match.index).trim()
           );
         }
-        currentIndex = rgx.tag.lastIndex;
+        currentIndex = structureRgx.tag.lastIndex;
 
         if (match[1] !== '/') {
           const elem = assembleElement(match[2], match[3], match[4], match[5]);
@@ -807,7 +808,7 @@ export default (function() {
         }
         if (attributes) {
           let match;
-          while (match = rgx.attributes.exec(attributes)) {
+          while (match = structureRgx.attributes.exec(attributes)) {
             const attribName = match[1];
             let value = match[2];
             // Don't override classes for the default elements (track, thumb), but complement them
@@ -828,10 +829,10 @@ export default (function() {
       }
 
       function registerVariables(str, node, attribName) {
-        if (rgx.variable.test(str)) {
+        if (structureRgx.variable.test(str)) {
           // Memorize & skip already handled variables for the current string
           const cache = {};
-          str = str.replace(rgx.variable, function(match, variableDelimit, variable) {
+          str = str.replace(structureRgx.variable, function(match, variableDelimit, variable) {
             const varName = variableDelimit || variable;
             if (!cache.hasOwnProperty(varName)) {
               const propName = varName.indexOf('.') !== -1 ? varName.slice(0, varName.indexOf('.')) : varName;
