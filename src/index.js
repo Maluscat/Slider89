@@ -1,6 +1,6 @@
 'use strict';
 export default (function() {
-  //Style rule strings which will be inserted into a newly created stylesheet
+  // Style rule strings which will be inserted into a newly created stylesheet
   const styles = require('./default-styles.css');
   const eventTypes = [
     'start',
@@ -34,13 +34,13 @@ export default (function() {
   function Slider89(target, config, replace) {
     if (!target) {
       error('no first argument has been supplied. It needs to be the DOM target node for the slider', 'constructor', true);
-    } else if (!target.nodeType || target.nodeType != 1) {
+    } else if (!target.nodeType || target.nodeType !== 1) {
       error('the first argument must be a valid DOM node the slider will be placed into ' + typeMsg(target), 'constructor', true);
     }
 
-    if (config == undefined || config === false) {
+    if (config == null || config === false) {
       config = {};
-    } else if (typeof config != 'object' || Array.isArray(config)) {
+    } else if (typeof config !== 'object' || Array.isArray(config)) {
       error('the optional second argument needs to be an object for configuration ' + typeMsg(config), 'constructor', true);
     }
 
@@ -51,13 +51,13 @@ export default (function() {
     let activeTouchID;
     let mouseDownPos;
     let eventID = 0;
-    let trackStyle; //The live computed style of vals.node.track
+    let trackStyle; // The live computed style of vals.node.track
     const structureVars = {};
-    const eventList = {}; //Storing event data (most notably the identifier) for event removability
-    const vals = {}; //holding every property of the class
+    const eventList = {}; // Storing event data (most notably the identifier) for event removability
+    const vals = {}; // holding every class property
 
-    //`$` is a fixed endpoint for all properties, only to be accessed by a bubbling getter/setter
-    //Object.defineProperty is used for non-enumerability of `$` inside `vals`
+    // `$` is a fixed endpoint for all properties, only to be accessed by a bubbling getter/setter
+    // Object.defineProperty is used for non-enumerability of `$` inside `vals`
     Object.defineProperty(vals, '$', {
       value: {}
     });
@@ -180,7 +180,7 @@ export default (function() {
         ],
         setter: function(val) {
           if (val !== false) {
-            for (var i = 0; i < vals.range.length; i++) {
+            for (let i = 0; i < vals.range.length; i++) {
               if (Number(vals.range[i].toFixed(val)) !== vals.range[i]) {
                 propError('range', 'the given range ' + ['start', 'end'][i] + ' of `' + vals.range[i] + '` exceeds the currently set precision of ' + val);
               }
@@ -274,7 +274,7 @@ export default (function() {
         initial: true,
         setter: function(val) {
           const errTypes = new Array();
-          for (var eventType in val) {
+          for (let eventType in val) {
             if (!checkEventType(eventType)) errTypes.push(eventType);
           }
           if (errTypes.length > 0) {
@@ -288,17 +288,13 @@ export default (function() {
     };
 
     initial = true;
-    //Initializing properties and methods
+    // Initialize properties and methods
     (function() {
-      for (var _ in properties) {
+      for (let _ in properties) {
+        // IE-support: item needs to be a scoped variable because defineProperty is async
         const item = _;
         const prop = properties[item];
 
-        /*
-          Calling Object.defineProperty on the class instance (`this`) is necessary to be able to create multiple instances
-          as Class.prototype as target will inherit the defined property to all instances
-          and a new call of defineProperty (when creating a new instance) would throw an error for defining the same property twice
-        */
         Object.defineProperty(that, item, {
           set: function(val) {
             if (!prop.static) {
@@ -315,7 +311,7 @@ export default (function() {
             } else error('property ‘' + item + '’ may only be read from but it was just set with the value ‘' + val + '’');
           },
           get: function() {
-            const val = prop.getter ? prop.getter(vals[item]) : vals[item];
+            const val = (prop.getter ? prop.getter(vals[item]) : vals[item]);
             return val;
           }
         });
@@ -327,14 +323,14 @@ export default (function() {
           delete config[item];
         } else {
           const def = prop.default;
-          vals[item] = typeof def == 'function' ? def() : def;
+          vals[item] = (typeof def === 'function' ? def() : def);
         }
       }
 
-      for (var _ in config) {
+      for (let _ in config) {
         const item = _;
 
-        if (item[0] == '_') {
+        if (item[0] === '_') {
           defineDeepProperty(that, item, vals);
           vals[item] = config[item];
         } else {
@@ -342,7 +338,7 @@ export default (function() {
         }
       }
 
-      for (var _ in methods) {
+      for (let _ in methods) {
         const item = _;
         const method = methods[item];
         Slider89.prototype[item] = function() {
@@ -353,10 +349,10 @@ export default (function() {
       }
     })();
 
-    //Building the slider element
+    // Build the slider element
     (function() {
-      if (vals.structure == false) {
-        //In case no custom structure is defined, manually build the node to ensure best performance (parseStructure takes a while)
+      if (vals.structure === false) {
+        // In case no custom structure is defined, manually build the node to ensure best performance (parseStructure takes a while)
         vals.node.slider = document.createElement('div');
         vals.node.track = document.createElement('div');
         vals.node.thumb = document.createElement('div');
@@ -364,8 +360,8 @@ export default (function() {
         vals.node.track.appendChild(vals.node.thumb);
         vals.node.slider.appendChild(vals.node.track);
 
-        for (var element in vals.node)
-          if (element != 'slider') vals.node[element].classList.add('sl89-' + element);
+        for (let element in vals.node)
+          if (element !== 'slider') vals.node[element].classList.add('sl89-' + element);
       } else {
         vals.node = parseStructure(vals.structure);
       }
@@ -373,22 +369,22 @@ export default (function() {
 
       if (replace) {
         const targetAttr = target.attributes;
-        for (var i = 0; i < targetAttr.length; i++) {
+        for (let i = 0; i < targetAttr.length; i++) {
           node.slider.setAttribute(targetAttr[i].name, targetAttr[i].value);
         }
       }
       node.slider.classList.add('slider89');
-      if (vals.orientation == 'vertical') node.slider.classList.add('vertical');
+      if (vals.orientation === 'vertical') node.slider.classList.add('vertical');
 
       if (vals.classList) {
-        // Adding the specified classes and collecting all nonexistent nodes in `errNodes`
+        // Add the specified classes and collecting all nonexistent nodes in `errNodes`
         const errNodes = new Array();
-        for (var key in vals.classList) {
+        for (let key in vals.classList) {
           const item = vals.classList[key];
           if (!Object.prototype.hasOwnProperty.call(node, key)) {
             errNodes.push(key);
-          } else if (errNodes.length == 0) {
-            for (var i = 0; i < item.length; i++) {
+          } else if (errNodes.length === 0) {
+            for (let i = 0; i < item.length; i++) {
               node[key].classList.add(item[i]);
             }
           }
@@ -457,22 +453,22 @@ export default (function() {
       }
     }
 
+
     // ------ Helper functions ------
     function error(msg, target, abort) {
-      //TODO: refer to docs
       msg = 'Slider89' + (target ? ' @ ' + target : '') + ': ' + msg;
-      if (msg[msg.length - 1] != '\n' && msg[msg.length - 1] != '.') msg += '.\n';
+      if (msg[msg.length - 1] !== '\n' && msg[msg.length - 1] !== '.') msg += '.\n';
       if (initial || abort) msg += 'Aborting the slider construction.';
       throw new Error(msg);
     }
     function checkEventType(type) {
-      if (type.indexOf('change:') == 0) {
-        //Edge case for 'change:$property'
+      if (type.indexOf('change:') === 0) {
+        // Edge case for 'change:$property'
         const customProp = type.slice('change:'.length);
         if (!Object.prototype.hasOwnProperty.call(vals, customProp)) {
           error("‘" + type + "’ refers to ‘" + customProp + "’, which isn't a recognized property. Check its spelling and be aware that custom properties need to be initialized", 'addEvent');
         }
-      } else if (eventTypes.indexOf(type) == -1) return false;
+      } else if (eventTypes.indexOf(type) === -1) return false;
       return true;
     }
 
@@ -492,7 +488,7 @@ export default (function() {
       });
 
       function updateVariable(propName) {
-        for (var i in structureVars[propName]) {
+        for (let i in structureVars[propName]) {
           const item = structureVars[propName][i];
           const str = item.str.replace(structureRgx.variable, function(match, variableDelimit, variable) {
             return getValueFromVariable(variableDelimit || variable);
@@ -517,18 +513,19 @@ export default (function() {
       return value;
     }
 
+
     // ------ Thumb moving functions ------
     function getTrackPadding(direction) {
       return parseFloat(trackStyle['padding' + direction]);
     }
     function getDistance() {
       const style = vals.node.thumb.style.transform;
-      const translateStr = vals.orientation == 'vertical' ? 'translateY(' : 'translateX(';
+      const translateStr = vals.orientation === 'vertical' ? 'translateY(' : 'translateX(';
       const firstBracket = style.slice(style.indexOf(translateStr) + translateStr.length);
       return parseFloat(firstBracket.slice(0, firstBracket.indexOf(')')));
     }
     function getAbsoluteTrackSize() {
-      if (vals.orientation == 'vertical') {
+      if (vals.orientation === 'vertical') {
         return (vals.node.track.clientHeight - getTrackPadding('Top') - getTrackPadding('Bottom')) - vals.node.thumb.clientHeight;
       } else {
         return (vals.node.track.clientWidth - getTrackPadding('Left') - getTrackPadding('Right')) - vals.node.thumb.clientWidth;
@@ -540,9 +537,9 @@ export default (function() {
     }
     function moveThumb(distance, useTransform) {
       if (useTransform) {
-        vals.node.thumb.style.transform = 'translate' + (vals.orientation == 'vertical' ? 'Y' : 'X') + '(' + distance + 'px)';
+        vals.node.thumb.style.transform = 'translate' + (vals.orientation === 'vertical' ? 'Y' : 'X') + '(' + distance + 'px)';
       } else {
-        if (vals.orientation == 'vertical') {
+        if (vals.orientation === 'vertical') {
           var paddingStart = getTrackPadding('Top');
           var paddingEnd = getTrackPadding('Bottom');
           var thumbDim = vals.node.thumb.clientHeight;
@@ -567,7 +564,7 @@ export default (function() {
         value = vals.value;
       } else {
         const props = ['range', 'step'];
-        for (var i in props) {
+        for (let i in props) {
           if (newVals[props[i]] == null) newVals[props[i]] = vals[props[i]];
         }
         if (newVals.value != null) {
@@ -577,7 +574,7 @@ export default (function() {
           value = (newVals.range[1] - newVals.range[0]) * ratio + newVals.range[0];
         }
       }
-      //Round value to a given step
+      // Round value to a given step
       if (newVals.step !== false) {
         if (newVals.range[1] - newVals.range[0] < newVals.step) {
           value = newVals.range[0];
@@ -590,18 +587,20 @@ export default (function() {
       if (newRatio !== ratio) moveThumb(newRatio);
     }
 
+
     // ------ Event functions ------
     function invokeEvent(types) {
-      for (var i = 0; i < types.length; i++) {
+      for (let i = 0; i < types.length; i++) {
         const functions = vals.events[types[i]];
         if (functions) {
-          for (var n = 0; n < functions.length; n++) {
+          for (let n = 0; n < functions.length; n++) {
             functions[n].call(that);
           }
         }
       }
     }
-    // -> Event listeners
+
+    // -> Touch event callbacks
     function touchStart(e) {
       e.preventDefault();
       if (activeTouchID == null) {
@@ -615,7 +614,7 @@ export default (function() {
     }
     function touchMove(e) {
       e.preventDefault();
-      for (var i = 0; i < e.changedTouches.length; i++) {
+      for (let i = 0; i < e.changedTouches.length; i++) {
         if (e.changedTouches[i].identifier === activeTouchID) {
           slideMove.call(this, e.changedTouches[i], true);
           break;
@@ -624,7 +623,7 @@ export default (function() {
     }
     function touchEnd(e) {
       e.preventDefault();
-      for (var i = 0; i < e.changedTouches.length; i++) {
+      for (let i = 0; i < e.changedTouches.length; i++) {
         if (e.changedTouches[i].identifier === activeTouchID) {
           vals.node.thumb.removeEventListener('touchmove', touchMove);
           vals.node.thumb.removeEventListener('touchend', touchEnd);
@@ -636,13 +635,15 @@ export default (function() {
         }
       }
     }
+
+    // -> Mouse event callbacks
     function slideStart(e, isTouch) {
       document.body.classList.add('sl89-noselect');
       vals.node.thumb.classList.add('active');
       invokeEvent(['start']);
 
       activeThumb = this;
-      if (vals.orientation == 'vertical') {
+      if (vals.orientation === 'vertical') {
         var startDir = 'Top';
         var posAnchor = 'top';
         var clientDim = e.clientY;
@@ -663,7 +664,7 @@ export default (function() {
     }
     function slideMove(e) {
       const absSize = getAbsoluteTrackSize();
-      let distance = (vals.orientation == 'vertical' ? e.clientY : e.clientX) - mouseDownPos;
+      let distance = (vals.orientation === 'vertical' ? e.clientY : e.clientX) - mouseDownPos;
 
       if (distance > absSize) distance = absSize;
       else if (distance < 0) distance = 0;
@@ -698,7 +699,8 @@ export default (function() {
       document.body.classList.remove('sl89-noselect');
     }
 
-    // ------ Scope-specific functions ------
+
+    // ------ Slider init functions ------
     // -> Element building
     function createStyleSheet() {
       const sheet = (function() {
@@ -709,10 +711,11 @@ export default (function() {
           return document.head.appendChild(document.createElement('style')).sheet;
         }
       })();
-      for (var i = 0; i < styles.length; i++) {
+      for (let i = 0; i < styles.length; i++) {
         sheet.insertRule(styles[i], 0);
       }
     }
+
     function parseStructure(structureStr) {
       const node = {
         slider: document.createElement('div')
@@ -733,7 +736,7 @@ export default (function() {
       let match;
       // match: [matchedStr, type, name, tag, innerContent, attributes]
       while (match = structureRgx.tag.exec(structureStr)) {
-        if (match.index != currentIndex) {
+        if (match.index !== currentIndex) {
           parseError(
             'tag ‘<' + (match[1] || '') + match[2] + '>’',
             structureStr.slice(currentIndex, match.index).trim()
@@ -815,7 +818,7 @@ export default (function() {
             if (
               name in defaultClasses
               && attribName === 'class'
-              && value.split(' ').indexOf(defaultClasses[name]) == -1
+              && value.split(' ').indexOf(defaultClasses[name]) === -1
             ) {
               value += ' ' + defaultClasses[name];
             }
@@ -857,7 +860,7 @@ export default (function() {
       }
     }
 
-    //-> Methods & properties
+    // -> Methods & properties
     function propError(prop, msg, noTarget) {
       if (!initial) {
         let prevVal = vals[prop];
@@ -878,11 +881,11 @@ export default (function() {
       error(errMsg, method);
     }
 
-    //Checking properties & methods for the correct type & format
+    // Check properties & methods for the correct type & format
     function checkMethod(method, argList) {
       const obj = methods[method];
-      //If the next argument (argList.length - 1 + 1) is not optional, a required arg is missing
-      for (var i in argList) {
+      // If the next argument (argList.length - 1 + 1) is not optional, a required arg is missing
+      for (let i in argList) {
         const arg = argList[i];
         const msg = checkTypes(arg, obj.args[i].structure, false);
         if (msg) methodError(method, i, msg);
@@ -919,7 +922,7 @@ export default (function() {
       msg += 'NaN';
     else if (variable === null)
       msg += 'null';
-    else if (typeof variable == 'boolean')
+    else if (typeof variable === 'boolean')
       msg += variable;
     else
       msg += 'of type ' + typeof variable;
@@ -930,25 +933,25 @@ export default (function() {
   // -> Type checking functions
   function checkTypes(val, structure, plural) {
     let msg;
-    for (var i = 0; i < structure.length; i++) {
+    for (let i = 0; i < structure.length; i++) {
       const typeObj = structure[i];
       const type = typeObj.type;
       if (
-        type == 'boolean' && typeof val == 'boolean' ||
-        type == 'true' && val === true ||
-        type == 'false' && val === false ||
-        type == 'array' && Array.isArray(val) ||
-        type == 'object' && Object.prototype.toString.call(val) == '[object Object]' ||
-        type == 'number' && typeof val == 'number' && !polyIsNaN(val) ||
-        type == 'function' && typeof val == 'function' ||
-        type == 'string' && typeof val == 'string'
+        type === 'boolean' && typeof val === 'boolean' ||
+        type === 'true' && val === true ||
+        type === 'false' && val === false ||
+        type === 'array' && Array.isArray(val) ||
+        type === 'object' && Object.prototype.toString.call(val) === '[object Object]' ||
+        type === 'number' && typeof val === 'number' && !polyIsNaN(val) ||
+        type === 'function' && typeof val === 'function' ||
+        type === 'string' && typeof val === 'string'
       ) {
         if (type == 'array') {
-          for (var n = 0; n < val.length; n++) {
+          for (let n = 0; n < val.length; n++) {
             if (msg = checkTypes(val[n], typeObj.structure, true)) break;
           }
-        } else if (type == 'object') {
-          for (var key in val) {
+        } else if (type === 'object') {
+          for (let key in val) {
             if (msg = checkTypes(val[key], typeObj.structure, true)) break;
           }
         }
@@ -970,28 +973,28 @@ export default (function() {
         if (conditions.filled && val.trim() === '') {
           return 'an empty string';
         }
-        if (conditions.keywords && conditions.keywords.indexOf(val) == -1) {
+        if (conditions.keywords && conditions.keywords.indexOf(val) === -1) {
           return 'a different string';
         }
         if (conditions.wordChar && !polyIsNaN(Number(val))) {
           return 'a pure number string';
         }
         if (conditions.length && val.length !== conditions.length) {
-          return (type == 'array' ? 'an ' : 'a ') + type + ' of length ' + val.length;
+          return (type === 'array' ? 'an ' : 'a ') + type + ' of length ' + val.length;
         }
       }
     }
   }
 
-  //Computing an automated error message regarding the property's types and conditions
+  // Compute an automated error message regarding the property's types and conditions
   function computeTypeMsg(struct, shape, plural, deep) {
     let msg = '';
-    for (var i = 0; i < struct.length; i++) {
+    for (let i = 0; i < struct.length; i++) {
       const type = struct[i].type;
       const cond = struct[i].conditions;
       if (msg) msg += ' or ';
 
-      if (type == 'number') {
+      if (type === 'number') {
         const nonnegative = cond && cond.nonnegative;
         const isInt = cond && cond.integer;
 
@@ -1005,7 +1008,7 @@ export default (function() {
         if (plural) msg += 's';
       }
 
-      else if (type == 'array') {
+      else if (type === 'array') {
         const len = cond && cond.length;
         const msgRes = computeTypeMsg(struct[i].structure, false, len !== 1, true);
 
@@ -1021,17 +1024,17 @@ export default (function() {
         if (!deep) msg += ' with ' + msgRes + ' as values';
       }
 
-      else if (type == 'object') {
+      else if (type === 'object') {
         msg += 'an object with ' + computeTypeMsg(struct[i].structure, false, true, true) + ' as values';
       }
 
-      else if (type == 'function') {
+      else if (type === 'function') {
         if (!deep) msg += 'a ';
         msg += 'function reference';
         if (!deep && plural) msg += 's';
       }
 
-      else if (type == 'string') {
+      else if (type === 'string') {
         if (cond && cond.keywords) {
           if (cond.keywords.length > 1) {
             msg += 'one of the keywords';
@@ -1039,8 +1042,8 @@ export default (function() {
             msg += 'the keyword';
           }
           cond.keywords.forEach(function(val, n, arr) {
-            if (n != 0 && n == arr.length - 1) msg += ' or';
-            else if (n != 0) msg += ',';
+            if (n !== 0 && n === arr.length - 1) msg += ' or';
+            else if (n !== 0) msg += ',';
             msg += ' "' + val + '"';
           });
         } else {
@@ -1052,12 +1055,12 @@ export default (function() {
         }
       }
 
-      else if (type == 'boolean') {
+      else if (type === 'boolean') {
         if (!deep) msg += 'a ';
         msg += 'boolean';
         if (!deep && plural) msg += 's';
       }
-      else if (type == 'true' || type == 'false') {
+      else if (type === 'true' || type === 'false') {
         msg += type;
       }
 
