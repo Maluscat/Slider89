@@ -197,7 +197,7 @@ export default (function() {
           {
             type: 'number',
             conditions: {
-              nonnegative: true
+              positive: true
             }
           },
           { type: 'false' }
@@ -967,6 +967,9 @@ export default (function() {
         if (conditions.nonnegative && val < 0) {
           return 'a negative number';
         }
+        if (conditions.positive && val <= 0) {
+          return 'a negative number or 0';
+        }
         if (conditions.integer && val % 1 !== 0) {
           return 'a floating point number';
         }
@@ -995,12 +998,17 @@ export default (function() {
       if (msg) msg += ' or ';
 
       if (type === 'number') {
+        const positive = cond && cond.positive;
         const nonnegative = cond && cond.nonnegative;
         const isInt = cond && cond.integer;
 
-        if (nonnegative) {
+        if (nonnegative || positive) {
           if (!plural) msg += 'a ';
-          msg += 'non-negative';
+          if (nonnegative) {
+            msg += 'non-negative';
+          } else {
+            msg += 'positive'
+          }
         } else if (isInt && !plural) {
           msg += 'an';
         } else msg += 'any';
