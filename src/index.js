@@ -576,7 +576,7 @@ export default (function() {
       }
       // Round value to a given step
       if (newVals.step !== false) {
-        if (newVals.range[1] - newVals.range[0] < newVals.step) {
+        if (Math.abs(newVals.range[1] - newVals.range[0]) < newVals.step) {
           value = newVals.range[0];
         } else {
           value = newVals.range[0] + Math.round((value - newVals.range[0]) / newVals.step) * newVals.step;
