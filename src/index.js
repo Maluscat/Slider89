@@ -150,15 +150,24 @@ export default (function() {
           type: 'number'
         }],
         setter: function(val) {
-          if (
-            vals.range[0] > vals.range[1] && (val > vals.range[0] || val < vals.range[1]) ||
-            vals.range[1] > vals.range[0] && (val < vals.range[0] || val > vals.range[1])
-          ) {
-            const rangeStr = '[' + vals.range.join(', ') + ']';
-            propError('value', 'the given value of ' + val + ' exceeds the currently set range of ' + rangeStr);
+          if (vals.range[0] < vals.range[1]) {
+            if (val < vals.range[0]) {
+              val = vals.range[0];
+            } else if (val > vals.range[1]) {
+              val = vals.range[1];
+            }
+          } else {
+            if (val > vals.range[0]) {
+              val = vals.range[0];
+            } else if (val < vals.range[1]) {
+              val = vals.range[1];
+            }
           }
           if (!initial) {
             computeRatioDistance({value: val});
+            return true;
+          } else {
+            vals.value = val;
             return true;
           }
         },
