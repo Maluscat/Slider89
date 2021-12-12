@@ -680,8 +680,8 @@ export default (function() {
 
       if (vals.step) {
         const relStep = absSize / ((vals.range[1] - vals.range[0]) / vals.step);
-        distance = Math.round(distance / relStep) * relStep;
-        if (distance > absSize) return;
+        // min(last possible step distance, computed step distance)
+        distance = Math.min(distance - (distance % relStep), Math.round(distance / relStep) * relStep);
       }
       const value = computeDistanceValue(distance, absSize);
 
