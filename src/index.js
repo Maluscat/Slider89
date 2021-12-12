@@ -341,7 +341,7 @@ export default (function() {
       for (let _ in methods) {
         const item = _;
         const method = methods[item];
-        Slider89.prototype[item] = function() {
+        that[item] = function() {
           const args = Array.prototype.slice.call(arguments, 0, method.args.length);
           checkMethod(item, args);
           return method.function.apply(this, args);
