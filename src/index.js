@@ -666,7 +666,9 @@ export default (function() {
         var posAnchor = 'left';
         var clientDim = e.clientX;
       }
-      const thumbOffset = activeThumb['offset' + startDir] - getTrackPadding(startDir);
+      const thumbOffset =
+        activeThumb.getBoundingClientRect()[posAnchor] - vals.node.track.getBoundingClientRect()[posAnchor] -
+        getTrackPadding(startDir);
       mouseDownPos = clientDim - thumbOffset;
       moveThumb(thumbOffset, true);
       activeThumb.style.removeProperty(posAnchor);
