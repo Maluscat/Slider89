@@ -484,11 +484,14 @@ export default (function() {
     function defineDeepProperty(target, item, endpoint) {
       Object.defineProperty(target, item, {
         set: function(val) {
+          const prevVal = endpoint[item];
           endpoint[item] = val;
           if (Object.prototype.hasOwnProperty.call(structureVars, item)) {
             updateVariable(item);
           }
-          if (!initial) invokeEvent(['change:' + item]);
+          if (!initial) {
+            invokeEvent(['change:' + item], prevVal);
+          }
         },
         get: function() {
           return endpoint[item];
@@ -599,11 +602,13 @@ export default (function() {
 
     // ------ Event functions ------
     function invokeEvent(types) {
+      const args = Array.from(arguments);
+      args[0] = that;
       for (let i = 0; i < types.length; i++) {
         const functions = vals.events[types[i]];
         if (functions) {
           for (let n = 0; n < functions.length; n++) {
-            functions[n].call(that);
+            functions[n].apply(that, args);
           }
         }
       }
@@ -614,7 +619,7 @@ export default (function() {
       e.preventDefault();
       if (activeTouchID == null) {
         activeTouchID = e.changedTouches[0].identifier;
-        slideStart.call(this, e.changedTouches[0], true);
+        slideStart.call(this, e.changedTouches[0], e);
 
         vals.node.thumb.addEventListener('touchmove', touchMove);
         vals.node.thumb.addEventListener('touchend', touchEnd);
@@ -625,7 +630,7 @@ export default (function() {
       e.preventDefault();
       for (let i = 0; i < e.changedTouches.length; i++) {
         if (e.changedTouches[i].identifier === activeTouchID) {
-          slideMove.call(this, e.changedTouches[i], true);
+          slideMove.call(this, e.changedTouches[i], e);
           break;
         }
       }
@@ -638,7 +643,7 @@ export default (function() {
           vals.node.thumb.removeEventListener('touchend', touchEnd);
           vals.node.thumb.removeEventListener('touchcancel', touchEnd);
 
-          slideEnd.call(this, e.changedTouches[i], true);
+          slideEnd.call(this, e.changedTouches[i], e);
           activeTouchID = null;
           break;
         }
@@ -646,10 +651,10 @@ export default (function() {
     }
 
     // -> Mouse event callbacks
-    function slideStart(e, isTouch) {
+    function slideStart(e, touchEvent) {
       document.body.classList.add('sl89-noselect');
       vals.node.thumb.classList.add('active');
-      invokeEvent(['start']);
+      invokeEvent(['start'], touchEvent || e);
 
       activeThumb = this;
       if (vals.orientation === 'vertical') {
@@ -666,12 +671,12 @@ export default (function() {
       moveThumb(thumbOffset, true);
       activeThumb.style.removeProperty(posAnchor);
 
-      if (!isTouch) {
+      if (!touchEvent) {
         window.addEventListener('mouseup', slideEnd);
         window.addEventListener('mousemove', slideMove);
       }
     }
-    function slideMove(e) {
+    function slideMove(e, touchEvent) {
       const absSize = getAbsoluteTrackSize();
       let distance = (vals.orientation === 'vertical' ? e.clientY : e.clientX) - mouseDownPos;
 
@@ -688,11 +693,11 @@ export default (function() {
       if (vals.value !== value) {
         vals.value = value;
         moveThumb(distance, true);
-        invokeEvent(['move']);
+        invokeEvent(['move'], touchEvent || e);
       }
     }
-    function slideEnd(e, isTouch) {
-      if (!isTouch) {
+    function slideEnd(e, touchEvent) {
+      if (!touchEvent) {
         window.removeEventListener('mouseup', slideEnd);
         window.removeEventListener('mousemove', slideMove);
       }
@@ -703,7 +708,7 @@ export default (function() {
       mouseDownPos = null;
       activeThumb = null;
 
-      invokeEvent(['end']);
+      invokeEvent(['end'], touchEvent || e);
       vals.node.thumb.classList.remove('active');
       document.body.classList.remove('sl89-noselect');
     }
