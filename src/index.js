@@ -484,12 +484,15 @@ export default (function() {
     function defineDeepProperty(target, item, endpoint) {
       Object.defineProperty(target, item, {
         set: function(val) {
-          const prevVal = endpoint[item];
-          endpoint[item] = val;
-          if (Object.prototype.hasOwnProperty.call(structureVars, item)) {
-            updateVariable(item);
-          }
           if (!initial) {
+            var prevVal = that[item];
+          }
+          endpoint[item] = val;
+          // Only compare `that` items to accomodate for getters (e.g. `value` (`precision`))
+          if (!initial && prevVal !== that[item]) {
+            if (Object.prototype.hasOwnProperty.call(structureVars, item)) {
+              updateVariable(item);
+            }
             invokeEvent(['change:' + item], prevVal);
           }
         },
