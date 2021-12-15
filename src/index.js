@@ -569,7 +569,7 @@ export default (function() {
         vals.node.thumb.style[posAnchor] = 'calc(' + (distance * 100) + '% - ' + subtract + ')';
       }
     }
-    function computeRatioDistance(newVals) {
+    function computeRatioDistance(newVals, returnProperties) {
       let value, ratio;
       if (!newVals) {
         newVals = vals;
@@ -595,8 +595,15 @@ export default (function() {
         }
       }
       const newRatio = (value - newVals.range[0]) / (newVals.range[1] - newVals.range[0]);
-      if (value !== vals.value) vals.value = value;
-      if (newRatio !== ratio) moveThumb(newRatio);
+      if (returnProperties) {
+        return {
+          value: value,
+          ratio: newRatio
+        };
+      } else {
+        if (value !== vals.value) vals.value = value;
+        if (newRatio !== ratio) moveThumb(newRatio);
+      }
     }
 
 
@@ -685,12 +692,12 @@ export default (function() {
       if (distance > absSize) distance = absSize;
       else if (distance < 0) distance = 0;
 
-      if (vals.step) {
-        const relStep = absSize / ((vals.range[1] - vals.range[0]) / vals.step);
-        // min(last possible step distance, computed step distance)
-        distance = Math.min(distance - (distance % relStep), Math.round(distance / relStep) * relStep);
+      let value = computeDistanceValue(distance, absSize);
+      if (vals.step !== false) {
+        const computedProperties = computeRatioDistance({value: value}, true);
+        value = computedProperties.value;
+        distance = computedProperties.ratio * absSize;
       }
-      const value = computeDistanceValue(distance, absSize);
 
       if (vals.value !== value) {
         vals.value = value;
