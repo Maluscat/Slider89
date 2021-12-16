@@ -381,34 +381,33 @@ export default (function() {
           }
         }
       }
-      const node = vals.node;
 
       if (replace) {
         const targetAttr = target.attributes;
         for (let i = 0; i < targetAttr.length; i++) {
-          node.slider.setAttribute(targetAttr[i].name, targetAttr[i].value);
+          vals.node.slider.setAttribute(targetAttr[i].name, targetAttr[i].value);
         }
       }
-      node.slider.classList.add('slider89');
-      if (vals.orientation === 'vertical') node.slider.classList.add('vertical');
+      vals.node.slider.classList.add('slider89');
+      if (vals.orientation === 'vertical') vals.node.slider.classList.add('vertical');
 
       if (vals.classList) {
         // Add the specified classes and collecting all nonexistent nodes in `errNodes`
         const errNodes = new Array();
         for (let key in vals.classList) {
           const item = vals.classList[key];
-          if (!Object.prototype.hasOwnProperty.call(node, key)) {
+          if (!Object.prototype.hasOwnProperty.call(vals.node, key)) {
             errNodes.push(key);
           } else if (errNodes.length === 0) {
             for (let i = 0; i < item.length; i++) {
-              node[key].classList.add(item[i]);
+              vals.node[key].classList.add(item[i]);
             }
           }
         }
         if (errNodes.length > 0) {
           const msg =
             "the given object contains items which aren't nodes of this slider:" + enlistArray(errNodes) +
-            "Following nodes are part of this slider's node pool:" + enlistArray(Object.keys(node))
+            "Following nodes are part of this slider's node pool:" + enlistArray(Object.keys(vals.node))
           propError('classList', msg);
         }
       }
@@ -416,16 +415,16 @@ export default (function() {
       createStyleSheet();
 
       if (replace)
-        target.parentNode.replaceChild(node.slider, target);
+        target.parentNode.replaceChild(vals.node.slider, target);
       else
-        target.appendChild(node.slider);
+        target.appendChild(vals.node.slider);
 
-      trackStyle = getComputedStyle(node.track);
+      trackStyle = getComputedStyle(vals.node.track);
 
       computeRatioDistance();
 
-      node.thumb.addEventListener('touchstart', touchStart);
-      node.thumb.addEventListener('mousedown', slideStart);
+      vals.node.thumb.addEventListener('touchstart', touchStart);
+      vals.node.thumb.addEventListener('mousedown', slideStart);
     })();
 
     initial = false;
@@ -518,9 +517,9 @@ export default (function() {
           return getValueFromVariable(variableDelimit || variable);
         });
         if (item.attr) {
-          item.node.setAttribute(item.attr, str);
+          item.elem.setAttribute(item.attr, str);
         } else {
-          item.node.textContent = str;
+          item.elem.textContent = str;
         }
       }
 
@@ -868,7 +867,7 @@ export default (function() {
         return elem;
       }
 
-      function registerVariables(str, node, attribName) {
+      function registerVariables(str, elem, attribName) {
         // Need to use a RegExp without /g/ because the internal `lastIndex` counter would clash with the `exec` below
         if (structureRgx.variableNoFlag.test(str)) {
           // Memorize & skip already handled variables for the current string
@@ -885,7 +884,7 @@ export default (function() {
               if (structureVars[propName] == null) structureVars[propName] = new Array();
               const item = {
                 str: str,
-                node: node
+                elem: elem
               };
               if (attribName) item.attr = attribName;
               structureVars[propName].push(item);
