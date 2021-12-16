@@ -324,7 +324,8 @@ export default (function() {
           get: function() {
             const val = (prop.getter ? prop.getter(vals[item]) : vals[item]);
             return val;
-          }
+          },
+          enumerable: true
         });
 
         defineDeepProperty(vals, item, vals.$);
