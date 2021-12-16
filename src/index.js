@@ -28,6 +28,8 @@ export default (function() {
     };
     for (let expr in rgx) rgx[expr] = new RegExp(rgx[expr], 'g');
 
+    rgx.variableNoFlag = new RegExp(rgx.variable, '');
+
     return rgx;
   }());
 
@@ -373,6 +375,11 @@ export default (function() {
           if (element !== 'slider') vals.node[element].classList.add('sl89-' + element);
       } else {
         vals.node = parseStructure(vals.structure);
+        for (let variable in structureVars) {
+          if (Object.prototype.hasOwnProperty.call(structureVars, variable)) {
+            updateVariable(variable);
+          }
+        }
       }
       const node = vals.node;
 
@@ -502,30 +509,31 @@ export default (function() {
         enumerable: true
       });
 
-      function updateVariable(propName) {
-        for (let i in structureVars[propName]) {
-          const item = structureVars[propName][i];
-          const str = item.str.replace(structureRgx.variable, function(match, variableDelimit, variable) {
-            return getValueFromVariable(variableDelimit || variable);
-          });
-          if (item.attr) {
-            item.node.setAttribute(item.attr, str);
-          } else {
-            item.node.textContent = str;
-          }
-        }
-      }
     }
 
-    function getValueFromVariable(varName) {
-      const recursiveVar = varName.split('.');
-      let value = that[recursiveVar[0]];
-      if (recursiveVar.length > 1) {
-        for (let i = 1; i < recursiveVar.length; i++) {
-          value = value[recursiveVar[i]];
+    function updateVariable(propName) {
+      for (let i in structureVars[propName]) {
+        const item = structureVars[propName][i];
+        const str = item.str.replace(structureRgx.variable, function(match, variableDelimit, variable) {
+          return getValueFromVariable(variableDelimit || variable);
+        });
+        if (item.attr) {
+          item.node.setAttribute(item.attr, str);
+        } else {
+          item.node.textContent = str;
         }
       }
-      return value;
+
+      function getValueFromVariable(varName) {
+        const recursiveVar = varName.split('.');
+        let value = that[recursiveVar[0]];
+        if (recursiveVar.length > 1) {
+          for (let i = 1; i < recursiveVar.length; i++) {
+            value = value[recursiveVar[i]];
+          }
+        }
+        return value;
+      }
     }
 
 
@@ -832,8 +840,9 @@ export default (function() {
           propError('structure', 'Every element must have a unique name but there are mutiple elements called ‘' + name + '’');
         }
         const elem = document.createElement(tag || 'div');
-        if (content) {
-          elem.textContent = registerVariables(content, elem, false);
+        // Content with variables gets added after parseStructure, due to unavailability of some properties
+        if (!registerVariables(content, elem, false)) {
+          elem.textContent = content;
         }
         if (attributes) {
           let match;
@@ -848,7 +857,9 @@ export default (function() {
             ) {
               value += ' ' + defaultClasses[name];
             }
-            elem.setAttribute(attribName, registerVariables(value, elem, attribName));
+            if (!registerVariables(value, elem, attribName)) {
+              elem.setAttribute(attribName, value);
+            }
           }
         }
         if (name in defaultClasses && !elem.getAttribute('class')) {
@@ -858,13 +869,15 @@ export default (function() {
       }
 
       function registerVariables(str, node, attribName) {
-        if (structureRgx.variable.test(str)) {
+        // Need to use a RegExp without /g/ because the internal `lastIndex` counter would clash with the `exec` below
+        if (structureRgx.variableNoFlag.test(str)) {
           // Memorize & skip already handled variables for the current string
           const cache = {};
-          str = str.replace(structureRgx.variable, function(match, variableDelimit, variable) {
-            const varName = variableDelimit || variable;
-            if (!cache.hasOwnProperty(varName)) {
-              const propName = varName.indexOf('.') !== -1 ? varName.slice(0, varName.indexOf('.')) : varName;
+          let match;
+          while (match = structureRgx.variable.exec(str)) {
+            const varName = match[1] || match[2];
+            const propName = varName.indexOf('.') !== -1 ? varName.slice(0, varName.indexOf('.')) : varName;
+            if (!cache.hasOwnProperty(propName)) {
               if (!Object.prototype.hasOwnProperty.call(vals, propName)) {
                 propError('structure', "‘" + propName + "’ is not a recognized property and cannot be used as variable. Please check its spelling or initialize it in the constructor");
               }
@@ -877,12 +890,12 @@ export default (function() {
               if (attribName) item.attr = attribName;
               structureVars[propName].push(item);
 
-              cache[varName] = item;
+              cache[propName] = item;
             }
-            return getValueFromVariable(varName);
-          });
+          }
+          return true;
         }
-        return str;
+        return false;
       }
     }
 
