@@ -508,7 +508,6 @@ export default (function() {
         },
         enumerable: true
       });
-
     }
 
     function updateVariable(propName) {
@@ -529,7 +528,11 @@ export default (function() {
         let value = that[recursiveVar[0]];
         if (recursiveVar.length > 1) {
           for (let i = 1; i < recursiveVar.length; i++) {
-            value = value[recursiveVar[i]];
+            try {
+              value = value[recursiveVar[i]];
+            } catch (e) {
+              error("Variable ‘" + varName + "’ cannot access property ‘" + recursiveVar[i] + "’ on " + value, 'structure');
+            }
           }
         }
         return value;
