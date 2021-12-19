@@ -758,12 +758,6 @@ export default (function() {
         slider: document.createElement('div')
       };
 
-      // Set the default CSS classes for the two default elements
-      const defaultClasses = {};
-      ['track', 'thumb'].forEach(function(nodeName) {
-        defaultClasses[nodeName] = 'sl89-' + nodeName;
-      });
-
       const variables = {};
 
       structureStr = structureStr.trim();
@@ -824,6 +818,9 @@ export default (function() {
         } else if (track && !thumb) {
           node.track.appendChild(node.thumb);
         }
+
+        track.classList.add('sl89-track');
+        thumb.classList.add('sl89-thumb');
       })();
 
       return node;
@@ -852,21 +849,10 @@ export default (function() {
           while (match = structureRgx.attributes.exec(attributes)) {
             const attribName = match[1];
             let value = match[2];
-            // Don't override classes for the default elements (track, thumb), but complement them
-            if (
-              name in defaultClasses
-              && attribName === 'class'
-              && value.split(' ').indexOf(defaultClasses[name]) === -1
-            ) {
-              value += ' ' + defaultClasses[name];
-            }
             if (!registerVariables(value, elem, attribName)) {
               elem.setAttribute(attribName, value);
             }
           }
-        }
-        if (name in defaultClasses && !elem.getAttribute('class')) {
-          elem.setAttribute('class', defaultClasses[name]);
         }
         return elem;
       }
