@@ -249,7 +249,21 @@ export default (function() {
               'vertical'
             ]
           }
-        }]
+        }],
+        setter: function(val) {
+          if (!initial) {
+            if (val === 'vertical') {
+              vals.node.thumb.style.removeProperty('left');
+              vals.node.slider.classList.add('vertical');
+            } else {
+              vals.node.thumb.style.removeProperty('top');
+              vals.node.slider.classList.remove('vertical');
+            }
+            vals.orientation = val;
+            computeRatioDistance();
+            return true;
+          }
+        }
       },
       classList: {
         default: false,
