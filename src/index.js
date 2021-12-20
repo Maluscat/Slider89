@@ -566,16 +566,21 @@ export default (function() {
       return parseFloat(trackStyle['padding' + direction]);
     }
     function getDistance() {
-      const style = vals.node.thumb.style.transform;
-      const translateStr = vals.orientation === 'vertical' ? 'translateY(' : 'translateX(';
-      const firstBracket = style.slice(style.indexOf(translateStr) + translateStr.length);
-      return parseFloat(firstBracket.slice(0, firstBracket.indexOf(')')));
+      if (vals.orientation === 'vertical') {
+        return vals.node.thumb.getBoundingClientRect().top - vals.node.track.getBoundingClientRect().top -
+          getTrackPadding('Top');
+      } else {
+        return vals.node.thumb.getBoundingClientRect().left - vals.node.track.getBoundingClientRect().left -
+          getTrackPadding('Left');
+      }
     }
     function getAbsoluteTrackSize() {
       if (vals.orientation === 'vertical') {
-        return (vals.node.track.clientHeight - getTrackPadding('Top') - getTrackPadding('Bottom')) - vals.node.thumb.clientHeight;
+        return vals.node.track.getBoundingClientRect().height - getTrackPadding('Top') - getTrackPadding('Bottom') -
+          vals.node.thumb.getBoundingClientRect().height;
       } else {
-        return (vals.node.track.clientWidth - getTrackPadding('Left') - getTrackPadding('Right')) - vals.node.thumb.clientWidth;
+        return vals.node.track.getBoundingClientRect().width - getTrackPadding('Left') - getTrackPadding('Right') -
+          vals.node.thumb.getBoundingClientRect().width;
       }
     }
     function computeDistanceValue(distance, absSize) {
@@ -718,19 +723,15 @@ export default (function() {
 
       activeThumb = this;
       if (vals.orientation === 'vertical') {
-        var startDir = 'Top';
         var posAnchor = 'top';
         var clientDim = e.clientY;
       } else {
-        var startDir = 'Left';
         var posAnchor = 'left';
         var clientDim = e.clientX;
       }
-      const thumbOffset =
-        activeThumb.getBoundingClientRect()[posAnchor] - vals.node.track.getBoundingClientRect()[posAnchor] -
-        getTrackPadding(startDir);
-      mouseDownPos = clientDim - thumbOffset;
-      moveThumb(thumbOffset, true);
+      const distance = getDistance();
+      mouseDownPos = clientDim - distance;
+      moveThumb(distance, true);
       activeThumb.style.removeProperty(posAnchor);
 
       if (!touchEvent) {
