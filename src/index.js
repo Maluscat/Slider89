@@ -426,6 +426,8 @@ export default (function() {
 
       vals.node.thumb.addEventListener('touchstart', touchStart);
       vals.node.thumb.addEventListener('mousedown', slideStart);
+
+      window.addEventListener('keydown', keyDown);
     })();
 
     initial = false;
@@ -635,6 +637,24 @@ export default (function() {
       }
     }
 
+    function keyDown(e) {
+      if (document.activeElement === vals.node.thumb) {
+        let modifier = Math.round((vals.range[1] - vals.range[0]) / 100);
+        if (e.shiftKey && e.ctrlKey) {
+          modifier *= 0.1;
+        } else if (e.shiftKey) {
+          modifier *= 10;
+        }
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          that.value -= modifier;
+        } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          that.value += modifier;
+        }
+      }
+    }
+
     // -> Touch event callbacks
     function touchStart(e) {
       e.preventDefault();
@@ -821,6 +841,7 @@ export default (function() {
 
         track.classList.add('sl89-track');
         thumb.classList.add('sl89-thumb');
+        if (thumb.tabindex == null) thumb.tabindex = '0';
       })();
 
       return node;
