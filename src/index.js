@@ -376,11 +376,6 @@ export default (function() {
           if (element !== 'slider') vals.node[element].classList.add('sl89-' + element);
       } else {
         vals.node = parseStructure(vals.structure);
-        for (let variable in structureVars) {
-          if (Object.prototype.hasOwnProperty.call(structureVars, variable)) {
-            updateVariable(variable);
-          }
-        }
       }
 
       if (replace) {
@@ -423,6 +418,16 @@ export default (function() {
       trackStyle = getComputedStyle(vals.node.track);
 
       computeRatioDistance();
+
+      // Expanding structure variables initially
+      // This happens so late to ensure that $node can be accessed properly
+      if (vals.structure !== false) {
+        for (let variable in structureVars) {
+          if (Object.prototype.hasOwnProperty.call(structureVars, variable)) {
+            updateVariable(variable);
+          }
+        }
+      }
 
       vals.node.thumb.addEventListener('touchstart', touchStart);
       vals.node.thumb.addEventListener('mousedown', slideStart);
