@@ -54,6 +54,7 @@ export default (function() {
     let mouseDownPos;
     let eventID = 0;
     let trackStyle; // The live computed style of vals.node.track
+    const configHasValues = 'values' in config;
     const structureVars = {};
     const eventList = {}; // Storing event data (most notably the identifier) for event removability
     const vals = {}; // holding every class property
@@ -144,34 +145,48 @@ export default (function() {
           }
         }
       },
+      values: {
+        default: function() {
+          return [vals.range[0]];
+        },
+        structure: [{
+          type: 'array',
+          // TODO condition: at least of size 1
+          structure: [{
+            type: 'number'
+          }]
+        }],
+        setter: function(val) {
+          vals.values = val.map(function(valueItem) {
+            return adaptValueToRange(valueItem);
+          });
+          return true;
+        },
+        getter: function(val) {
+          return val.map(function(valueItem) {
+            return properties.value.getter(valueItem);
+          });
+        }
+      },
       value: {
         default: function() {
-          return vals.range[0];
+          return vals.values[0];
         },
         structure: [{
           type: 'number'
         }],
         setter: function(val) {
-          if (vals.range[0] < vals.range[1]) {
-            if (val < vals.range[0]) {
-              val = vals.range[0];
-            } else if (val > vals.range[1]) {
-              val = vals.range[1];
-            }
-          } else {
-            if (val > vals.range[0]) {
-              val = vals.range[0];
-            } else if (val < vals.range[1]) {
-              val = vals.range[1];
-            }
+          if (initial && configHasValues) {
+            propError('value', 'only one of ‘value’ and ‘values’ may be set in the constructor');
           }
+
+          val = adaptValueToRange(val);
           if (!initial) {
             computeRatioDistance({value: val});
-            return true;
           } else {
             vals.value = val;
-            return true;
           }
+          return true;
         },
         getter: function(val) {
           return vals.precision !== false ? Number(val.toFixed(vals.precision)) : val;
@@ -498,6 +513,7 @@ export default (function() {
       if (initial || abort) msg += 'Aborting the slider construction.';
       throw new Error(msg);
     }
+
     function checkEventType(type) {
       if (type.indexOf('change:') === 0) {
         // Edge case for 'change:$property'
@@ -507,6 +523,22 @@ export default (function() {
         }
       } else if (eventTypes.indexOf(type) === -1) return false;
       return true;
+    }
+    function adaptValueToRange(value) {
+      if (vals.range[0] < vals.range[1]) {
+        if (value < vals.range[0]) {
+          return vals.range[0];
+        } else if (value > vals.range[1]) {
+          return vals.range[1];
+        }
+      } else {
+        if (value > vals.range[0]) {
+          return vals.range[0];
+        } else if (value < vals.range[1]) {
+          return vals.range[1];
+        }
+      }
+      return value;
     }
 
     function defineDeepProperty(target, item, endpoint) {
