@@ -396,9 +396,12 @@ export default (function() {
         // In case no custom structure is defined, manually build the node to ensure best performance (parseStructure takes a while)
         vals.node.slider = document.createElement('div');
         vals.node.track = document.createElement('div');
-        vals.node.thumb = document.createElement('div');
 
-        vals.node.track.appendChild(vals.node.thumb);
+        vals.node.thumb = new Array(vals.values.length);
+        for (let i = 0; i < vals.values.length; i++) {
+          vals.node.thumb[i] = document.createElement('div');
+          vals.node.track.appendChild(vals.node.thumb[i]);
+        }
         vals.node.slider.appendChild(vals.node.track);
 
         for (let element in vals.node)
@@ -446,7 +449,11 @@ export default (function() {
 
       trackStyle = getComputedStyle(vals.node.track);
 
-      computeRatioDistance();
+      for (let i = 0; i < vals.node.thumb.length; i++) {
+        computeRatioDistance(i);
+        vals.node.thumb[i].addEventListener('touchstart', touchStart);
+        vals.node.thumb[i].addEventListener('mousedown', slideStart);
+      }
 
       // Expanding structure variables initially
       // This happens so late to ensure that $node can be accessed properly
@@ -457,9 +464,6 @@ export default (function() {
           }
         }
       }
-
-      vals.node.thumb.addEventListener('touchstart', touchStart);
-      vals.node.thumb.addEventListener('mousedown', slideStart);
 
       window.addEventListener('keydown', keyDown);
     })();
@@ -875,25 +879,32 @@ export default (function() {
         closingTagError(stack[0]);
       }
 
-      // Statically typed
+      // Post-processing
       (function() {
-        const track = node.track;
-        const thumb = node.thumb;
-        if (!track) node.track = assembleElement('track', 'div');
-        if (!thumb) node.thumb = assembleElement('thumb', 'div');
-        if (!track && !thumb) {
-          node.track.appendChild(node.thumb);
-          node.slider.appendChild(node.track);
-        } else if (!track && thumb) {
-          node.thumb.parentNode.appendChild(node.track);
-          node.track.appendChild(node.thumb);
-        } else if (track && !thumb) {
-          node.track.appendChild(node.thumb);
+        let originalThumb = node.thumb;
+        if (!node.thumb) originalThumb = assembleElement('thumb', 'div');
+        if (!node.track) {
+          node.track = assembleElement('track', 'div');
+          if (node.thumb) {
+            originalThumb.parentNode.appendChild(node.track);
+          } else {
+            node.slider.appendChild(node.track);
+          }
         }
 
-        track.classList.add('sl89-track');
-        thumb.classList.add('sl89-thumb');
-        if (thumb.tabindex == null) thumb.tabindex = '0';
+        node.thumb = new Array(vals.values.length);
+        node.thumb[0] = originalThumb;
+        for (let i = 0; i < vals.values.length; i++) {
+          if (i > 0) {
+            node.thumb[i] = originalThumb.cloneNode(true);
+          }
+          node.thumb[i].classList.add('sl89-thumb');
+          node.track.appendChild(node.thumb[i]);
+          if (node.thumb[i].tabindex == null) {
+            node.thumb[i].tabindex = '0';
+          }
+        }
+        node.track.classList.add('sl89-track');
       })();
 
       return node;
