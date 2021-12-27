@@ -601,55 +601,55 @@ export default (function() {
     function getTrackPadding(direction) {
       return parseFloat(trackStyle['padding' + direction]);
     }
-    function getDistance() {
+    function getDistance(thumb) {
       if (vals.orientation === 'vertical') {
-        return vals.node.thumb.getBoundingClientRect().top - vals.node.track.getBoundingClientRect().top -
+        return thumb.getBoundingClientRect().top - vals.node.track.getBoundingClientRect().top -
           getTrackPadding('Top');
       } else {
-        return vals.node.thumb.getBoundingClientRect().left - vals.node.track.getBoundingClientRect().left -
+        return thumb.getBoundingClientRect().left - vals.node.track.getBoundingClientRect().left -
           getTrackPadding('Left');
       }
     }
-    function getAbsoluteTrackSize() {
+    function getAbsoluteTrackSize(thumb) {
       if (vals.orientation === 'vertical') {
         return vals.node.track.getBoundingClientRect().height - getTrackPadding('Top') - getTrackPadding('Bottom') -
-          vals.node.thumb.getBoundingClientRect().height;
+          thumb.getBoundingClientRect().height;
       } else {
         return vals.node.track.getBoundingClientRect().width - getTrackPadding('Left') - getTrackPadding('Right') -
-          vals.node.thumb.getBoundingClientRect().width;
+          thumb.getBoundingClientRect().width;
       }
     }
-    function computeDistanceValue(distance, absSize) {
-      if (absSize == null) absSize = getAbsoluteTrackSize();
+    function computeDistanceValue(thumb, distance, absSize) {
+      if (absSize == null) absSize = getAbsoluteTrackSize(thumb);
       return distance / absSize * (vals.range[1] - vals.range[0]) + vals.range[0];
     }
-    function moveThumb(distance, useTransform) {
+    function moveThumb(thumb, distance, useTransform) {
       if (useTransform) {
-        vals.node.thumb.style.transform = 'translate' + (vals.orientation === 'vertical' ? 'Y' : 'X') + '(' + distance + 'px)';
+        thumb.style.transform = 'translate' + (vals.orientation === 'vertical' ? 'Y' : 'X') + '(' + distance + 'px)';
       } else {
         if (vals.orientation === 'vertical') {
           var paddingStart = getTrackPadding('Top');
           var paddingEnd = getTrackPadding('Bottom');
-          var thumbDim = vals.node.thumb.clientHeight;
+          var thumbDim = thumb.clientHeight;
           var posAnchor = 'top';
         } else {
           var paddingStart = getTrackPadding('Left');
           var paddingEnd = getTrackPadding('Right');
-          var thumbDim = vals.node.thumb.clientWidth;
+          var thumbDim = thumb.clientWidth;
           var posAnchor = 'left';
         }
 
         let subtract = (thumbDim * distance) + 'px';
         if (paddingEnd) subtract += ' - ' + (paddingEnd * distance) + 'px';
         if (paddingStart) subtract += ' + ' + (paddingStart * (1 - distance)) + 'px';
-        vals.node.thumb.style[posAnchor] = 'calc(' + (distance * 100) + '% - ' + subtract + ')';
+        thumb.style[posAnchor] = 'calc(' + (distance * 100) + '% - ' + subtract + ')';
       }
     }
-    function computeRatioDistance(newVals, returnProperties) {
+    function computeRatioDistance(thumbIndex, newVals, returnProperties) {
       let value, ratio;
       if (!newVals) {
         newVals = vals;
-        value = vals.value;
+        value = vals.values[thumbIndex];
       } else {
         const props = ['range', 'step'];
         for (let i in props) {
@@ -658,7 +658,7 @@ export default (function() {
         if (newVals.value != null) {
           value = newVals.value;
         } else {
-          ratio = (vals.value - vals.range[0]) / (vals.range[1] - vals.range[0]);
+          ratio = (vals.values[thumbIndex] - vals.range[0]) / (vals.range[1] - vals.range[0]);
           value = (newVals.range[1] - newVals.range[0]) * ratio + newVals.range[0];
         }
       }
@@ -677,8 +677,8 @@ export default (function() {
           ratio: newRatio
         };
       } else {
-        if (value !== vals.value) vals.value = value;
-        if (newRatio !== ratio) moveThumb(newRatio);
+        if (value !== vals.values[thumbIndex]) vals.values[thumbIndex] = value;
+        if (newRatio !== ratio) moveThumb(vals.node.thumb[thumbIndex], newRatio);
       }
     }
 
@@ -753,11 +753,12 @@ export default (function() {
 
     // -> Mouse event callbacks
     function slideStart(e, touchEvent) {
+      activeThumb = this;
+
       document.body.classList.add('sl89-noselect');
-      vals.node.thumb.classList.add('active');
+      activeThumb.classList.add('active');
       invokeEvent(['start'], touchEvent || e);
 
-      activeThumb = this;
       if (vals.orientation === 'vertical') {
         var posAnchor = 'top';
         var clientDim = e.clientY;
@@ -765,9 +766,9 @@ export default (function() {
         var posAnchor = 'left';
         var clientDim = e.clientX;
       }
-      const distance = getDistance();
+      const distance = getDistance(activeThumb);
       mouseDownPos = clientDim - distance;
-      moveThumb(distance, true);
+      moveThumb(activeThumb, distance, true);
       activeThumb.style.removeProperty(posAnchor);
 
       if (!touchEvent) {
@@ -776,22 +777,23 @@ export default (function() {
       }
     }
     function slideMove(e, touchEvent) {
-      const absSize = getAbsoluteTrackSize();
+      const thumbIndex = vals.node.thumb.indexOf(activeThumb);
+      const absSize = getAbsoluteTrackSize(activeThumb);
       let distance = (vals.orientation === 'vertical' ? e.clientY : e.clientX) - mouseDownPos;
 
       if (distance > absSize) distance = absSize;
       else if (distance < 0) distance = 0;
 
-      let value = computeDistanceValue(distance, absSize);
+      let value = computeDistanceValue(activeThumb, distance, absSize);
       if (vals.step !== false) {
-        const computedProperties = computeRatioDistance({value: value}, true);
+        const computedProperties = computeRatioDistance(thumbIndex, {value: value}, true);
         value = computedProperties.value;
         distance = computedProperties.ratio * absSize;
       }
 
-      if (vals.value !== value) {
-        vals.value = value;
-        moveThumb(distance, true);
+      if (vals.values[thumbIndex] !== value) {
+        vals.values[thumbIndex] = value;
+        moveThumb(activeThumb, distance, true);
         invokeEvent(['move'], touchEvent || e);
       }
     }
@@ -801,15 +803,16 @@ export default (function() {
         window.removeEventListener('mousemove', slideMove);
       }
 
-      const value = computeDistanceValue(getDistance());
-      computeRatioDistance({value: value});
+      const value = computeDistanceValue(activeThumb, getDistance(activeThumb));
+      computeRatioDistance(vals.node.thumb.indexOf(activeThumb), {value: value});
       activeThumb.style.removeProperty('transform');
-      mouseDownPos = null;
-      activeThumb = null;
 
       invokeEvent(['end'], touchEvent || e);
-      vals.node.thumb.classList.remove('active');
+      activeThumb.classList.remove('active');
       document.body.classList.remove('sl89-noselect');
+
+      mouseDownPos = null;
+      activeThumb = null;
     }
 
 
