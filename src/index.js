@@ -8,7 +8,8 @@ export default (function() {
     'end',
     'change:$property'
   ];
-  const structureRgx = (function() {
+  const structureRgx = {};
+  (function() {
     const reg = {
       attr: {
         name: '[\\w-]+'
@@ -26,11 +27,12 @@ export default (function() {
       attributes: '(' + reg.attr.name + ')=\\[(' + reg.attr.value + ')\\](?:\\s+|$)',
       tag: '<([/:])?' + reg.capName + reg.tagType + reg.content + '(' + reg.attribs + ')\\s*?>\\s*'
     };
-    for (let expr in rgx) rgx[expr] = new RegExp(rgx[expr], 'g');
 
-    rgx.variableNoFlag = new RegExp(rgx.variable, '');
-
-    return rgx;
+    // ES5 can't `new RegExp` from another RegExp
+    for (let expr in rgx) {
+      structureRgx[expr] = new RegExp(rgx[expr], 'g');
+    }
+    structureRgx.variableNoFlag = new RegExp(rgx.variable);
   }());
 
   function Slider89(target, config, replace) {
