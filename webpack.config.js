@@ -3,6 +3,7 @@ const pnpPlugin = require('pnp-webpack-plugin');
 
 const common = {
   entry: './src/index.js',
+  target: ['web', 'es5'],
   output: {
     filename: 'slider89.js',
     path: path.resolve('dist'),
