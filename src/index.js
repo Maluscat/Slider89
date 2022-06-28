@@ -1030,6 +1030,11 @@ export default (function() {
   function polyIsNaN(val) {
     return Number.isNaN && Number.isNaN(val) || !Number.isNaN && typeof val === 'number' && val !== val;
   }
+  // NOTE: This is an incomplete but very simple polyfill
+  // It works for Arrays (duh) but doesn't handle weird edge cases as Array.from
+  function polyArrayFrom(val) {
+    return Array.from && Array.from(val) || Array.prototype.slice.call(val);
+  }
 
   function enlistArray(arr) {
     return '\n - "' + arr.join('"\n - "') + '"\n';
