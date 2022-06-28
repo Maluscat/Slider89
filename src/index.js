@@ -585,6 +585,52 @@ export default (function() {
       });
     }
 
+    // ------ Object definitons for the keys/indexes of deeply defined arrays ------
+    function defineDeepArrayIntermediateThis(parentItem, parentValue, keySetter, keyGetter) {
+      const endpoint = vals;
+
+      vals.$intermediateThis[parentItem] = [];
+      for (let i = 0; i < parentValue.length; i++) {
+        const value = parentValue[i];
+
+        Object.defineProperty(vals.$intermediateThis[parentItem], i, {
+          set: function(val) {
+            if (!keySetter || !keySetter(val, i)) {
+              endpoint[parentItem][i] = parentValue;
+            }
+          },
+          get: function() {
+            return (keyGetter ? keyGetter(endpoint[parentItem][i]) : endpoint[parentItem][i]);
+          },
+          enumerable: true
+        });
+        // This assignment is necessary to invoke a potential keySetter (e.g. from `values`)
+        vals.$intermediateThis[parentItem][i] = parentValue[i];
+      }
+    }
+    function defineDeepArrayIntermediateVals(parentItem, parentValue) {
+      const endpoint = vals.$;
+
+      vals.$intermediateVals[parentItem] = [];
+      for (let i = 0; i < parentValue.length; i++) {
+        const value = parentValue[i];
+
+        Object.defineProperty(vals.$intermediateVals[parentItem], i, {
+          set: function(val) {
+            if (!initial) {
+              var prevVal = polyArrayFrom(that[parentItem]);
+            }
+            endpoint[parentItem][i] = val;
+            handleInternalPropertyChange(parentItem, prevVal, i);
+          },
+          get: function() {
+            return endpoint[parentItem][i];
+          },
+          enumerable: true
+        });
+      }
+    }
+
     // ------ Property change tracking ------
     function handleInternalPropertyChange(item, prevVal) {
       // `that` items are compared to accomodate for getters (e.g. `value` (precision))
