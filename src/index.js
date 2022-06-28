@@ -339,22 +339,19 @@ export default (function() {
 
         Object.defineProperty(that, item, {
           set: function(val) {
-            if (!prop.static) {
-              if (!prop.initial || initial) {
-                checkProp(item, val);
-                let setterResult;
-                if (prop.setter) {
-                  setterResult = (prop.setter)(val);
-                }
-                if (setterResult === undefined) {
-                  vals[item] = val;
-                }
-              } else error('property ‘' + item + '’ may only be set at init time but it was just set with the value ‘' + val + '’');
-            } else error('property ‘' + item + '’ may only be read from but it was just set with the value ‘' + val + '’');
+            if (prop.static) {
+              error('property ‘' + item + '’ may only be read from but it was just set with the value ‘' + val + '’');
+            }
+            if (prop.initial && !initial) {
+              error('property ‘' + item + '’ may only be set at init time but it was just set with the value ‘' + val + '’');
+            }
+            checkProp(item, val);
+            if (!prop.setter || !prop.setter(val)) {
+              vals[item] = val;
+            }
           },
           get: function() {
-            const val = (prop.getter ? prop.getter(vals[item]) : vals[item]);
-            return val;
+            return (prop.getter ? prop.getter(vals[item]) : vals[item]);
           },
           enumerable: true
         });
