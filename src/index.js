@@ -544,6 +544,7 @@ export default (function() {
       return value;
     }
 
+    // ------ Object definition ------
     function defineDeepProperty(target, item, endpoint) {
       Object.defineProperty(target, item, {
         set: function(val) {
@@ -551,19 +552,25 @@ export default (function() {
             var prevVal = that[item];
           }
           endpoint[item] = val;
-          // Only compare `that` items to accomodate for getters (e.g. `value` (`precision`))
-          if (!initial && prevVal !== that[item]) {
-            if (Object.prototype.hasOwnProperty.call(structureVars, item)) {
-              updateVariable(item);
-            }
-            invokeEvent(['change:' + item], prevVal);
-          }
+          handleInternalPropertyChange(item, prevVal);
         },
         get: function() {
           return endpoint[item];
         },
         enumerable: true
       });
+    }
+
+    // ------ Property change tracking ------
+    function handleInternalPropertyChange(item, prevVal) {
+      // `that` items are compared to accomodate for getters (e.g. `value` (precision))
+      if (!initial && prevVal !== that[item]) {
+        // TODO: Move this structureVars lookup into updateVariable
+        if (Object.prototype.hasOwnProperty.call(structureVars, item)) {
+          updateVariable(item);
+        }
+        invokeEvent(['change:' + item], prevVal);
+      }
     }
 
     function updateVariable(propName) {
