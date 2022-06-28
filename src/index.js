@@ -632,14 +632,22 @@ export default (function() {
     }
 
     // ------ Property change tracking ------
-    function handleInternalPropertyChange(item, prevVal) {
+    function handleInternalPropertyChange(item, prevVal, deepDefinedIndex) {
       // `that` items are compared to accomodate for getters (e.g. `value` (precision))
-      if (!initial && prevVal !== that[item]) {
+      // Object types (arrays included) always invoke a change due to inability to deeply compare them (efficiently)
+      if (!initial
+          && ((typeof item === 'object'
+            && (deepDefinedIndex == null || prevVal[deepDefinedIndex] !== that[item][deepDefinedIndex]))
+            || prevVal !== that[item])) {
         // TODO: Move this structureVars lookup into updateVariable
         if (Object.prototype.hasOwnProperty.call(structureVars, item)) {
           updateVariable(item);
         }
-        invokeEvent(['change:' + item], prevVal);
+        if (deepDefinedIndex) {
+          invokeEvent(['change:' + item], prevVal, deepDefinedIndex);
+        } else {
+          invokeEvent(['change:' + item], prevVal);
+        }
       }
     }
 
