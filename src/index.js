@@ -569,17 +569,20 @@ export default (function() {
     }
 
     // ------ Object definition ------
-    function defineDeepProperty(target, item, endpoint) {
+    function defineDeepProperty(target, item, endpoint, isDeepDefinedArray) {
       Object.defineProperty(target, item, {
         set: function(val) {
+          if (isDeepDefinedArray) {
+            defineDeepArrayIntermediateVals(item, val);
+          }
           if (!initial) {
-            var prevVal = that[item];
+            var prevVal = (isDeepDefinedArray ? polyArrayFrom(that[item]) : that[item]);
           }
           endpoint[item] = val;
-          handleInternalPropertyChange(item, prevVal);
+          handleInternalPropertyChange(item, prevVal, isDeepDefinedArray);
         },
         get: function() {
-          return endpoint[item];
+          return (isDeepDefinedArray ? vals.$intermediateVals : endpoint)[item];
         },
         enumerable: true
       });
