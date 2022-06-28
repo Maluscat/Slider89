@@ -641,7 +641,7 @@ export default (function() {
         if (Object.prototype.hasOwnProperty.call(structureVars, item)) {
           updateVariable(item);
         }
-        if (deepDefinedIndex) {
+        if (deepDefinedIndex != null) {
           invokeEvent(['change:' + item], prevVal, deepDefinedIndex);
         } else {
           invokeEvent(['change:' + item], prevVal);
