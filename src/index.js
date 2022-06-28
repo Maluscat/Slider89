@@ -172,6 +172,7 @@ export default (function() {
         }
       },
       values: {
+        isDeepDefinedArray: true,
         default: function() {
           return [vals.range[0]];
         },
