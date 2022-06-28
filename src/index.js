@@ -373,14 +373,18 @@ export default (function() {
             if (!prop.setter || !prop.setter(val)) {
               vals[item] = val;
             }
+            if (prop.isDeepDefinedArray) {
+              defineDeepArrayIntermediateThis(item, val, prop.keySetter, prop.keyGetter);
+            }
           },
           get: function() {
-            return (prop.getter ? prop.getter(vals[item]) : vals[item]);
+            const getterEndpoint = (prop.isDeepDefinedArray ? vals.$intermediateThis : vals);
+            return (prop.getter ? prop.getter(getterEndpoint[item]) : getterEndpoint[item]);
           },
           enumerable: true
         });
 
-        defineDeepProperty(vals, item, vals.$);
+        defineDeepProperty(vals, item, vals.$, prop.isDeepDefinedArray);
 
         if (item in config) {
           that[item] = config[item];
