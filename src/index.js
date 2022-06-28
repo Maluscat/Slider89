@@ -182,22 +182,20 @@ export default (function() {
             type: 'number'
           }]
         }],
-        setter: function(val) {
-          vals.values = val.map(function(valueItem) {
-            return adaptValueToRange(valueItem);
-          });
+        keySetter: function(val, key) {
+          val = adaptValueToRange(val);
+          if (!initial) {
+            computeRatioDistance(key, {value: val});
+          } else {
+            vals.values[key] = val;
+          }
           return true;
         },
-        getter: function(val) {
-          return val.map(function(valueItem) {
-            return properties.value.getter(valueItem);
-          });
+        keyGetter: function(val, key) {
+          return vals.precision !== false ? Number(val.toFixed(vals.precision)) : val;
         }
       },
       value: {
-        default: function() {
-          return vals.values[0];
-        },
         structure: [{
           type: 'number'
         }],
@@ -205,17 +203,9 @@ export default (function() {
           if (initial && configHasValues) {
             propError('value', 'only one of ‘value’ and ‘values’ may be set in the constructor');
           }
-
-          val = adaptValueToRange(val);
-          if (!initial) {
-            computeRatioDistance({value: val});
-          } else {
-            vals.value = val;
-          }
-          return true;
         },
         getter: function(val) {
-          return vals.precision !== false ? Number(val.toFixed(vals.precision)) : val;
+          return that.values[0];
         }
       },
       precision: {
