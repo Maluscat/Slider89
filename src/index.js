@@ -61,10 +61,34 @@ export default (function() {
     const eventList = {}; // Storing event data (most notably the identifier) for event removability
     const vals = {}; // holding every class property
 
-    // `$` is a fixed endpoint for all properties, only to be accessed by a bubbling getter/setter
-    // Object.defineProperty is used for non-enumerability of `$` inside `vals`
-    Object.defineProperty(vals, '$', {
-      value: {}
+    /* Special properties which are only to be accessed by a getter/setter, never directly:
+     *   $: Fixed endpoint for the values of all properties
+     *   $intermediateThis: Intermediate property (between this and vals) for the keys of an array/object
+     *   $intermediateVals: Intermediate property (between vals and vals.$) for the keys of an array/object
+     *
+     * This results in the following getter/setter paths:
+     *   Normal (primitive & shallow) properties:
+     *     <this.property>   --- Type check & Custom getter/setter --->
+     *     <vals.property>   --- Internal property update --->
+     *     <vals.$.property>
+     *   Deeply defined Arrays:
+     *     <this.property>                        --- Type check & Custom getter/setter --->
+     *     <vals.$intermediateThis.property = []> --- Custom getter/setter on the keys/indexes --->
+     *     <vals.property>                        --- Internal property update --->
+     *     <vals.$intermediateVals.property = []> --- Internal property[key/index] update --->
+     *     <vals.$.property>
+     */
+    // Object.defineProperties is used for non-enumerability & non-writability of these special properties
+    Object.defineProperties(vals, {
+      '$': {
+        value: {}
+      },
+      '$intermediateThis': {
+        value: {}
+      },
+      '$intermediateVals': {
+        value: {}
+      },
     });
 
     const methods = {
