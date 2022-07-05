@@ -626,10 +626,9 @@ export default (function() {
     function handleInternalPropertyChange(item, prevVal, deepDefinedIndex) {
       // `that` items are compared to accomodate for getters (e.g. `value` (precision))
       // Object types (arrays included) always invoke a change due to inability to deeply compare them (efficiently)
-      if (!initial
-          && ((typeof item === 'object'
-            && (deepDefinedIndex == null || prevVal[deepDefinedIndex] !== that[item][deepDefinedIndex]))
-            || prevVal !== that[item])) {
+      if (!initial && (
+          (typeof that[item] !== 'object' && prevVal !== that[item])
+          || (deepDefinedIndex == null || prevVal[deepDefinedIndex] !== that[item][deepDefinedIndex]))) {
         // TODO: Move this structureVars lookup into updateVariable
         if (Object.prototype.hasOwnProperty.call(structureVars, item)) {
           updateVariable(item);
