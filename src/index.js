@@ -380,9 +380,9 @@ export default (function() {
         if (item in config) {
           that[item] = config[item];
           delete config[item];
-        } else {
+        } else if ('default' in prop) {
           const def = prop.default;
-          vals[item] = (typeof def === 'function' ? def() : def);
+          ((prop.getter || prop.keyGetter) ? that : vals)[item] = (typeof def === 'function' ? def() : def);
         }
       }
 
@@ -583,7 +583,7 @@ export default (function() {
       });
     }
 
-    // ------ Object definitons for the keys/indexes of deeply defined arrays ------
+    // ------ Object definitions for the keys/indexes of deeply defined arrays ------
     function defineDeepArrayIntermediateThis(parentItem, parentValue, keySetter, keyGetter) {
       const endpoint = vals;
 
