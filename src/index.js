@@ -442,13 +442,19 @@ export default (function() {
       if (vals.classList) {
         // Add the specified classes and collecting all nonexistent nodes in `errNodes`
         const errNodes = new Array();
-        for (let key in vals.classList) {
-          const item = vals.classList[key];
-          if (!Object.prototype.hasOwnProperty.call(vals.node, key)) {
-            errNodes.push(key);
+        for (let nodeName in vals.classList) {
+          const classArr = vals.classList[nodeName];
+          if (!Object.prototype.hasOwnProperty.call(vals.node, nodeName)) {
+            errNodes.push(nodeName);
           } else if (errNodes.length === 0) {
-            for (let i = 0; i < item.length; i++) {
-              vals.node[key].classList.add(item[i]);
+            for (let i = 0; i < classArr.length; i++) {
+              if (nodeName === 'thumb') {
+                for (let j = 0; j < vals.node[nodeName].length; j++) {
+                  vals.node[nodeName][j].classList.add(classArr[i]);
+                }
+              } else {
+                vals.node[nodeName].classList.add(classArr[i]);
+              }
             }
           }
         }
