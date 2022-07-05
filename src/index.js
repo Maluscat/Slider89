@@ -222,13 +222,6 @@ export default (function() {
           { type: 'false' }
         ],
         setter: function(val) {
-          if (val !== false) {
-            for (let i = 0; i < vals.range.length; i++) {
-              if (Number(vals.range[i].toFixed(val)) !== vals.range[i]) {
-                propError('range', 'the given range ' + ['start', 'end'][i] + ' of `' + vals.range[i] + '` exceeds the currently set precision of ' + val);
-              }
-            }
-          }
           if (!initial) {
             computeRatioDistance({precision: val});
           }
