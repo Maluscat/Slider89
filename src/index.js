@@ -415,8 +415,17 @@ export default (function() {
         }
         vals.node.slider.appendChild(vals.node.track);
 
-        for (let element in vals.node)
-          if (element !== 'slider') vals.node[element].classList.add('sl89-' + element);
+        for (let element in vals.node) {
+          if (element !== 'slider') {
+            if (element === 'thumb') {
+              for (let i = 0; i < vals.node[element].length; i++) {
+                vals.node[element][i].classList.add('sl89-' + element);
+              }
+            } else {
+              vals.node[element].classList.add('sl89-' + element);
+            }
+          }
+        }
       } else {
         vals.node = parseStructure(vals.structure);
       }
