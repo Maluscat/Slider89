@@ -604,7 +604,7 @@ export default (function() {
             }
           },
           get: function() {
-            return (keyGetter ? keyGetter(endpoint[parentItem][i]) : endpoint[parentItem][i]);
+            return (keyGetter ? keyGetter(endpoint[parentItem][i], i) : endpoint[parentItem][i]);
           },
           enumerable: true
         });
