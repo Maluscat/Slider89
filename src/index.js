@@ -636,17 +636,30 @@ export default (function() {
     }
 
     // ------ Property change tracking ------
-    function handleInternalPropertyChange(item, prevVal, deepDefinedIndex) {
-      // `that` items are compared to accomodate for getters (e.g. `value` (precision))
-      // Object types (arrays included) always invoke a change due to inability to deeply compare them (efficiently)
-      if (!initial && (
-          (typeof that[item] !== 'object' && prevVal !== that[item])
-          || (deepDefinedIndex == null || prevVal[deepDefinedIndex] !== that[item][deepDefinedIndex]))) {
+    // `that` items are compared to accomodate for getters (e.g. `value` (precision))
+    function handleInternalPropertyChange(item, prevVal) {
+      // Object types (arrays included) always invoke a variable update
+      // due to inability to deeply compare them (efficiently)
+      if (!initial && (typeof that[item] === 'object' || prevVal !== that[item])) {
+        updatePotentialVariable(item);
+        invokeEvent(['change:' + item], prevVal);
+      }
+    }
+    function handleInternalDeepArrayChange(item, prevVal, val, deepDefinedIndex) {
+      if (!initial) {
         updatePotentialVariable(item);
         if (deepDefinedIndex != null) {
-          invokeEvent(['change:' + item], prevVal, deepDefinedIndex);
+          invokeDeepArrayChangeEvent(item, prevVal, deepDefinedIndex);
         } else {
-          invokeEvent(['change:' + item], prevVal);
+          for (let i = 0; i < val.length; i++) {
+            invokeDeepArrayChangeEvent(item, prevVal, i);
+          }
+        }
+      }
+
+      function invokeDeepArrayChangeEvent(item, prevVal, deepDefinedIndex) {
+        if (prevVal[deepDefinedIndex] !== that[item][deepDefinedIndex]) {
+          invokeEvent(['change:' + item], prevVal, deepDefinedIndex);
         }
       }
     }
