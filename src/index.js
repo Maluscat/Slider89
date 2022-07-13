@@ -185,6 +185,21 @@ export default (function() {
             type: 'number'
           }]
         }],
+        setter: function(val) {
+          if (!initial) {
+            // Add/remove thumbs if the given array is bigger/smaller than the current values
+            if (val.length > vals.values.length) {
+              for (let i = vals.values.length; i < val.length; i++) {
+                vals.node.thumb.push(createNewThumb());
+                computeRatioDistance(i);
+              }
+            } else if (val.length < vals.values.length) {
+              for (let i = val.length; i < vals.values.length; i++) {
+                thumbParent.removeChild(vals.node.thumb.pop());
+              }
+            }
+          }
+        },
         keySetter: function(val, key) {
           val = adaptValueToRange(val);
           if (!initial) {
