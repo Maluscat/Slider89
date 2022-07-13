@@ -942,6 +942,14 @@ export default (function() {
 
       structureStr = structureStr.trim();
 
+      // Reset the global RegExp-internal `lastIndex` flag
+      // This would otherwise clash with multiple slider instances, because the regexes are global
+      for (const regexpName in structureRgx) {
+        if (structureRgx[regexpName].global) {
+          structureRgx[regexpName].lastIndex = 0;
+        }
+      }
+
       const stack = new Array();
       let currentIndex = 0;
       let match;
