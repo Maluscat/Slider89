@@ -473,8 +473,6 @@ export default (function() {
 
       for (let i = 0; i < vals.node.thumb.length; i++) {
         computeRatioDistance(i);
-        vals.node.thumb[i].addEventListener('touchstart', touchStart);
-        vals.node.thumb[i].addEventListener('mousedown', slideStart);
       }
 
       // Expanding structure variables initially
@@ -1004,30 +1002,38 @@ export default (function() {
 
       // Post-processing
       (function() {
-        let originalThumb = node.thumb;
-        if (!node.thumb) originalThumb = assembleElement('thumb', 'div');
+        // NOTE: thumb and track can be defined independently
+        // I.e. track gets the class `sl89-track`, but thumbParent can be a different node
+        if (!node.thumb) {
+          thumbBase = assembleElement('thumb', 'div');
+        } else {
+          thumbBase = node.thumb;
+          if (node.track) {
+            thumbParent = node.thumb.parentNode;
+          }
+        }
         if (!node.track) {
           node.track = assembleElement('track', 'div');
           if (node.thumb) {
-            originalThumb.parentNode.appendChild(node.track);
+            node.thumb.parentNode.appendChild(node.track);
           } else {
             node.slider.appendChild(node.track);
           }
         }
+        // Remove original thumb node
+        if (node.thumb) {
+          node.thumb.parentNode.removeChild(node.thumb);
+        }
+        if (!thumbParent) {
+          thumbParent = node.track;
+        }
+
+        node.track.classList.add('sl89-track');
 
         node.thumb = new Array(vals.values.length);
-        node.thumb[0] = originalThumb;
         for (let i = 0; i < vals.values.length; i++) {
-          if (i > 0) {
-            node.thumb[i] = originalThumb.cloneNode(true);
-          }
-          node.thumb[i].classList.add('sl89-thumb');
-          node.track.appendChild(node.thumb[i]);
-          if (node.thumb[i].tabindex == null) {
-            node.thumb[i].tabindex = '0';
-          }
+          node.thumb[i] = createNewThumb();
         }
-        node.track.classList.add('sl89-track');
       })();
 
       return node;
