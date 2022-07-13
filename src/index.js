@@ -625,7 +625,7 @@ export default (function() {
               var prevVal = polyArrayFrom(that[parentItem]);
             }
             endpoint[parentItem][i] = val;
-            handleInternalPropertyChange(parentItem, prevVal, i);
+            handleInternalDeepArrayChange(parentItem, prevVal, null, i);
           },
           get: function() {
             return endpoint[parentItem][i];
