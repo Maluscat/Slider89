@@ -56,6 +56,8 @@ export default (function() {
     let mouseDownPos;
     let eventID = 0;
     let trackStyle; // The live computed style of vals.node.track
+    let thumbBase; // Clonable thumb node
+    let thumbParent;
     const configHasValues = 'values' in config;
     const structureVars = {};
     const eventList = {}; // Storing event data (most notably the identifier) for event removability
@@ -564,6 +566,18 @@ export default (function() {
         }
       }
       return value;
+    }
+
+    function createNewThumb() {
+      const newThumb = thumbBase.cloneNode(true);
+      newThumb.classList.add('sl89-thumb');
+      if (newThumb.tabindex == null) {
+        newThumb.tabIndex = 0;
+      }
+      newThumb.addEventListener('touchstart', touchStart);
+      newThumb.addEventListener('mousedown', slideStart);
+      thumbParent.appendChild(newThumb);
+      return newThumb;
     }
 
     // ------ Object definition ------
