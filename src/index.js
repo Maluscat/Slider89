@@ -407,22 +407,19 @@ export default (function() {
         vals.node.slider = document.createElement('div');
         vals.node.track = document.createElement('div');
 
+        thumbBase = document.createElement('div');
+        thumbParent = vals.node.track;
+
         vals.node.thumb = new Array(vals.values.length);
         for (let i = 0; i < vals.values.length; i++) {
-          vals.node.thumb[i] = document.createElement('div');
-          vals.node.track.appendChild(vals.node.thumb[i]);
+          vals.node.thumb[i] = createNewThumb();
         }
         vals.node.slider.appendChild(vals.node.track);
 
         for (let element in vals.node) {
-          if (element !== 'slider') {
-            if (element === 'thumb') {
-              for (let i = 0; i < vals.node[element].length; i++) {
-                vals.node[element][i].classList.add('sl89-' + element);
-              }
-            } else {
-              vals.node[element].classList.add('sl89-' + element);
-            }
+          // Thumb classes are applied in `createNewThumb`
+          if (element !== 'slider' && element !== 'thumb') {
+            vals.node[element].classList.add('sl89-' + element);
           }
         }
       } else {
