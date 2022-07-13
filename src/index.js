@@ -357,9 +357,6 @@ export default (function() {
             if (!prop.setter || !prop.setter(val)) {
               vals[item] = val;
             }
-            if (prop.isDeepDefinedArray) {
-              defineDeepArrayIntermediateThis(item, val, prop.keySetter, prop.keyGetter);
-            }
           },
           get: function() {
             const getterEndpoint = (prop.isDeepDefinedArray ? vals.$intermediateThis : vals);
@@ -573,14 +570,19 @@ export default (function() {
     function defineDeepProperty(target, item, endpoint, isDeepDefinedArray) {
       Object.defineProperty(target, item, {
         set: function(val) {
-          if (isDeepDefinedArray) {
-            defineDeepArrayIntermediateVals(item, val);
-          }
           if (!initial) {
             var prevVal = (isDeepDefinedArray ? polyArrayFrom(that[item]) : that[item]);
           }
           endpoint[item] = val;
-          handleInternalPropertyChange(item, prevVal, isDeepDefinedArray);
+          if (isDeepDefinedArray) {
+            // The endpoints (see doc comment at the start of file) are defined from bottom to top
+            // This ensures compatibility with getters/setters
+            defineDeepArrayIntermediateVals(item, val);
+            defineDeepArrayIntermediateThis(item, val, properties[item].keySetter, properties[item].keyGetter);
+            handleInternalDeepArrayChange(item, prevVal, val);
+          } else {
+            handleInternalPropertyChange(item, prevVal);
+          }
         },
         get: function() {
           return (isDeepDefinedArray ? vals.$intermediateVals : endpoint)[item];
