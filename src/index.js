@@ -485,9 +485,7 @@ export default (function() {
       // This happens so late to ensure that $node can be accessed properly
       if (vals.structure !== false) {
         for (let variable in structureVars) {
-          if (Object.prototype.hasOwnProperty.call(structureVars, variable)) {
-            updateVariable(variable);
-          }
+          updatePotentialVariable(variable);
         }
       }
 
@@ -644,10 +642,7 @@ export default (function() {
       if (!initial && (
           (typeof that[item] !== 'object' && prevVal !== that[item])
           || (deepDefinedIndex == null || prevVal[deepDefinedIndex] !== that[item][deepDefinedIndex]))) {
-        // TODO: Move this structureVars lookup into updateVariable
-        if (Object.prototype.hasOwnProperty.call(structureVars, item)) {
-          updateVariable(item);
-        }
+        updatePotentialVariable(item);
         if (deepDefinedIndex != null) {
           invokeEvent(['change:' + item], prevVal, deepDefinedIndex);
         } else {
@@ -656,16 +651,18 @@ export default (function() {
       }
     }
 
-    function updateVariable(propName) {
-      for (let i in structureVars[propName]) {
-        const item = structureVars[propName][i];
-        const str = item.str.replace(structureRgx.variable, function(match, variableDelimit, variable) {
-          return getValueFromVariable(variableDelimit || variable);
-        });
-        if (item.attr) {
-          item.elem.setAttribute(item.attr, str);
-        } else {
-          item.elem.textContent = str;
+    function updatePotentialVariable(propName) {
+      if (Object.prototype.hasOwnProperty.call(structureVars, propName)) {
+        for (let i in structureVars[propName]) {
+          const item = structureVars[propName][i];
+          const str = item.str.replace(structureRgx.variable, function(match, variableDelimit, variable) {
+            return getValueFromVariable(variableDelimit || variable);
+          });
+          if (item.attr) {
+            item.elem.setAttribute(item.attr, str);
+          } else {
+            item.elem.textContent = str;
+          }
         }
       }
 
