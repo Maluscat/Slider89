@@ -169,7 +169,7 @@ export default (function() {
             propError('range', 'the given range of [' + val.join(', ') + '] defines the same value for both range start and end');
           }
           if (!initial) {
-            computeRatioDistance({range: val});
+            computeAllRatioDistances({range: val});
           }
         }
       },
@@ -191,7 +191,7 @@ export default (function() {
             if (val.length > vals.values.length) {
               for (let i = vals.values.length; i < val.length; i++) {
                 vals.node.thumb.push(createNewThumb());
-                computeRatioDistance(i);
+                computeOneRatioDistance(i);
               }
             } else if (val.length < vals.values.length) {
               for (let i = val.length; i < vals.values.length; i++) {
@@ -203,7 +203,7 @@ export default (function() {
         keySetter: function(val, key) {
           val = adaptValueToRange(val);
           if (!initial) {
-            computeRatioDistance(key, {value: val});
+            computeOneRatioDistance(key, {value: val});
           } else {
             vals.values[key] = val;
           }
@@ -240,7 +240,7 @@ export default (function() {
         ],
         setter: function(val) {
           if (!initial) {
-            computeRatioDistance({precision: val});
+            computeAllRatioDistances({precision: val});
           }
         }
       },
@@ -260,7 +260,7 @@ export default (function() {
             propError('step', 'the given value of ' + val + ' exceeds the currently set precision of ' + vals.precision);
           }
           if (!initial) {
-            computeRatioDistance({step: val})
+            computeAllRatioDistances({step: val})
           }
         }
       },
@@ -302,7 +302,7 @@ export default (function() {
               vals.node.slider.classList.remove('vertical');
             }
             vals.orientation = val;
-            computeRatioDistance();
+            computeAllRatioDistances();
             return true;
           }
         }
@@ -486,9 +486,7 @@ export default (function() {
 
       trackStyle = getComputedStyle(vals.node.track);
 
-      for (let i = 0; i < vals.node.thumb.length; i++) {
-        computeRatioDistance(i);
-      }
+      computeAllRatioDistances();
 
       // Expanding structure variables initially
       // This happens so late to ensure that $node can be accessed properly
@@ -770,7 +768,13 @@ export default (function() {
         thumb.style[posAnchor] = 'calc(' + (distance * 100) + '% - ' + subtract + ')';
       }
     }
-    function computeRatioDistance(thumbIndex, newVals, returnProperties) {
+
+    function computeAllRatioDistances(newVals, returnProperties) {
+      for (let i = 0; i < vals.values.length; i++) {
+        computeOneRatioDistance(i, newVals, returnProperties);
+      }
+    }
+    function computeOneRatioDistance(thumbIndex, newVals, returnProperties) {
       let value, ratio;
       if (!newVals) {
         newVals = vals;
@@ -911,7 +915,7 @@ export default (function() {
 
       let value = computeDistanceValue(activeThumb, distance, absSize);
       if (vals.step !== false) {
-        const computedProperties = computeRatioDistance(thumbIndex, {value: value}, true);
+        const computedProperties = computeOneRatioDistance(thumbIndex, {value: value}, true);
         value = computedProperties.value;
         distance = computedProperties.ratio * absSize;
       }
@@ -929,7 +933,7 @@ export default (function() {
       }
 
       const value = computeDistanceValue(activeThumb, getDistance(activeThumb));
-      computeRatioDistance(vals.node.thumb.indexOf(activeThumb), {value: value});
+      computeOneRatioDistance(vals.node.thumb.indexOf(activeThumb), {value: value});
       activeThumb.style.removeProperty('transform');
 
       invokeEvent(['end'], touchEvent || e);
