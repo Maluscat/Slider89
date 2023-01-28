@@ -150,6 +150,7 @@ export default (function() {
 
     const properties = {
       range: {
+        isDeepDefinedArray: true,
         default: [0, 100],
         structure: [
           {
@@ -170,6 +171,18 @@ export default (function() {
           }
           if (!initial) {
             computeAllRatioDistances({range: val});
+          }
+        },
+        keySetter: function(val, key) {
+          // Compare `val` with the value at the other key (0 or 1)
+          if (val === vals.range[Math.abs(key - 1)]) {
+            propError('range', 'the new range of [' + val + ', ' + val + '] defines the same value for both range start and end');
+            return true;
+          }
+          if (!initial) {
+            const newRange = polyArrayFrom(vals.range);
+            newRange[key] = val;
+            computeAllRatioDistances({ range: newRange });
           }
         }
       },
