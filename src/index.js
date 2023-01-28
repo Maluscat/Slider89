@@ -187,7 +187,7 @@ export default (function() {
         }],
         setter: function(val) {
           if (!initial) {
-            // Add/remove thumbs if the given array is bigger/smaller than the current values
+            // Add/remove thumbs if the given array is bigger/smaller than the current `values` array
             if (val.length > vals.values.length) {
               for (let i = vals.values.length; i < val.length; i++) {
                 vals.node.thumb.push(createNewThumb());
@@ -200,10 +200,22 @@ export default (function() {
             }
           }
         },
+        postSetter: function(val, prevVal) {
+          if (!initial) {
+            // Manually invoke `value` property change
+            handleInternalPropertyChange('value', prevVal[0]);
+          }
+        },
         keySetter: function(val, key) {
           val = adaptValueToRange(val);
           if (!initial) {
+            if (key === 0) {
+              var prevVal = that.value;
+            }
             computeOneRatioDistance(key, {value: val});
+            if (key === 0) {
+              handleInternalPropertyChange('value', prevVal);
+            }
           } else {
             vals.values[key] = val;
           }
@@ -382,7 +394,7 @@ export default (function() {
           enumerable: true
         });
 
-        defineDeepProperty(vals, item, vals.$, prop.isDeepDefinedArray);
+        defineDeepProperty(vals, item, vals.$, prop.postSetter, prop.isDeepDefinedArray);
 
         if (item in config) {
           that[item] = config[item];
@@ -589,7 +601,7 @@ export default (function() {
     }
 
     // ------ Object definition ------
-    function defineDeepProperty(target, item, endpoint, isDeepDefinedArray) {
+    function defineDeepProperty(target, item, endpoint, postSetter, isDeepDefinedArray) {
       Object.defineProperty(target, item, {
         set: function(val) {
           if (!initial) {
@@ -604,6 +616,9 @@ export default (function() {
             handleInternalDeepArrayChange(item, prevVal, val);
           } else {
             handleInternalPropertyChange(item, prevVal);
+          }
+          if (postSetter) {
+            postSetter(val, prevVal);
           }
         },
         get: function() {
@@ -624,7 +639,7 @@ export default (function() {
         Object.defineProperty(vals.$intermediateThis[parentItem], i, {
           set: function(val) {
             if (!keySetter || !keySetter(val, i)) {
-              endpoint[parentItem][i] = parentValue;
+              endpoint[parentItem][i] = val;
             }
           },
           get: function() {
