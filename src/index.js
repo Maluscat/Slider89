@@ -233,6 +233,8 @@ export default (function() {
           if (initial && configHasValues) {
             propError('value', 'only one of ‘value’ and ‘values’ may be set in the constructor');
           }
+          that.values[0] = val;
+          return true;
         },
         getter: function(val) {
           return that.values[0];
