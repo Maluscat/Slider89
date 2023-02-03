@@ -2,7 +2,7 @@ const path = require('path');
 const pnpPlugin = require('pnp-webpack-plugin');
 
 const common = {
-  entry: './src/index.js',
+  entry: './src/Slider89.js',
   target: ['web', 'es5'],
   output: {
     filename: 'slider89.js',
