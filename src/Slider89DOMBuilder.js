@@ -7,14 +7,13 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
   thumbBase; // Clonable thumb node
   thumbParent;
 
-  thumbCallbackTouch;
-  thumbCallbackMouse;
+  /** @type Record<string, Function> */
+  thumbEvents = {};
 
 
-  constructor(vals, thumbCallbackTouchdown, thumbCallbackMousedown) {
+  constructor(vals, thumbEvents) {
     super(vals);
-    this.thumbCallbackTouch = thumbCallbackTouchdown;
-    this.thumbCallbackMouse = thumbCallbackMousedown;
+    this.thumbEvents = thumbEvents;
   }
 
 
@@ -161,8 +160,9 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     if (newThumb.tabindex == null) {
       newThumb.tabIndex = 0;
     }
-    newThumb.addEventListener('touchstart', this.thumbCallbackTouch);
-    newThumb.addEventListener('mousedown', this.thumbCallbackMouse);
+    for (const [ eventName, callback ] of Object.entries(this.thumbEvents)) {
+      newThumb.addEventListener(eventName, callback);
+    }
     this.thumbParent.appendChild(newThumb);
     return newThumb;
   }
