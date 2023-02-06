@@ -61,42 +61,55 @@ export default class Slider89DOM extends Slider89Properties {
     }
   }
 
+  // ---- Thumb moving ----
+  moveThumbTranslate(thumb, distance) {
+    const axis = this.vals.orientation === 'vertical' ? 'Y' : 'X';
+    thumb.style.transform = 'translate' + axis + '(' + distance + 'px)';
+  }
+  moveThumbRelative(thumb, distance) {
+    // Relative positioning starts at the padding, so looking at the border is not needed
+    if (this.vals.orientation === 'vertical') {
+      var offsetStart = this.getTrackPadding('Top');
+      var offsetEnd = this.getTrackPadding('Bottom');
+      var thumbDim = thumb.clientHeight;
+      var posAnchor = 'top';
+    } else {
+      var offsetStart = this.getTrackPadding('Left');
+      var offsetEnd = this.getTrackPadding('Right');
+      var thumbDim = thumb.clientWidth;
+      var posAnchor = 'left';
+    }
+
+    let subtract = (thumbDim * distance) + 'px';
+    if (offsetEnd) subtract += ' - ' + (offsetEnd * distance) + 'px';
+    if (offsetStart) subtract += ' + ' + (offsetStart * (1 - distance)) + 'px';
+
+    thumb.style[posAnchor] = 'calc(' + (distance * 100) + '% - ' + subtract + ')';
+  }
+
+  applyAllRatioDistances(newVals) {
+    for (let i = 0; i < this.vals.values.length; i++) {
+      this.applyOneRatioDistance(i, newVals);
+    }
+  }
+  applyOneRatioDistance(thumbIndex, newVals) {
+    const { value, prevRatio, ratio } = this.computeRatioDistance(thumbIndex, newVals);
+
+    const prevVal = this.vals.values[thumbIndex];
+    if (!Slider89.floatIsEqual(value, prevVal)) this.vals.values[thumbIndex] = value;
+    if (!Slider89.floatIsEqual(ratio, prevRatio)) this.moveThumbRelative(this.vals.node.thumb[thumbIndex], ratio);
+    if (thumbIndex === 0) {
+      this.handleInternalPropertyChange('value', prevVal);
+    }
+  }
+
+  // ---- Distance computation ----
   computeDistanceValue(thumb, distance, absSize) {
     if (absSize == null) absSize = this.getAbsoluteTrackSize(thumb);
     return distance / absSize * (this.vals.range[1] - this.vals.range[0]) + this.vals.range[0];
   }
-  moveThumb(thumb, distance, useTransform) {
-    if (useTransform) {
-      thumb.style.transform = 'translate' + (this.vals.orientation === 'vertical' ? 'Y' : 'X') + '(' + distance + 'px)';
-    } else {
-      // Absolute positioning starts at the padding, so looking at the border is not needed
-      if (this.vals.orientation === 'vertical') {
-        var offsetStart = this.getTrackPadding('Top');
-        var offsetEnd = this.getTrackPadding('Bottom');
-        var thumbDim = thumb.clientHeight;
-        var posAnchor = 'top';
-      } else {
-        var offsetStart = this.getTrackPadding('Left');
-        var offsetEnd = this.getTrackPadding('Right');
-        var thumbDim = thumb.clientWidth;
-        var posAnchor = 'left';
-      }
 
-      let subtract = (thumbDim * distance) + 'px';
-      if (offsetEnd) subtract += ' - ' + (offsetEnd * distance) + 'px';
-      if (offsetStart) subtract += ' + ' + (offsetStart * (1 - distance)) + 'px';
-      thumb.style[posAnchor] = 'calc(' + (distance * 100) + '% - ' + subtract + ')';
-    }
-  }
-
-
-  // ---- Distance computation ----
-  computeAllRatioDistances(newVals, returnProperties) {
-    for (let i = 0; i < this.vals.values.length; i++) {
-      this.computeOneRatioDistance(i, newVals, returnProperties);
-    }
-  }
-  computeOneRatioDistance(thumbIndex, newVals, returnProperties) {
+  computeRatioDistance(thumbIndex, newVals) {
     let value, ratio;
     if (!newVals) {
       newVals = this.vals;
@@ -123,19 +136,11 @@ export default class Slider89DOM extends Slider89Properties {
     }
     const newRatio = (value - newVals.range[0]) / (newVals.range[1] - newVals.range[0]);
 
-    if (returnProperties) {
-      return {
-        value: value,
-        ratio: newRatio
-      };
-    } else {
-      const prevVal = this.vals.values[thumbIndex];
-      if (!Slider89.floatIsEqual(value, prevVal)) this.vals.values[thumbIndex] = value;
-      if (!Slider89.floatIsEqual(newRatio, ratio)) this.moveThumb(this.vals.node.thumb[thumbIndex], newRatio);
-      if (thumbIndex === 0) {
-        this.handleInternalPropertyChange('value', prevVal);
-      }
-    }
+    return {
+      value: value,
+      prevRatio: ratio,
+      ratio: newRatio
+    };
   }
 
 
@@ -193,7 +198,7 @@ export default class Slider89DOM extends Slider89Properties {
     }
     const distance = this.getDistance(this.activeThumb);
     this.mouseDownPos = clientDim - distance;
-    this.moveThumb(this.activeThumb, distance, true);
+    this.moveThumbTranslate(this.activeThumb, distance);
     this.activeThumb.style.removeProperty(posAnchor);
 
     if (!touchEvent) {
@@ -213,7 +218,7 @@ export default class Slider89DOM extends Slider89Properties {
 
     let value = this.computeDistanceValue(this.activeThumb, distance, absSize);
     if (this.vals.step !== false) {
-      const computedProperties = this.computeOneRatioDistance(thumbIndex, {value: value}, true);
+      const computedProperties = this.computeRatioDistance(thumbIndex, { value: value });
       value = computedProperties.value;
       distance = computedProperties.ratio * absSize;
     }
@@ -221,11 +226,11 @@ export default class Slider89DOM extends Slider89Properties {
     const prevVal = this.vals.values[thumbIndex];
     if (!Slider89.floatIsEqual(value, prevVal)) {
       this.vals.values[thumbIndex] = value;
-      this.moveThumb(this.activeThumb, distance, true);
-      this.invokeEvent(['move'], touchEvent || e);
+      this.moveThumbTranslate(this.activeThumb, distance);
       if (thumbIndex === 0) {
         this.handleInternalPropertyChange('value', prevVal);
       }
+      this.invokeEvent(['move'], touchEvent || e);
     }
   }
   slideEnd(e, touchEvent) {
@@ -236,7 +241,7 @@ export default class Slider89DOM extends Slider89Properties {
 
     const thumbIndex = this.vals.node.thumb.indexOf(this.activeThumb);
 
-    this.computeOneRatioDistance(thumbIndex);
+    this.applyOneRatioDistance(thumbIndex);
     this.activeThumb.style.removeProperty('transform');
 
     this.invokeEvent(['end'], touchEvent || e);
