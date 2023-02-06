@@ -22,8 +22,6 @@ export default class Slider89DOM extends Slider89Properties {
     this.slideEnd = this.slideEnd.bind(this);
 
     this.keyDown = this.keyDown.bind(this);
-
-    window.addEventListener('keydown', this.keyDown);
   }
 
 
@@ -259,20 +257,23 @@ export default class Slider89DOM extends Slider89Properties {
 
   // ---- Misc events ----
   keyDown(e) {
-    if (document.activeElement === this.vals.node.thumb) {
-      let modifier = Math.round((this.vals.range[1] - this.vals.range[0]) / 100);
-      if (e.shiftKey && e.ctrlKey) {
-        modifier *= 0.1;
-      } else if (e.shiftKey) {
-        modifier *= 10;
-      }
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        this.value -= modifier;
-      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-        e.preventDefault();
-        this.value += modifier;
-      }
+    if (!e.key.startsWith('Arrow')) return;
+
+    const thumbIndex = this.vals.node.thumb.indexOf(e.currentTarget);
+
+    let modifier = Math.round((this.vals.range[1] - this.vals.range[0]) / 100);
+    if (e.shiftKey && e.ctrlKey) {
+      modifier *= 0.1;
+    } else if (e.shiftKey) {
+      modifier *= 10;
+    }
+
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      this.values[thumbIndex] -= modifier;
+    } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      this.values[thumbIndex] += modifier;
     }
   }
 }

@@ -332,7 +332,11 @@ export default class Slider89 extends Slider89DOM {
     // TODO Bring back possibility to skip `config` with `false`
     this.testInitialConfig(config);
 
-    this.domBuilder = new Slider89DOMBuilder(this.vals, this.touchStart, this.slideStart);
+    this.domBuilder = new Slider89DOMBuilder(this.vals, {
+      touchstart: this.touchStart,
+      mousedown: this.slideStart,
+      keydown: this.keyDown
+    });
     this.typeChecker = new LibraryTypeCheck();
 
     this.initializeClassProperties(config);
