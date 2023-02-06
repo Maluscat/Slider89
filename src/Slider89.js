@@ -184,7 +184,7 @@ export default class Slider89 extends Slider89DOM {
           this.propError('range', 'the given range of [' + val.join(', ') + '] defines the same value for both range start and end');
         }
         if (!this.initial) {
-          this.computeAllRatioDistances({ range: val });
+          this.applyAllRatioDistances({ range: val });
         }
       },
       keySetter: (val, key) => {
@@ -196,7 +196,7 @@ export default class Slider89 extends Slider89DOM {
         if (!this.initial) {
           const newRange = Array.from(this.vals.range);
           newRange[key] = val;
-          this.computeAllRatioDistances({ range: newRange });
+          this.applyAllRatioDistances({ range: newRange });
         }
       }
     },
@@ -211,7 +211,7 @@ export default class Slider89 extends Slider89DOM {
           if (val.length > this.vals.values.length) {
             for (let i = this.vals.values.length; i < val.length; i++) {
               this.vals.node.thumb.push(this.domBuilder.createNewThumb());
-              this.computeOneRatioDistance(i);
+              this.applyOneRatioDistance(i);
             }
           } else if (val.length < this.vals.values.length) {
             for (let i = val.length; i < this.vals.values.length; i++) {
@@ -232,7 +232,7 @@ export default class Slider89 extends Slider89DOM {
           if (key === 0) {
             var prevVal = this.value;
           }
-          this.computeOneRatioDistance(key, {value: val});
+          this.applyOneRatioDistance(key, {value: val});
         } else {
           this.vals.values[key] = val;
         }
@@ -258,7 +258,7 @@ export default class Slider89 extends Slider89DOM {
       default: false,
       setter: (val) => {
         if (!this.initial) {
-          this.computeAllRatioDistances({precision: val});
+          this.applyAllRatioDistances({ precision: val });
         }
       }
     },
@@ -269,7 +269,7 @@ export default class Slider89 extends Slider89DOM {
           this.propError('step', 'the given value of ' + val + ' exceeds the currently set precision of ' + this.vals.precision);
         }
         if (!this.initial) {
-          this.computeAllRatioDistances({step: val})
+          this.applyAllRatioDistances({ step: val })
         }
       }
     },
@@ -293,7 +293,7 @@ export default class Slider89 extends Slider89DOM {
             this.vals.node.slider.classList.remove('vertical');
           }
           this.vals.orientation = val;
-          this.computeAllRatioDistances();
+          this.applyAllRatioDistances();
           return true;
         }
       }
@@ -341,7 +341,7 @@ export default class Slider89 extends Slider89DOM {
 
     this.buildSlider(target, replace);
 
-    this.computeAllRatioDistances();
+    this.applyAllRatioDistances();
 
     // Expanding structure variables initially
     // This happens so late to ensure that $node can be accessed properly
