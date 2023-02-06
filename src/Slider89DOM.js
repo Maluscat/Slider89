@@ -95,12 +95,8 @@ export default class Slider89DOM extends Slider89Properties {
   applyOneRatioDistance(thumbIndex, newVals) {
     const { value, prevRatio, ratio } = this.computeRatioDistance(thumbIndex, newVals);
 
-    const prevVal = this.vals.values[thumbIndex];
-    if (!Slider89.floatIsEqual(value, prevVal)) this.vals.values[thumbIndex] = value;
+    this.setValuesWithValueChange(thumbIndex, value);
     if (!Slider89.floatIsEqual(ratio, prevRatio)) this.moveThumbRelative(this.vals.node.thumb[thumbIndex], ratio);
-    if (thumbIndex === 0) {
-      this.handleInternalPropertyChange('value', prevVal);
-    }
   }
 
   // ---- Distance computation ----
@@ -141,6 +137,19 @@ export default class Slider89DOM extends Slider89Properties {
       prevRatio: ratio,
       ratio: newRatio
     };
+  }
+
+  // ---- Helper functions ----
+  setValuesWithValueChange(thumbIndex, value) {
+    const prevVal = this.vals.values[thumbIndex];
+    if (!Slider89.floatIsEqual(value, prevVal)) {
+      this.vals.values[thumbIndex] = value;
+      if (thumbIndex === 0) {
+        this.handleInternalPropertyChange('value', prevVal);
+      }
+      return true;
+    }
+    return false;
   }
 
 
@@ -223,13 +232,8 @@ export default class Slider89DOM extends Slider89Properties {
       distance = computedProperties.ratio * absSize;
     }
 
-    const prevVal = this.vals.values[thumbIndex];
-    if (!Slider89.floatIsEqual(value, prevVal)) {
-      this.vals.values[thumbIndex] = value;
+    if (this.setValuesWithValueChange(thumbIndex, value)) {
       this.moveThumbTranslate(this.activeThumb, distance);
-      if (thumbIndex === 0) {
-        this.handleInternalPropertyChange('value', prevVal);
-      }
       this.invokeEvent(['move'], touchEvent || e);
     }
   }
