@@ -30,22 +30,33 @@ export default class Slider89DOM extends Slider89Properties {
   getTrackPadding(direction) {
     return parseFloat(this.trackStyle['padding' + direction]);
   }
+  getTrackOffset(direction) {
+    return parseFloat(this.trackStyle['border' + direction + 'Width'])
+      + this.getTrackPadding(direction);
+  }
+
   getDistance(thumb) {
     if (this.vals.orientation === 'vertical') {
-      return thumb.getBoundingClientRect().top - this.vals.node.track.getBoundingClientRect().top -
-        this.getTrackPadding('Top');
+      return thumb.getBoundingClientRect().top
+        - this.vals.node.track.getBoundingClientRect().top
+        - this.getTrackOffset('Top');
     } else {
-      return thumb.getBoundingClientRect().left - this.vals.node.track.getBoundingClientRect().left -
-        this.getTrackPadding('Left');
+      return thumb.getBoundingClientRect().left
+        - this.vals.node.track.getBoundingClientRect().left
+        - this.getTrackOffset('Left');
     }
   }
   getAbsoluteTrackSize(thumb) {
     if (this.vals.orientation === 'vertical') {
-      return this.vals.node.track.getBoundingClientRect().height - this.getTrackPadding('Top') - this.getTrackPadding('Bottom') -
-        thumb.getBoundingClientRect().height;
+      return this.vals.node.track.getBoundingClientRect().height
+        - this.getTrackOffset('Top')
+        - this.getTrackOffset('Bottom')
+        - thumb.getBoundingClientRect().height;
     } else {
-      return this.vals.node.track.getBoundingClientRect().width - this.getTrackPadding('Left') - this.getTrackPadding('Right') -
-        thumb.getBoundingClientRect().width;
+      return this.vals.node.track.getBoundingClientRect().width
+        - this.getTrackOffset('Left')
+        - this.getTrackOffset('Right')
+        - thumb.getBoundingClientRect().width;
     }
   }
 
@@ -57,21 +68,22 @@ export default class Slider89DOM extends Slider89Properties {
     if (useTransform) {
       thumb.style.transform = 'translate' + (this.vals.orientation === 'vertical' ? 'Y' : 'X') + '(' + distance + 'px)';
     } else {
+      // Absolute positioning starts at the padding, so looking at the border is not needed
       if (this.vals.orientation === 'vertical') {
-        var paddingStart = this.getTrackPadding('Top');
-        var paddingEnd = this.getTrackPadding('Bottom');
+        var offsetStart = this.getTrackPadding('Top');
+        var offsetEnd = this.getTrackPadding('Bottom');
         var thumbDim = thumb.clientHeight;
         var posAnchor = 'top';
       } else {
-        var paddingStart = this.getTrackPadding('Left');
-        var paddingEnd = this.getTrackPadding('Right');
+        var offsetStart = this.getTrackPadding('Left');
+        var offsetEnd = this.getTrackPadding('Right');
         var thumbDim = thumb.clientWidth;
         var posAnchor = 'left';
       }
 
       let subtract = (thumbDim * distance) + 'px';
-      if (paddingEnd) subtract += ' - ' + (paddingEnd * distance) + 'px';
-      if (paddingStart) subtract += ' + ' + (paddingStart * (1 - distance)) + 'px';
+      if (offsetEnd) subtract += ' - ' + (offsetEnd * distance) + 'px';
+      if (offsetStart) subtract += ' + ' + (offsetStart * (1 - distance)) + 'px';
       thumb.style[posAnchor] = 'calc(' + (distance * 100) + '% - ' + subtract + ')';
     }
   }
