@@ -497,6 +497,11 @@ export default class Slider89 extends Slider89DOM {
     }
     return value;
   }
+
+  // ---- Helper functions ----
+  static floatIsEqual(val0, val1) {
+    return Math.abs(val0 - val1) < 0.00000000001;
+  }
 }
 
 function enlistArray(arr) {
