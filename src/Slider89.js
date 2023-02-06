@@ -184,7 +184,7 @@ export default class Slider89 extends Slider89DOM {
           this.propError('range', 'the given range of [' + val.join(', ') + '] defines the same value for both range start and end');
         }
         if (!this.initial) {
-          this.computeAllRatioDistances({range: val});
+          this.computeAllRatioDistances({ range: val });
         }
       },
       keySetter: (val, key) => {
@@ -233,9 +233,6 @@ export default class Slider89 extends Slider89DOM {
             var prevVal = this.value;
           }
           this.computeOneRatioDistance(key, {value: val});
-          if (key === 0) {
-            this.handleInternalPropertyChange('value', prevVal);
-          }
         } else {
           this.vals.values[key] = val;
         }
