@@ -1,4 +1,5 @@
 'use strict';
+import Slider89 from './Slider89.js';
 import Slider89Properties from './Slider89Properties.js';
 
 export default class Slider89DOM extends Slider89Properties {
@@ -128,8 +129,8 @@ export default class Slider89DOM extends Slider89Properties {
         ratio: newRatio
       };
     } else {
-      if (value !== this.vals.values[thumbIndex]) this.vals.values[thumbIndex] = value;
-      if (newRatio !== ratio) this.moveThumb(this.vals.node.thumb[thumbIndex], newRatio);
+      if (!Slider89.floatIsEqual(value, this.vals.values[thumbIndex])) this.vals.values[thumbIndex] = value;
+      if (!Slider89.floatIsEqual(newRatio, ratio)) this.moveThumb(this.vals.node.thumb[thumbIndex], newRatio);
     }
   }
 
@@ -211,7 +212,7 @@ export default class Slider89DOM extends Slider89Properties {
       distance = computedProperties.ratio * absSize;
     }
 
-    if (this.vals.values[thumbIndex] !== value) {
+    if (!Slider89.floatIsEqual(this.vals.values[thumbIndex], value)) {
       this.vals.values[thumbIndex] = value;
       this.moveThumb(this.activeThumb, distance, true);
       this.invokeEvent(['move'], touchEvent || e);
