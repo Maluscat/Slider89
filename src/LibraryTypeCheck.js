@@ -1,22 +1,22 @@
 'use strict';
 export default class LibraryTypeCheck {
-  typeMsg(variable, noIntro) {
-    let msg = noIntro ? '' : 'but it is ';
+  static getType(variable, noIntro) {
+    let msg;
     if (Array.isArray(variable))
-      msg += 'an array';
+      msg = 'an array';
     else if (Number.isNaN(variable))
-      msg += 'NaN';
+      msg = 'NaN';
     else if (variable === null)
-      msg += 'null';
+      msg = 'null';
     else if (typeof variable === 'boolean')
-      msg += variable;
+      msg = variable;
     else
-      msg += 'of type ' + typeof variable;
+      msg = 'of type ' + typeof variable;
 
     return msg;
   }
 
-  checkTypes(val, structure, plural) {
+  static checkTypes(val, structure, plural) {
     let msg;
     for (let i = 0; i < structure.length; i++) {
       const typeObj = structure[i];
@@ -33,11 +33,11 @@ export default class LibraryTypeCheck {
       ) {
         if (type == 'array') {
           for (let n = 0; n < val.length; n++) {
-            if (msg = this.checkTypes(val[n], typeObj.structure, true)) break;
+            if (msg = LibraryTypeCheck.checkTypes(val[n], typeObj.structure, true)) break;
           }
         } else if (type === 'object') {
           for (let key in val) {
-            if (msg = this.checkTypes(val[key], typeObj.structure, true)) break;
+            if (msg = LibraryTypeCheck.checkTypes(val[key], typeObj.structure, true)) break;
           }
         }
         if (msg) return msg;
@@ -45,7 +45,7 @@ export default class LibraryTypeCheck {
         else return false;
       }
     }
-    return msg ? ' is ' + msg : (plural ? 's values are ' : ' is ') + this.typeMsg(val, true);
+    return msg ? ' is ' + msg : (plural ? 's values are ' : ' is ') + LibraryTypeCheck.getType(val);
 
     function checkConditions(conditions, val) {
       if (conditions) {
@@ -75,7 +75,7 @@ export default class LibraryTypeCheck {
   }
 
   // Compute an automated error message regarding the property's types and conditions
-  computeTypeMsg(struct, shape, plural, deep) {
+  static computeTypeMsg(struct, shape, plural, deep) {
     let msg = '';
     for (let i = 0; i < struct.length; i++) {
       const type = struct[i].type;
@@ -103,7 +103,7 @@ export default class LibraryTypeCheck {
 
       else if (type === 'array') {
         const len = cond && cond.length;
-        const msgRes = this.computeTypeMsg(struct[i].structure, false, len !== 1, true);
+        const msgRes = LibraryTypeCheck.computeTypeMsg(struct[i].structure, false, len !== 1, true);
 
         if (!plural) msg += 'a';
         if (deep) {
@@ -118,7 +118,7 @@ export default class LibraryTypeCheck {
       }
 
       else if (type === 'object') {
-        msg += 'an object with ' + this.computeTypeMsg(struct[i].structure, false, true, true) + ' as values';
+        msg += 'an object with ' + LibraryTypeCheck.computeTypeMsg(struct[i].structure, false, true, true) + ' as values';
       }
 
       else if (type === 'function') {

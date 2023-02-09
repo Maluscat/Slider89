@@ -5,6 +5,8 @@ export default class Slider89Base extends Slider89Error {
   methods;
   properties;
 
+  TypeCheck;
+
   vals = {}; // holding every class property
   initial = false;
 
