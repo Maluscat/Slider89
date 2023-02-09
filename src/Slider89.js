@@ -6,7 +6,7 @@ import LibraryTypeCheck from './LibraryTypeCheck.js';
 export default class Slider89 extends Slider89DOM {
   static TypeCheck = LibraryTypeCheck;
 
-  methodStructure = {
+  static methodStructure = {
     addEvent: {
       args: [
         {
@@ -58,8 +58,7 @@ export default class Slider89 extends Slider89DOM {
       ]
     }
   }
-
-  propertyStructure = {
+  static propertyStructure = {
     range: {
       structure: [
         {
@@ -433,7 +432,7 @@ export default class Slider89 extends Slider89DOM {
     for (let _ in this.methods) {
       const item = _;
       const method = this.methods[item];
-      const argCount = this.methodStructure[item].args.length;
+      const argCount = Slider89.methodStructure[item].args.length;
       this[item] = function() {
         const args = Array.prototype.slice.call(arguments, 0, argCount);
         that.checkMethod(item, args);
@@ -463,7 +462,7 @@ export default class Slider89 extends Slider89DOM {
   // ---- Helper functions ----
   // Check properties & methods for the correct type & format
   checkMethod(method, argList) {
-    const obj = this.methodStructure[method];
+    const obj = Slider89.methodStructure[method];
     // If the next argument (argList.length - 1 + 1) is not optional, a required arg is missing
     for (let i in argList) {
       const arg = argList[i];
@@ -475,7 +474,7 @@ export default class Slider89 extends Slider89DOM {
     }
   }
   checkProp(prop, val) {
-    const item = this.propertyStructure[prop];
+    const item = Slider89.propertyStructure[prop];
     const msg = Slider89.TypeCheck.checkTypes(val, item.structure, false);
     if (msg) {
       this.propError(prop, 'property ‘' + prop + '’ must be ' + Slider89.TypeCheck.computeTypeMsg(item.structure, item.shape) + ' but it' + msg, true);
