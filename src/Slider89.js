@@ -4,6 +4,8 @@ import Slider89DOMBuilder from './Slider89DOMBuilder.js';
 import LibraryTypeCheck from './LibraryTypeCheck.js';
 
 export default class Slider89 extends Slider89DOM {
+  static TypeCheck = LibraryTypeCheck;
+
   methodStructure = {
     addEvent: {
       args: [
@@ -321,7 +323,6 @@ export default class Slider89 extends Slider89DOM {
   };
 
   domBuilder;
-  typeChecker;
 
   constructor(target, config = {}, replace = false) {
     super();
@@ -337,7 +338,6 @@ export default class Slider89 extends Slider89DOM {
       mousedown: this.slideStart,
       keydown: this.keyDown
     });
-    this.typeChecker = new LibraryTypeCheck();
 
     this.initializeClassProperties(config);
     this.initializeCustomProperties(config);
@@ -363,14 +363,14 @@ export default class Slider89 extends Slider89DOM {
     if (!target) {
       this.error('no first argument has been supplied. It needs to be the DOM target node for the slider', 'constructor', true);
     } else if (!target.nodeType || target.nodeType !== 1) {
-      this.error('the first argument must be a valid DOM node the slider will be placed into ' + this.typeChecker.typeMsg(target), 'constructor', true);
+      this.error('the first argument must be a valid DOM node the slider will be placed into but it is ' + Slider89.TypeCheck.getType(target), 'constructor', true);
     }
   }
   testInitialConfig(config) {
     if (config == null || config === false) {
       config = {};
     } else if (typeof config !== 'object' || Array.isArray(config)) {
-      this.error('the optional second argument needs to be an object for configuration ' + this.typeChecker.typeMsg(config), 'constructor', true);
+      this.error('the optional second argument needs to be an object for configuration but it is ' + Slider89.TypeCheck.getType(config), 'constructor', true);
     }
   }
 
@@ -467,7 +467,7 @@ export default class Slider89 extends Slider89DOM {
     // If the next argument (argList.length - 1 + 1) is not optional, a required arg is missing
     for (let i in argList) {
       const arg = argList[i];
-      const msg = this.typeChecker.checkTypes(arg, obj.args[i].structure, false);
+      const msg = Slider89.TypeCheck.checkTypes(arg, obj.args[i].structure, false);
       if (msg) this.methodError(method, i, msg);
     }
     if (obj.args[argList.length] && !obj.args[argList.length].optional) {
@@ -476,9 +476,9 @@ export default class Slider89 extends Slider89DOM {
   }
   checkProp(prop, val) {
     const item = this.propertyStructure[prop];
-    const msg = this.typeChecker.checkTypes(val, item.structure, false);
+    const msg = Slider89.TypeCheck.checkTypes(val, item.structure, false);
     if (msg) {
-      this.propError(prop, 'property ‘' + prop + '’ must be ' + this.typeChecker.computeTypeMsg(item.structure, item.shape) + ' but it' + msg, true);
+      this.propError(prop, 'property ‘' + prop + '’ must be ' + Slider89.TypeCheck.computeTypeMsg(item.structure, item.shape) + ' but it' + msg, true);
     }
   }
 
