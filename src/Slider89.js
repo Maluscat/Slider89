@@ -158,12 +158,13 @@ export default class Slider89 extends Slider89DOM {
 
   domBuilder;
 
-  constructor(target, config = {}, replace = false) {
+  constructor(target, config, replace = false) {
     super();
     this.initial = true;
 
     this.testInitialTarget(target);
-    // TODO Bring back possibility to skip `config` with `false`
+
+    if (config == null || config === false) config = {};
     this.testInitialConfig(config);
 
     this.domBuilder = new Slider89DOMBuilder(this.vals, {
@@ -194,18 +195,16 @@ export default class Slider89 extends Slider89DOM {
 
   testInitialTarget(target) {
     if (!target) {
-      throw new Slider89.Error('no first argument has been supplied. It needs to be the DOM target node for the slider', 'constructor', true);
+      throw new Slider89.InitializationError('no first argument has been supplied. It needs to be the DOM target node for the slider');
     } else if (!target.nodeType || target.nodeType !== 1) {
-      throw new Slider89.Error('the first argument must be a valid DOM node the slider will be placed into but it is ' + Slider89.TypeCheck.getType(target), 'constructor', true);
+      throw new Slider89.InitializationError('the first argument must be a valid DOM node but it is ' + Slider89.TypeCheck.getType(target));
     }
   }
   testInitialConfig(config) {
-    if (config == null || config === false) {
-      config = {};
-    } else if (typeof config !== 'object' || Array.isArray(config)) {
-      throw new Slider89.Error('the optional second argument needs to be an object for configuration but it is ' + Slider89.TypeCheck.getType(config), 'constructor', true);
+    if (typeof config !== 'object' || Array.isArray(config)) {
+      throw new Slider89.InitializationError('the optional second argument needs to be a configuration object but it is ' + Slider89.TypeCheck.getType(config));
     } else if ('value' in config && 'values' in config) {
-      throw new Slider89.Error('only one of ‘value’ and ‘values’ may be set in the constructor', 'constructor', true);
+      throw new Slider89.InitializationError('only one of ‘value’ and ‘values’ may be defined at once');
     }
   }
 
