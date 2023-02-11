@@ -1,4 +1,5 @@
 'use strict';
+import Slider89 from './Slider89.js';
 import Slider89Base from './Slider89Base.js';
 
 export default class Slider89Events extends Slider89Base {
@@ -17,7 +18,7 @@ export default class Slider89Events extends Slider89Base {
   // ---- Class methods ----
   addEvent(type, fn, name) {
     if (!this.checkEventType(type)) {
-      this.error('the specified type ‘' + type + '’ is not a valid event type. Available types are:' + enlistArray(Slider89Events.eventTypes), 'addEvent');
+      throw new Slider89.Error('the specified type ‘' + type + '’ is not a valid event type. Available types are:' + Slider89.arrayToListString(Slider89Events.eventTypes), 'addEvent');
     }
 
     if (!Array.isArray(this.vals.events[type])) this.vals.events[type] = new Array();

@@ -1,4 +1,6 @@
 'use strict';
+import Slider89 from './Slider89.js';
+
 export default class Slider89StructureParser {
   // ---- Static properties ----
   // Static initialization blocks don't work with my current workflow
@@ -97,7 +99,7 @@ export default class Slider89StructureParser {
       this.parseError('end of string', structureStr.slice(currentIndex));
     }
     if (stack.length > 1) {
-      propError('structure', "couldn't find a matching closing tag for following elements:" + enlistArray(stack));
+      propError('structure', "couldn't find a matching closing tag for following elements:" + Slider89.arrayToListString(stack));
     } else if (stack.length === 1) {
       this.closingTagError(stack[0]);
     }

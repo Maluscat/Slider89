@@ -1,6 +1,7 @@
 'use strict';
 // Style rule strings which will be inserted into a newly created stylesheet
 import styles from './default-styles.css';
+import Slider89 from './Slider89.js';
 import Slider89StructureParser from './Slider89StructureParser.js';
 
 export default class Slider89DOMBuilder extends Slider89StructureParser {
@@ -133,9 +134,9 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
     if (errNodes.length > 0) {
       const msg =
-        "the given object contains items which aren't nodes of this slider:" + enlistArray(errNodes) +
-        "Following nodes are part of this slider's node pool:" + enlistArray(Object.keys(node))
-      propError('classList', msg);
+        "the given object contains items which aren't nodes of this slider:" + Slider89.arrayToListString(errNodes) +
+        "Following nodes are part of this slider's node pool:" + Slider89.arrayToListString(Object.keys(node))
+      throw new Slider89.PropertyError('classList', msg, true);
     }
   }
 
