@@ -21,6 +21,13 @@ export default class Slider89Error {
     }
   }
 
+  // ---- Constructor error ----
+  static InitializationError = class extends Slider89Error.Error {
+    constructor(msg) {
+      super(msg, 'constructor', true);
+    }
+  }
+
   // ---- Property errors ----
   static PropertyError = class extends Slider89Error.Error {
     constructor(slider, property, msg) {
