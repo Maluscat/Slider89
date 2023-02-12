@@ -42,7 +42,6 @@ export default class Slider89Error {
       super(msg, property, prevVal === undefined);
     }
   }
-
   static PropertyTypeError = class extends Slider89Error.PropertyError {
     constructor(slider, propertyName, propertyInfo, typeMsg) {
       let msg =
@@ -66,7 +65,6 @@ export default class Slider89Error {
       super(finalMsg);
     }
   }
-
   static MethodArgTypeError = class extends Slider89Error.MethodArgError {
     constructor(methodName, index, typeMsg) {
       const argInfo = Slider89.getMethodArgInfo(methodName, index);
@@ -75,7 +73,6 @@ export default class Slider89Error {
       super(msg, argInfo, index);
     }
   }
-
   static MethodArgOmitError = class extends Slider89Error.MethodArgError {
     constructor(methodName, index) {
       const argInfo = Slider89.getMethodArgInfo(methodName, index);
@@ -84,6 +81,22 @@ export default class Slider89Error {
         + Slider89.TypeCheck.computeTypeMsg(argInfo.structure);
 
       super(msg, argInfo, index);
+    }
+  }
+
+  // ---- Structure errors ----
+  static StructureError = class extends Slider89Error.Error {
+    constructor(msg) {
+      super(msg, 'structure', true);
+    }
+  }
+  static StructureParseError = class extends Slider89Error.StructureError {
+    constructor(beforeFailure, leftoverUnparsed) {
+      const msg =
+        "something has been declared wrongly and couldn't be parsed. Point of failure "
+        + "(before " + beforeFailure + "):\n\n"
+        + leftoverUnparsed + '\n';
+      super(msg);
     }
   }
 
