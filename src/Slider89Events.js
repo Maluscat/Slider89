@@ -73,7 +73,10 @@ export default class Slider89Events extends Slider89Base {
       // Edge case for 'change:$property'
       const customProp = type.slice('change:'.length);
       if (!Object.prototype.hasOwnProperty.call(this.vals, customProp)) {
-        this.error("‘" + type + "’ refers to ‘" + customProp + "’, which isn't a recognized property. Check its spelling and be aware that custom properties need to be initialized", 'addEvent');
+        throw new Slider89.Error(
+          "‘" + type + "’ refers to ‘" + customProp + "’, which isn't a recognized property. "
+          + "Check its spelling and be aware that custom properties need to be initialized",
+          'addEvent');
       }
     } else if (Slider89Events.eventTypes.indexOf(type) === -1) return false;
     return true;

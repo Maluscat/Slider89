@@ -1,4 +1,5 @@
 'use strict';
+import Slider89 from './Slider89.js';
 import Slider89Events from './Slider89Events.js';
 import Slider89StructureParser from './Slider89StructureParser.js';
 
@@ -131,7 +132,8 @@ export default class Slider89Properties extends Slider89Events {
         try {
           value = value[recursiveVar[i]];
         } catch (e) {
-          error("Variable ‘" + varName + "’ cannot access property ‘" + recursiveVar[i] + "’ on " + value, 'structure');
+          throw new Slider89.StructureError(
+            "Variable ‘" + varName + "’ cannot access property ‘" + recursiveVar[i] + "’ on " + value);
         }
       }
     }

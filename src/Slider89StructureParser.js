@@ -69,9 +69,9 @@ export default class Slider89StructureParser {
     // match: [matchedStr, type, name, tag, innerContent, attributes]
     while (match = Slider89StructureParser.regex.tag.exec(structureStr)) {
       if (match.index !== currentIndex) {
-        const pointOfFailure = 'tag ‘<' + (match[1] || '') + match[2] + '>’';
-        throw new Slider89.StructureParseError(
-          pointOfFailure, structureStr.slice(currentIndex, match.index).trim());
+        const beforeFailure = 'tag ‘<' + (match[1] || '') + match[2] + '>’';
+        const pointOfFailure = structureStr.slice(currentIndex, match.index).trim();
+        throw new Slider89.StructureParseError(beforeFailure, pointOfFailure);
       }
       currentIndex = Slider89StructureParser.regex.tag.lastIndex;
 
@@ -89,7 +89,7 @@ export default class Slider89StructureParser {
             this.closingTagError(lastItem);
           } else {
             throw new Slider89.StructureError(
-              "the closing tag ‘</" + match[2] + ">’ couldn't find a matching opening tag");
+              "The closing tag ‘</" + match[2] + ">’ couldn't find a matching opening tag");
           }
         }
       }
@@ -100,7 +100,7 @@ export default class Slider89StructureParser {
     }
     if (stack.length > 1) {
       throw new Slider89.StructureError(
-        "couldn't find a matching closing tag for following elements:" + Slider89.arrayToListString(stack));
+        "Couldn't find a matching closing tag for following elements:" + Slider89.arrayToListString(stack));
     } else if (stack.length === 1) {
       this.closingTagError(stack[0]);
     }

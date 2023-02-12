@@ -91,11 +91,11 @@ export default class Slider89Error {
     }
   }
   static StructureParseError = class extends Slider89Error.StructureError {
-    constructor(beforeFailure, leftoverUnparsed) {
+    constructor(beforeFailure, pointOfFailure) {
       const msg =
         "something has been declared wrongly and couldn't be parsed. Point of failure "
         + "(before " + beforeFailure + "):\n\n"
-        + leftoverUnparsed + '\n';
+        + pointOfFailure + '\n';
       super(msg);
     }
   }
