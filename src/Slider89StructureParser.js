@@ -69,10 +69,9 @@ export default class Slider89StructureParser {
     // match: [matchedStr, type, name, tag, innerContent, attributes]
     while (match = Slider89StructureParser.regex.tag.exec(structureStr)) {
       if (match.index !== currentIndex) {
-        this.parseError(
-          'tag ‘<' + (match[1] || '') + match[2] + '>’',
-          structureStr.slice(currentIndex, match.index).trim()
-        );
+        const pointOfFailure = 'tag ‘<' + (match[1] || '') + match[2] + '>’';
+        throw new Slider89.StructureParseError(
+          pointOfFailure, structureStr.slice(currentIndex, match.index).trim());
       }
       currentIndex = Slider89StructureParser.regex.tag.lastIndex;
 
@@ -89,17 +88,19 @@ export default class Slider89StructureParser {
           if (stack.indexOf(match[2]) !== -1) {
             this.closingTagError(lastItem);
           } else {
-            propError('structure', "the closing tag ‘</" + match[2] + ">’ couldn't find a matching opening tag");
+            throw new Slider89.StructureError(
+              "the closing tag ‘</" + match[2] + ">’ couldn't find a matching opening tag");
           }
         }
       }
     }
 
     if (currentIndex !== structureStr.length) {
-      this.parseError('end of string', structureStr.slice(currentIndex));
+      throw new Slider89.StructureParseError('end of string', structureStr.slice(currentIndex));
     }
     if (stack.length > 1) {
-      propError('structure', "couldn't find a matching closing tag for following elements:" + Slider89.arrayToListString(stack));
+      throw new Slider89.StructureError(
+        "couldn't find a matching closing tag for following elements:" + Slider89.arrayToListString(stack));
     } else if (stack.length === 1) {
       this.closingTagError(stack[0]);
     }
@@ -109,7 +110,8 @@ export default class Slider89StructureParser {
 
   assembleElement(node, name, tag, content, attributes) {
     if (name in node) {
-      this.propError('structure', 'Every element must have a unique name but there are mutiple elements called ‘' + name + '’');
+      throw new Slider89.StructureError(
+        'Every element must have a unique name but there are mutiple elements called ‘' + name + '’');
     }
     const elem = document.createElement(tag || 'div');
     // Content with variables gets added after parseStructure, due to unavailability of some properties
@@ -140,7 +142,8 @@ export default class Slider89StructureParser {
         const propName = varName.indexOf('.') !== -1 ? varName.slice(0, varName.indexOf('.')) : varName;
         if (!cache.hasOwnProperty(propName)) {
           if (!Object.prototype.hasOwnProperty.call(this.vals, propName)) {
-            this.propError('structure', "‘" + propName + "’ is not a recognized property and cannot be used as variable. Please check its spelling or initialize it in the constructor");
+            throw new Slider89.StructureError(
+              "‘" + propName + "’ is not a recognized property and cannot be used as variable. Please check its spelling or initialize it in the constructor");
           }
 
           if (this.structureVars[propName] == null) this.structureVars[propName] = new Array();
@@ -160,14 +163,9 @@ export default class Slider89StructureParser {
   }
 
 
-  // ---- Error functions ----
-  parseError(endPoint, failedStructure) {
-    propError('structure',
-      "something has been declared wrongly and couldn't be parsed. Point of failure before " +
-      endPoint + ":\n  " + failedStructure + '\n');
-  }
+  // ---- Error helpers ----
   closingTagError(tagName) {
-    propError('structure',
-      "couldn't find a matching closing tag for the element ‘<" + tagName + ">’ (Should it be a self-closing tag marked with ‘:’?)");
+    throw new Slider89.StructureError(
+      "couldn't find a closing tag for the element ‘<" + tagName + ">’ (Should it be a self-closing tag marked with ‘:’?)");
   }
 }
