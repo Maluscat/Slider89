@@ -37,24 +37,24 @@ export default class Slider89Events extends Slider89Base {
     return name || this.eventID++;
   }
   removeEvent(key) {
-    const listEntry = this.eventList[key];
-    if (!listEntry) return false;
+    const eventInfo = this.eventList[key];
+    if (!eventInfo) return false;
     delete this.eventList[key];
-    return Array.isArray(listEntry) ?
-      listEntry.reduce(handleEvents, new Array()) :
-      handleEvents(new Array(), listEntry);
-
-    function handleEvents(acc, entry) {
-      const typeEvents = this.vals.events[entry.type];
-      const deleted = typeEvents.splice(typeEvents.indexOf(entry.fn), 1)[0];
-      if (typeEvents.length === 0) delete this.vals.events[entry.type];
-      acc.push(deleted);
-      return acc;
-    }
+    return Array.isArray(eventInfo)
+      ? eventInfo.reduce(this.handleRemoveEvent.bind(this), new Array())
+      : this.handleRemoveEvent(new Array(), eventInfo);
   }
 
 
   // ---- Helper functions ----
+  handleRemoveEvent(deleteCollection, eventInfo) {
+    const typeEvents = this.vals.events[eventInfo.type];
+    const deleted = typeEvents.splice(typeEvents.indexOf(eventInfo.fn), 1)[0];
+    if (typeEvents.length === 0) delete this.vals.events[eventInfo.type];
+    deleteCollection.push(deleted);
+    return deleteCollection;
+  }
+
   invokeEvent(types) {
     const args = Array.from(arguments);
     args[0] = this;
