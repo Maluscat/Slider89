@@ -85,13 +85,13 @@ export default class Slider89Properties extends Slider89Events {
     // Object types (arrays included) always invoke a variable update
     // due to inability to deeply compare them (efficiently)
     if (!this.initial && (typeof this[item] === 'object' || prevVal !== this[item])) {
-      this.updatePotentialVariable(item);
+      this.updatePotentialStructureVar(item);
       this.invokeEvent(['change:' + item], prevVal);
     }
   }
   handleInternalDeepArrayChange(item, prevVal, val, deepDefinedIndex) {
     if (!this.initial) {
-      this.updatePotentialVariable(item);
+      this.updatePotentialStructureVar(item);
       if (deepDefinedIndex != null) {
         this.invokeDeepArrayChangeEvent(item, prevVal, deepDefinedIndex);
       } else {
@@ -108,22 +108,22 @@ export default class Slider89Properties extends Slider89Events {
     }
   }
 
-  updatePotentialVariable(propName) {
-    if (Object.prototype.hasOwnProperty.call(this.domBuilder.structureVars, propName)) {
-      for (const str in this.domBuilder.structureVars[propName]) {
-        const nodeList = this.domBuilder.structureVars[propName][str];
+  updatePotentialStructureVar(propName) {
+    if (!Object.prototype.hasOwnProperty.call(this.domBuilder.structureVars, propName)) return;
 
-        const replacedStr = str.replace(Slider89StructureParser.regex.variable, (match, variableDelimit, variable) => {
-          return this.getValueFromVariable(variableDelimit || variable);
-        });
-        for (const node of nodeList) {
-          node.textContent = replacedStr;
-        }
+    for (const str in this.domBuilder.structureVars[propName]) {
+      const nodeList = this.domBuilder.structureVars[propName][str];
+
+      const replacedStr = str.replace(Slider89StructureParser.regex.variable, (match, variableDelimit, variable) => {
+        return this.getValueFromStructureVar(variableDelimit || variable);
+      });
+      for (const node of nodeList) {
+        node.textContent = replacedStr;
       }
     }
   }
 
-  getValueFromVariable(varName) {
+  getValueFromStructureVar(varName) {
     const recursiveVar = varName.split('.');
     let value = this[recursiveVar[0]];
     if (recursiveVar.length > 1) {
@@ -131,8 +131,7 @@ export default class Slider89Properties extends Slider89Events {
         try {
           value = value[recursiveVar[i]];
         } catch (e) {
-          throw new Slider89.StructureError(
-            "Variable ‘" + varName + "’ cannot access property ‘" + recursiveVar[i] + "’ on " + value);
+          throw new Slider89.StructureError("Variable ‘" + varName + "’ cannot access property ‘" + recursiveVar[i] + "’ on " + value);
         }
       }
     }
