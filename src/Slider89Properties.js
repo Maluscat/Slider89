@@ -110,15 +110,14 @@ export default class Slider89Properties extends Slider89Events {
 
   updatePotentialVariable(propName) {
     if (Object.prototype.hasOwnProperty.call(this.domBuilder.structureVars, propName)) {
-      for (let i in this.domBuilder.structureVars[propName]) {
-        const item = this.domBuilder.structureVars[propName][i];
-        const str = item.str.replace(Slider89StructureParser.regex.variable, (match, variableDelimit, variable) => {
+      for (const str in this.domBuilder.structureVars[propName]) {
+        const nodeList = this.domBuilder.structureVars[propName][str];
+
+        const replacedStr = str.replace(Slider89StructureParser.regex.variable, (match, variableDelimit, variable) => {
           return this.getValueFromVariable(variableDelimit || variable);
         });
-        if (item.attr) {
-          item.elem.setAttribute(item.attr, str);
-        } else {
-          item.elem.textContent = str;
+        for (const node of nodeList) {
+          node.textContent = replacedStr;
         }
       }
     }
