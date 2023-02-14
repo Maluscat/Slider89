@@ -114,58 +114,72 @@ export default class Slider89StructureParser {
         'Every element must have a unique name but there are mutiple elements called ‘' + name + '’');
     }
     const elem = document.createElement(tag || 'div');
-    // Content with variables gets added after parseStructure, due to unavailability of some properties
-    if (!this.registerVariables(content, elem, false)) {
+
+    if (Slider89StructureParser.stringHasVariable(content)) {
+      this.registerVariables(content, elem);
       elem.textContent = content;
     }
+
     if (attributes) {
       let match;
       while (match = Slider89StructureParser.regex.attributes.exec(attributes)) {
         const attribName = match[1];
-        let value = match[2];
-        if (!this.registerVariables(value, elem, attribName)) {
-          elem.setAttribute(attribName, value);
+        const attribValue = match[2];
+
+        elem.setAttribute(attribName, attribValue);
+        if (Slider89StructureParser.stringHasVariable(attribValue)) {
+          const attribNode = elem.getAttributeNode(attribName);
+          this.registerVariables(attribValue, attribNode);
         }
       }
     }
     return elem;
   }
 
-  registerVariables(str, elem, attribName) {
-    // Need to use a RegExp without /g/ because the internal `lastIndex` counter would clash with the `exec` below
-    if (Slider89StructureParser.regex.variableNoFlag.test(str)) {
-      // Memorize & skip already handled variables for the current string
-      const cache = {};
-      let match;
-      while (match = Slider89StructureParser.regex.variable.exec(str)) {
-        const varName = match[1] || match[2];
-        const propName = varName.indexOf('.') !== -1 ? varName.slice(0, varName.indexOf('.')) : varName;
-        if (!cache.hasOwnProperty(propName)) {
-          if (!Object.prototype.hasOwnProperty.call(this.vals, propName)) {
-            throw new Slider89.StructureError(
-              "‘" + propName + "’ is not a recognized property and cannot be used as variable. Please check its spelling or initialize it in the constructor");
-          }
+  registerVariables(str, targetNode) {
+    // Memorize & skip already handled variables for the current string
+    const propNameCache = new Array();
+    let match;
+    while (match = Slider89StructureParser.regex.variable.exec(str)) {
+      const varName = match[1] || match[2];
+      const propName = varName.indexOf('.') !== -1
+        ? varName.slice(0, varName.indexOf('.'))
+        : varName;
 
-          if (this.structureVars[propName] == null) this.structureVars[propName] = new Array();
-          const item = {
-            str: str,
-            elem: elem
-          };
-          if (attribName) item.attr = attribName;
-          this.structureVars[propName].push(item);
-
-          cache[propName] = item;
+      if (!propNameCache.hasOwnProperty(propName)) {
+        if (!Object.prototype.hasOwnProperty.call(this.vals, propName)) {
+          throw new Slider89.StructureError(
+            "‘" + propName + "’ is not a recognized property and cannot be used as variable. Please check its spelling or initialize it in the constructor");
         }
+
+        this.addStructureVariable(propName, str, targetNode);
+
+        propNameCache.push(propName);
       }
-      return true;
     }
-    return false;
+  }
+
+  addStructureVariable(propName, str, targetNode) {
+    if (this.structureVars[propName] == null) {
+      this.structureVars[propName] = {}
+    }
+    if (this.structureVars[propName][str] == null) {
+      this.structureVars[propName][str] = new Array();
+    }
+    this.structureVars[propName][str].push(targetNode);
   }
 
 
   // ---- Error helpers ----
   closingTagError(tagName) {
     throw new Slider89.StructureError(
-      "couldn't find a closing tag for the element ‘<" + tagName + ">’ (Should it be a self-closing tag marked with ‘:’?)");
+      "Couldn't find a closing tag for the element ‘<" + tagName + ">’ (Should it be a self-closing tag marked with ‘:’?)");
+  }
+
+
+  // ---- Static helpers ----
+  static stringHasVariable(str) {
+    // Need to use a RegExp without /g/ because the internal `lastIndex` mustn't be advanced by a mere test
+    return Slider89StructureParser.regex.variableNoFlag.test(str);
   }
 }
