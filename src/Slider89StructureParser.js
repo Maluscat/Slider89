@@ -116,7 +116,7 @@ export default class Slider89StructureParser {
     const elem = document.createElement(tag || 'div');
 
     if (Slider89StructureParser.stringHasVariable(content)) {
-      this.registerVariables(content, elem);
+      this.parseVariables(content, elem);
       elem.textContent = content;
     }
 
@@ -129,14 +129,15 @@ export default class Slider89StructureParser {
         elem.setAttribute(attribName, attribValue);
         if (Slider89StructureParser.stringHasVariable(attribValue)) {
           const attribNode = elem.getAttributeNode(attribName);
-          this.registerVariables(attribValue, attribNode);
+          this.parseVariables(attribValue, attribNode);
         }
       }
     }
     return elem;
   }
 
-  registerVariables(str, targetNode) {
+  // ---- Structure variables register ----
+  parseVariables(str, targetNode) {
     // Memorize & skip already handled variables for the current string
     const propNameCache = new Array();
     let match;
@@ -152,14 +153,14 @@ export default class Slider89StructureParser {
             "‘" + propName + "’ is not a recognized property and cannot be used as variable. Please check its spelling or initialize it in the constructor");
         }
 
-        this.addStructureVariable(propName, str, targetNode);
+        this.registerVariable(propName, str, targetNode);
 
         propNameCache.push(propName);
       }
     }
   }
 
-  addStructureVariable(propName, str, targetNode) {
+  registerVariable(propName, str, targetNode) {
     if (this.structureVars[propName] == null) {
       this.structureVars[propName] = {}
     }
