@@ -108,6 +108,7 @@ export default class Slider89Properties extends Slider89Events {
     }
   }
 
+  // ---- Structure variables ----
   updatePotentialStructureVar(propName) {
     if (!Object.prototype.hasOwnProperty.call(this.domBuilder.structureVars, propName)) return;
 
@@ -118,8 +119,24 @@ export default class Slider89Properties extends Slider89Events {
         return this.getValueFromStructureVar(variableDelimit || variable);
       });
       for (const node of nodeList) {
-        node.textContent = replacedStr;
+        this.replaceStructureVarInNode(node, replacedStr);
       }
+    }
+  }
+  replaceStructureVarInNode(node, replacedStr) {
+    // Special case: Iterate over every thumb
+    if ((node.ownerElement || node) === this.domBuilder.thumbBase) {
+      if (node.nodeType === Node.ATTRIBUTE_NODE) {
+        this.vals.node.thumb.forEach(thumb => {
+          thumb.getAttributeNode(node.name).textContent = replacedStr;
+        });
+      } else {
+        this.vals.node.thumb.forEach(thumb => {
+          thumb.textContent = replacedStr;
+        });
+      }
+    } else {
+      node.textContent = replacedStr;
     }
   }
 
