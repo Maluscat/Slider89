@@ -126,9 +126,11 @@ export default class Slider89StructureParser {
         const attribName = match[1];
         const attribValue = match[2];
 
-        elem.setAttribute(attribName, attribValue);
+        const attribNode = document.createAttribute(attribName);
+        attribNode.textContent = attribValue;
+        elem.setAttributeNode(attribNode);
+
         if (Slider89StructureParser.stringHasVariable(attribValue)) {
-          const attribNode = elem.getAttributeNode(attribName);
           this.parseVariables(attribValue, attribNode);
         }
       }
