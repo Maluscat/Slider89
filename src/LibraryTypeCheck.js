@@ -1,26 +1,21 @@
 'use strict';
 export default class LibraryTypeCheck {
-  static getType(variable, noIntro) {
-    let msg;
-    if (Array.isArray(variable))
-      msg = 'an array';
-    else if (Number.isNaN(variable))
-      msg = 'NaN';
-    else if (variable === null)
-      msg = 'null';
-    else if (typeof variable === 'boolean')
-      msg = variable;
+  static getType(value) {
+    if (Array.isArray(value))
+      return 'Array';
+    else if (Number.isNaN(value))
+      return 'NaN';
+    else if (value === null)
+      return 'null';
     else
-      msg = 'of type ' + typeof variable;
-
-    return msg;
+      return typeof value;
   }
 
-  static checkTypes(val, structure, plural) {
+  static checkTypes(val, structureArr) {
     let msg;
-    for (let i = 0; i < structure.length; i++) {
-      const typeObj = structure[i];
-      const type = typeObj.type;
+    for (let i = 0; i < structureArr.length; i++) {
+      const struct = structureArr[i];
+      const type = struct.type;
       if (
         type === 'boolean' && typeof val === 'boolean' ||
         type === 'true' && val === true ||
@@ -31,100 +26,86 @@ export default class LibraryTypeCheck {
         type === 'function' && typeof val === 'function' ||
         type === 'string' && typeof val === 'string'
       ) {
-        if (type == 'array') {
-          for (let n = 0; n < val.length; n++) {
-            if (msg = LibraryTypeCheck.checkTypes(val[n], typeObj.structure, true)) break;
+        if (type === 'array') {
+          for (let j = 0; j < val.length; j++) {
+            if (msg = LibraryTypeCheck.checkTypes(val[j], struct.structure)) break;
           }
         } else if (type === 'object') {
           for (let key in val) {
-            if (msg = LibraryTypeCheck.checkTypes(val[key], typeObj.structure, true)) break;
+            if (msg = LibraryTypeCheck.checkTypes(val[key], struct.structure)) break;
           }
         }
-        if (msg) return msg;
-        if (msg = checkConditions(typeObj.conditions, val)) break;
+
+        if (msg) {
+          return LibraryTypeCheck.toTitleCase(type) + '<' + msg + '>';
+        }
+        if (msg = LibraryTypeCheck.buildConditionTypeMessage(struct.conditions, val)) break;
         else return false;
       }
     }
-    return msg ? ' is ' + msg : (plural ? 's values are ' : ' is ') + LibraryTypeCheck.getType(val);
+    return msg || LibraryTypeCheck.getType(val);
+  }
 
-    function checkConditions(conditions, val) {
-      if (conditions) {
-        if (conditions.nonnegative && val < 0) {
-          return 'a negative number';
-        }
-        if (conditions.positive && val <= 0) {
-          return 'a negative number or 0';
-        }
-        if (conditions.integer && val % 1 !== 0) {
-          return 'a floating point number';
-        }
-        if (conditions.filled && val.trim() === '') {
-          return 'an empty string';
-        }
-        if (conditions.keywords && conditions.keywords.indexOf(val) === -1) {
-          return 'a different string';
-        }
-        if (conditions.wordChar && !Number.isNaN(Number(val))) {
-          return 'a pure number string';
-        }
-        if (conditions.length && val.length !== conditions.length) {
-          return (type === 'array' ? 'an ' : 'a ') + type + ' of length ' + val.length;
-        }
-      }
+  static buildConditionTypeMessage(conditions, val) {
+    if (!conditions) return;
+
+    if (conditions.nonnegative && val < 0) {
+      return 'a negative number';
+    }
+    if (conditions.positive && val <= 0) {
+      return 'a negative number or 0';
+    }
+    if (conditions.integer && val % 1 !== 0) {
+      return 'a floating point number';
+    }
+    if (conditions.filled && val.trim() === '') {
+      return 'an empty string';
+    }
+    if (conditions.keywords && conditions.keywords.indexOf(val) === -1) {
+      return 'a different string';
+    }
+    if (conditions.wordChar && !Number.isNaN(Number(val))) {
+      return 'a number string';
+    }
+    if (conditions.length && val.length !== conditions.length) {
+      return 'an array of length ' + val.length;
     }
   }
 
   // Compute an automated error message regarding the property's types and conditions
-  static computeTypeMsg(struct, shape, plural, deep) {
+  static buildStructureTypeMessage(structureArr) {
     let msg = '';
-    for (let i = 0; i < struct.length; i++) {
-      const type = struct[i].type;
-      const cond = struct[i].conditions;
-      if (msg) msg += ' or ';
+    for (let i = 0; i < structureArr.length; i++) {
+      const struct = structureArr[i];
+      const type = struct.type;
+      const cond = struct.conditions;
+
+      if (msg) msg += ' OR ';
 
       if (type === 'number') {
-        const positive = cond && cond.positive;
         const nonnegative = cond && cond.nonnegative;
+        const positive = cond && cond.positive;
         const isInt = cond && cond.integer;
 
-        if (nonnegative || positive) {
-          if (!plural) msg += 'a ';
-          if (nonnegative) {
-            msg += 'non-negative';
-          } else {
-            msg += 'positive'
-          }
-        } else if (isInt && !plural) {
-          msg += 'an';
-        } else msg += 'any';
-        msg += ' ' + (isInt ? 'integer' : 'number');
-        if (plural) msg += 's';
+        if (nonnegative) {
+          msg += 'non-negative ';
+        } else if (positive) {
+          msg += 'positive '
+        }
+        msg += (isInt ? 'integer' : 'number');
       }
 
       else if (type === 'array') {
-        const len = cond && cond.length;
-        const msgRes = LibraryTypeCheck.computeTypeMsg(struct[i].structure, false, len !== 1, true);
-
-        if (!plural) msg += 'a';
-        if (deep) {
-          msg += msgRes;
-        } else if (!plural) {
-          msg += 'n';
+        const innerType = LibraryTypeCheck.buildStructureTypeMessage(struct.structure);
+        msg += 'Array<' + innerType + '>';
+        if (cond && cond.length) {
+          msg += ' of length ' + cond.length;
         }
-        msg += ' array';
-        if (plural) msg += 's';
-        if (len) msg += ' of length ' + len;
-        if (!deep) msg += ' with ' + msgRes + ' as values';
       }
 
       else if (type === 'object') {
-        msg += 'an object with ' + LibraryTypeCheck.computeTypeMsg(struct[i].structure, false, true, true) + ' as values';
-      }
-
-      else if (type === 'function') {
-        if (!deep) msg += 'a ';
-        msg += 'function reference';
-        if (!deep && plural) msg += 's';
+        const innerType = LibraryTypeCheck.buildStructureTypeMessage(struct.structure);
+        msg += 'Object<' + struct.keyName + ', ' + innerType + '>';
       }
 
       else if (type === 'string') {
@@ -135,34 +116,34 @@ export default class LibraryTypeCheck {
             msg += 'the keyword';
           }
           cond.keywords.forEach(function(val, n, arr) {
-            if (n !== 0 && n === arr.length - 1) msg += ' or';
-            else if (n !== 0) msg += ',';
+            if (n !== 0 && n === arr.length - 1) {
+              msg += ' or';
+            } else if (n !== 0) {
+              msg += ',';
+            }
             msg += ' "' + val + '"';
           });
         } else {
-          if (!deep) msg += 'a ';
           if (cond && cond.filled) msg += 'non-empty ';
           if (cond && cond.wordChar) msg += 'non-number ';
           msg += 'string';
-          if (!deep && plural) msg += 's';
         }
       }
 
-      else if (type === 'boolean') {
-        if (!deep) msg += 'a ';
-        msg += 'boolean';
-        if (!deep && plural) msg += 's';
-      }
-      else if (type === 'true' || type === 'false') {
+      else {
         msg += type;
       }
 
-      if (shape) {
-        msg += ' (' + shape + ')';
-        shape = false;
+      if (struct.shape) {
+        msg += ' (' + struct.shape + ')';
       }
     }
 
     return msg;
+  }
+
+  // ---- Helper functions ----
+  static toTitleCase(str) {
+    return str.slice(0, 1).toUpperCase() + str.slice(1);
   }
 }
