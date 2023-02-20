@@ -134,9 +134,9 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
     if (errNodes.length > 0) {
       const msg =
-        "the given object contains items which aren't nodes of this slider:" + Slider89.arrayToListString(errNodes) +
+        "The given object contains items which aren't nodes of this slider:" + Slider89.arrayToListString(errNodes) +
         "Following nodes are part of this slider's node pool:" + Slider89.arrayToListString(Object.keys(node))
-      throw new Slider89.PropertyError('classList', msg, true);
+      throw new Slider89.Error(msg, 'classList', true);
     }
   }
 

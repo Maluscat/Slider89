@@ -62,6 +62,7 @@ export default class Slider89Base extends Slider89Error {
       structure: [
         {
           type: 'array',
+          shape: '[startValue, endValue]',
           conditions: {
             length: 2
           },
@@ -71,7 +72,6 @@ export default class Slider89Base extends Slider89Error {
         },
         { type: 'boolean' }
       ],
-      shape: '[startValue, endValue]',
     },
     values: {
       structure: [{
@@ -139,6 +139,8 @@ export default class Slider89Base extends Slider89Error {
       structure: [
         {
           type: 'object',
+          shape: '{nodeName: [...classes]}',
+          keyName: 'nodeName',
           structure: [{
             type: 'array',
             structure: [
@@ -148,12 +150,13 @@ export default class Slider89Base extends Slider89Error {
         },
         { type: 'false' }
       ],
-      shape: '{nodeName: [...classes]}'
     },
     events: {
       structure: [
         {
           type: 'object',
+          shape: '{eventName: [...functions]}',
+          keyName: 'eventName',
           structure: [{
             type: 'array',
             structure: [{

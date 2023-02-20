@@ -19,7 +19,7 @@ export default class Slider89 extends Slider89DOM {
       setter: (val) => {
         if (val[0] === val[1]) {
           throw new Slider89.PropertyError(this, 'range',
-            'the given range of [' + val.join(', ') + '] defines the same value for both range start and end');
+            'The given range of [' + val.join(', ') + '] defines the same value for both range start and end');
         }
         if (!this.initial) {
           this.applyAllRatioDistances({ range: val });
@@ -29,7 +29,7 @@ export default class Slider89 extends Slider89DOM {
         // Compare `val` with the value at the other key (0 or 1)
         if (val === this.vals.range[Math.abs(key - 1)]) {
           throw new Slider89.PropertyError(this, 'range',
-            'the new range of [' + val + ', ' + val + '] defines the same value for both range start and end');
+            'The new range of [' + val + ', ' + val + '] defines the same value for both range start and end');
         }
         if (!this.initial) {
           const newRange = Array.from(this.vals.range);
@@ -102,7 +102,7 @@ export default class Slider89 extends Slider89DOM {
       setter: (val) => {
         if (this.vals.precision !== false && val !== false && Number(val.toFixed(this.vals.precision)) !== val) {
           throw new Slider89.PropertyError(this, 'step',
-            'the given value of ' + val + ' exceeds the currently set precision of ' + this.vals.precision);
+            'The given value of ' + val + ' exceeds the currently set precision of ' + this.vals.precision);
         }
         if (!this.initial) {
           this.applyAllRatioDistances({ step: val })
@@ -147,10 +147,9 @@ export default class Slider89 extends Slider89DOM {
           if (!this.checkEventType(eventType)) errTypes.push(eventType);
         }
         if (errTypes.length > 0) {
-          const msg =
-            'the given object contains items which are no valid event types:' + Slider89.arrayToListString(errTypes) +
-            'Available event types are:' + Slider89.arrayToListString(Slider89.eventTypes);
-          throw new Slider89.PropertyError(this, 'events', msg);
+          throw new Slider89.PropertyError(this, 'events',
+            'The given object contains items which are no valid event types:' + Slider89.arrayToListString(errTypes)
+            + 'Available event types are:' + Slider89.arrayToListString(Slider89.eventTypes));
         }
       }
     }
@@ -185,7 +184,7 @@ export default class Slider89 extends Slider89DOM {
     // This happens so late to ensure that $node can be accessed properly
     if (this.vals.structure !== false) {
       for (let variable in this.domBuilder.structureVars) {
-        this.updatePotentialVariable(variable);
+        this.updatePotentialStructureVar(variable);
       }
     }
 
@@ -195,16 +194,16 @@ export default class Slider89 extends Slider89DOM {
 
   testInitialTarget(target) {
     if (!target) {
-      throw new Slider89.InitializationError('no first argument has been supplied. It needs to be the DOM target node for the slider');
+      throw new Slider89.InitializationError('No first argument has been supplied. It needs to be the DOM target node for the slider');
     } else if (!target.nodeType || target.nodeType !== 1) {
-      throw new Slider89.InitializationError('the first argument must be a valid DOM node but it is ' + Slider89.TypeCheck.getType(target));
+      throw new Slider89.InitializationError('The first argument must be a valid DOM node (got ' + Slider89.TypeCheck.getType(target) + ')');
     }
   }
   testInitialConfig(config) {
     if (typeof config !== 'object' || Array.isArray(config)) {
-      throw new Slider89.InitializationError('the optional second argument needs to be a configuration object but it is ' + Slider89.TypeCheck.getType(config));
+      throw new Slider89.InitializationError('The optional second argument needs to be a configuration object (got ' + Slider89.TypeCheck.getType(config) + ')');
     } else if ('value' in config && 'values' in config) {
-      throw new Slider89.InitializationError('only one of ‘value’ and ‘values’ may be defined at once');
+      throw new Slider89.InitializationError('Only one of ‘value’ and ‘values’ may be defined at once');
     }
   }
 
@@ -219,10 +218,10 @@ export default class Slider89 extends Slider89DOM {
       Object.defineProperty(this, item, {
         set: (val) => {
           if (prop.static) {
-            throw new Slider89.Error('property ‘' + item + '’ may only be read from but it was just set with the value ‘' + val + '’');
+            throw new Slider89.Error('Property ‘' + item + '’ is read-only (It was just set with the value ‘' + val + '’)');
           }
           if (prop.initial && !this.initial) {
-            throw new Slider89.Error('property ‘' + item + '’ may only be set at init time but it was just set with the value ‘' + val + '’');
+            throw new Slider89.Error('Property ‘' + item + '’ may only be set at init time (It was just set with the value ‘' + val + '’)');
           }
           this.checkProp(item, val);
           if (!prop.setter || !prop.setter(val)) {
@@ -256,7 +255,8 @@ export default class Slider89 extends Slider89DOM {
         this.defineDeepProperty(this, item, this.vals);
         this.vals[item] = config[item];
       } else {
-        throw new Slider89.Error('‘' + item + '’ is not a valid property name. Check its spelling or prefix it with an underscore to use it as custom property (‘_' + item + '’)');
+        throw new Slider89.InitializationError(
+          '‘' + item + '’ is not a valid property name. Check its spelling or prefix it with an underscore to use it as custom property (‘_' + item + '’)');
       }
     }
   }
@@ -301,7 +301,7 @@ export default class Slider89 extends Slider89DOM {
     // If the next argument (argList.length - 1 + 1) is not optional, a required arg is missing
     for (let i in argList) {
       const arg = argList[i];
-      const typeMsg = Slider89.TypeCheck.checkTypes(arg, obj.args[i].structure, false);
+      const typeMsg = Slider89.TypeCheck.checkTypes(arg, obj.args[i].structure);
       if (typeMsg) throw new Slider89.MethodArgTypeError(method, i, typeMsg);
     }
     if (obj.args[argList.length] && !obj.args[argList.length].optional) {
@@ -310,7 +310,7 @@ export default class Slider89 extends Slider89DOM {
   }
   checkProp(prop, val) {
     const propertyInfo = Slider89.propertyStructure[prop];
-    const typeMsg = Slider89.TypeCheck.checkTypes(val, propertyInfo.structure, false);
+    const typeMsg = Slider89.TypeCheck.checkTypes(val, propertyInfo.structure);
     if (typeMsg) {
       throw new Slider89.PropertyTypeError(this, prop, propertyInfo, typeMsg);
     }

@@ -45,42 +45,33 @@ export default class Slider89Error {
   static PropertyTypeError = class extends Slider89Error.PropertyError {
     constructor(slider, propertyName, propertyInfo, typeMsg) {
       let msg =
-        'property ‘' + propertyName + '’ '
-        + Slider89.getErrorTypeMessage(propertyInfo.structure, typeMsg);
+        'Type mismatch.'
+        + Slider89.getTypeErrorMessage(propertyInfo.structure, typeMsg);
 
       super(slider, propertyName, msg);
     }
   }
 
   // ---- Method errors ----
-  static MethodArgError = class extends Slider89Error.Error {
-    constructor(msg, argInfo, index) {
-      let finalMsg = 'the ';
-      if (argInfo.optional) {
-        finalMsg += 'optional ';
-      }
-      finalMsg += Slider89.COUNTS[index] + ' argument (' + argInfo.name + ') ';
-      finalMsg += msg;
-
-      super(finalMsg);
-    }
-  }
-  static MethodArgTypeError = class extends Slider89Error.MethodArgError {
+  static MethodArgTypeError = class extends Slider89Error.Error {
     constructor(methodName, index, typeMsg) {
       const argInfo = Slider89.getMethodArgInfo(methodName, index);
-      const msg = Slider89.getErrorTypeMessage(argInfo.structure, typeMsg);
+      const msg =
+        'Type mismatch on the ' + Slider89Error.getMethodArgMessage(argInfo, index) + '.'
+        + Slider89.getTypeErrorMessage(argInfo.structure, typeMsg);
 
-      super(msg, argInfo, index);
+      super(msg, methodName);
     }
   }
-  static MethodArgOmitError = class extends Slider89Error.MethodArgError {
+  static MethodArgOmitError = class extends Slider89Error.Error {
     constructor(methodName, index) {
       const argInfo = Slider89.getMethodArgInfo(methodName, index);
       const msg =
-        'has been omitted but it is required. It must be '
-        + Slider89.TypeCheck.computeTypeMsg(argInfo.structure);
+        'The ' + Slider89Error.getMethodArgMessage(argInfo, index)
+        + ' has been omitted but it is required'
+        + ' (It must be of type ' + Slider89.TypeCheck.buildStructureTypeMessage(argInfo.structure) + ').';
 
-      super(msg, argInfo, index);
+      super(msg, methodName);
     }
   }
 
@@ -93,7 +84,7 @@ export default class Slider89Error {
   static StructureParseError = class extends Slider89Error.StructureError {
     constructor(beforeFailure, pointOfFailure) {
       const msg =
-        "something has been declared wrongly and couldn't be parsed. Point of failure "
+        "Something has been declared wrongly and couldn't be parsed. Point of failure "
         + "(before " + beforeFailure + "):\n\n"
         + pointOfFailure + '\n';
       super(msg);
@@ -101,9 +92,18 @@ export default class Slider89Error {
   }
 
   // ---- Helper functions ----
-  static getErrorTypeMessage(structure, typeMsg) {
-    return 'must be ' + Slider89.TypeCheck.computeTypeMsg(structure)
-      + ' but it' + typeMsg;
+  static getTypeErrorMessage(structure, typeMsg) {
+    return ' Expected ' + Slider89.TypeCheck.buildStructureTypeMessage(structure) + ','
+         + ' got ' + typeMsg;
+  }
+
+  static getMethodArgMessage(argInfo, index) {
+    let msg = '';
+    if (argInfo.optional) {
+      msg += 'optional ';
+    }
+    msg += Slider89.COUNTS[index] + ' argument (' + argInfo.name + ')';
+    return msg;
   }
 
   static getMethodArgInfo(methodName, index) {
