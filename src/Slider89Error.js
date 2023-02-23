@@ -46,7 +46,7 @@ export default class Slider89Error {
     constructor(slider, propertyName, propertyInfo, typeMsg) {
       let msg =
         'Type mismatch.'
-        + Slider89.getTypeErrorMessage(propertyInfo.structure, typeMsg);
+        + Slider89.getTypeErrorMessage(propertyInfo.descriptor, typeMsg);
 
       super(slider, propertyName, msg);
     }
@@ -58,7 +58,7 @@ export default class Slider89Error {
       const argInfo = Slider89.getMethodArgInfo(methodName, index);
       const msg =
         'Type mismatch on the ' + Slider89Error.getMethodArgMessage(argInfo, index) + '.'
-        + Slider89.getTypeErrorMessage(argInfo.structure, typeMsg);
+        + Slider89.getTypeErrorMessage(argInfo.descriptor, typeMsg);
 
       super(msg, methodName);
     }
@@ -69,7 +69,7 @@ export default class Slider89Error {
       const msg =
         'The ' + Slider89Error.getMethodArgMessage(argInfo, index)
         + ' has been omitted but it is required'
-        + ' (It must be of type ' + Slider89.TypeCheck.buildStructureTypeMessage(argInfo.structure) + ').';
+        + ' (It must be of type ' + Slider89.TypeCheck.buildDescriptorTypeMessage(argInfo.descriptor) + ').';
 
       super(msg, methodName);
     }
@@ -92,8 +92,8 @@ export default class Slider89Error {
   }
 
   // ---- Helper functions ----
-  static getTypeErrorMessage(structure, typeMsg) {
-    return ' Expected ' + Slider89.TypeCheck.buildStructureTypeMessage(structure) + ','
+  static getTypeErrorMessage(descriptor, typeMsg) {
+    return ' Expected ' + Slider89.TypeCheck.buildDescriptorTypeMessage(descriptor) + ','
          + ' got ' + typeMsg;
   }
 
@@ -107,7 +107,7 @@ export default class Slider89Error {
   }
 
   static getMethodArgInfo(methodName, index) {
-    return Slider89.methodStructure[methodName].args[index];
+    return Slider89.methodData[methodName].args[index];
   }
 
   static arrayToListString(arr) {

@@ -5,25 +5,25 @@ import LibraryTypeCheck from './LibraryTypeCheck.js';
 export default class Slider89Base extends Slider89Error {
   static TypeCheck = LibraryTypeCheck;
 
-  static methodStructure = {
+  static methodData = {
     addEvent: {
       args: [
         {
           name: 'event type',
-          structure: [{
+          descriptor: [{
             type: 'string'
           }]
         },
         {
           name: 'event function',
-          structure: [{
+          descriptor: [{
             type: 'function'
           }]
         },
         {
           name: 'event namespace',
           optional: true,
-          structure: [{
+          descriptor: [{
             type: 'string',
             conditions: {
               filled: true,
@@ -37,7 +37,7 @@ export default class Slider89Base extends Slider89Error {
       args: [
         {
           name: 'event identifier/namespace',
-          structure: [
+          descriptor: [
             {
               type: 'number',
               conditions: {
@@ -57,16 +57,16 @@ export default class Slider89Base extends Slider89Error {
       ]
     }
   }
-  static propertyStructure = {
+  static propertyData = {
     range: {
-      structure: [
+      descriptor: [
         {
           type: 'array',
           shape: '[startValue, endValue]',
           conditions: {
             length: 2
           },
-          structure: [
+          descriptor: [
             { type: 'number' }
           ]
         },
@@ -74,21 +74,21 @@ export default class Slider89Base extends Slider89Error {
       ],
     },
     values: {
-      structure: [{
+      descriptor: [{
         type: 'array',
         // TODO condition: at least of size 1
-        structure: [{
+        descriptor: [{
           type: 'number'
         }]
       }],
     },
     value: {
-      structure: [{
+      descriptor: [{
         type: 'number'
       }],
     },
     precision: {
-      structure: [
+      descriptor: [
         {
           type: 'number',
           conditions: {
@@ -100,7 +100,7 @@ export default class Slider89Base extends Slider89Error {
       ],
     },
     step: {
-      structure: [
+      descriptor: [
         {
           type: 'number',
           conditions: {
@@ -111,7 +111,7 @@ export default class Slider89Base extends Slider89Error {
       ],
     },
     structure: {
-      structure: [
+      descriptor: [
         {
           type: 'string',
           conditions: {
@@ -125,7 +125,7 @@ export default class Slider89Base extends Slider89Error {
       default: {},
     },
     orientation: {
-      structure: [{
+      descriptor: [{
         type: 'string',
         conditions: {
           keywords: [
@@ -136,14 +136,14 @@ export default class Slider89Base extends Slider89Error {
       }],
     },
     classList: {
-      structure: [
+      descriptor: [
         {
           type: 'object',
           shape: '{nodeName: [...classes]}',
           keyName: 'nodeName',
-          structure: [{
+          descriptor: [{
             type: 'array',
-            structure: [
+            descriptor: [
               { type: 'string' }
             ]
           }]
@@ -152,14 +152,14 @@ export default class Slider89Base extends Slider89Error {
       ],
     },
     events: {
-      structure: [
+      descriptor: [
         {
           type: 'object',
           shape: '{eventName: [...functions]}',
           keyName: 'eventName',
-          structure: [{
+          descriptor: [{
             type: 'array',
-            structure: [{
+            descriptor: [{
               type: 'function'
             }]
           }]
