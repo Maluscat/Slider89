@@ -11,11 +11,11 @@ export default class LibraryTypeCheck {
       return typeof value;
   }
 
-  static checkTypes(val, structureArr) {
+  static checkTypes(val, descriptor) {
     let msg;
-    for (let i = 0; i < structureArr.length; i++) {
-      const struct = structureArr[i];
-      const type = struct.type;
+    for (let i = 0; i < descriptor.length; i++) {
+      const typeData = descriptor[i];
+      const type = typeData.type;
       if (
         type === 'boolean' && typeof val === 'boolean' ||
         type === 'true' && val === true ||
@@ -28,18 +28,18 @@ export default class LibraryTypeCheck {
       ) {
         if (type === 'array') {
           for (let j = 0; j < val.length; j++) {
-            if (msg = LibraryTypeCheck.checkTypes(val[j], struct.structure)) break;
+            if (msg = LibraryTypeCheck.checkTypes(val[j], typeData.descriptor)) break;
           }
         } else if (type === 'object') {
           for (let key in val) {
-            if (msg = LibraryTypeCheck.checkTypes(val[key], struct.structure)) break;
+            if (msg = LibraryTypeCheck.checkTypes(val[key], typeData.descriptor)) break;
           }
         }
 
         if (msg) {
           return LibraryTypeCheck.toTitleCase(type) + '<' + msg + '>';
         }
-        if (msg = LibraryTypeCheck.buildConditionTypeMessage(struct.conditions, val)) break;
+        if (msg = LibraryTypeCheck.buildConditionTypeMessage(typeData.conditions, val)) break;
         else return false;
       }
     }
@@ -73,12 +73,12 @@ export default class LibraryTypeCheck {
   }
 
   // Compute an automated error message regarding the property's types and conditions
-  static buildStructureTypeMessage(structureArr) {
+  static buildDescriptorTypeMessage(descriptor) {
     let msg = '';
-    for (let i = 0; i < structureArr.length; i++) {
-      const struct = structureArr[i];
-      const type = struct.type;
-      const cond = struct.conditions;
+    for (let i = 0; i < descriptor.length; i++) {
+      const typeData = descriptor[i];
+      const type = typeData.type;
+      const cond = typeData.conditions;
 
       if (msg) msg += ' OR ';
 
@@ -96,7 +96,7 @@ export default class LibraryTypeCheck {
       }
 
       else if (type === 'array') {
-        const innerType = LibraryTypeCheck.buildStructureTypeMessage(struct.structure);
+        const innerType = LibraryTypeCheck.buildDescriptorTypeMessage(typeData.descriptor);
         msg += 'Array<' + innerType + '>';
         if (cond && cond.length) {
           msg += ' of length ' + cond.length;
@@ -104,8 +104,8 @@ export default class LibraryTypeCheck {
       }
 
       else if (type === 'object') {
-        const innerType = LibraryTypeCheck.buildStructureTypeMessage(struct.structure);
-        msg += 'Object<' + struct.keyName + ', ' + innerType + '>';
+        const innerType = LibraryTypeCheck.buildDescriptorTypeMessage(typeData.descriptor);
+        msg += 'Object<' + typeData.keyName + ', ' + innerType + '>';
       }
 
       else if (type === 'string') {
@@ -134,8 +134,8 @@ export default class LibraryTypeCheck {
         msg += type;
       }
 
-      if (struct.shape) {
-        msg += ' (' + struct.shape + ')';
+      if (typeData.shape) {
+        msg += ' (' + typeData.shape + ')';
       }
     }
 

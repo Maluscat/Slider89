@@ -267,7 +267,7 @@ export default class Slider89 extends Slider89DOM {
     for (let _ in this.methods) {
       const item = _;
       const method = this.methods[item];
-      const argCount = Slider89.methodStructure[item].args.length;
+      const argCount = Slider89.methodData[item].args.length;
       this[item] = function() {
         const args = Array.prototype.slice.call(arguments, 0, argCount);
         that.checkMethod(item, args);
@@ -297,11 +297,11 @@ export default class Slider89 extends Slider89DOM {
   // ---- Helper functions ----
   // Check properties & methods for the correct type & format
   checkMethod(method, argList) {
-    const obj = Slider89.methodStructure[method];
+    const obj = Slider89.methodData[method];
     // If the next argument (argList.length - 1 + 1) is not optional, a required arg is missing
     for (let i in argList) {
       const arg = argList[i];
-      const typeMsg = Slider89.TypeCheck.checkTypes(arg, obj.args[i].structure);
+      const typeMsg = Slider89.TypeCheck.checkTypes(arg, obj.args[i].descriptor);
       if (typeMsg) throw new Slider89.MethodArgTypeError(method, i, typeMsg);
     }
     if (obj.args[argList.length] && !obj.args[argList.length].optional) {
@@ -309,8 +309,8 @@ export default class Slider89 extends Slider89DOM {
     }
   }
   checkProp(prop, val) {
-    const propertyInfo = Slider89.propertyStructure[prop];
-    const typeMsg = Slider89.TypeCheck.checkTypes(val, propertyInfo.structure);
+    const propertyInfo = Slider89.propertyData[prop];
+    const typeMsg = Slider89.TypeCheck.checkTypes(val, propertyInfo.descriptor);
     if (typeMsg) {
       throw new Slider89.PropertyTypeError(this, prop, propertyInfo, typeMsg);
     }
