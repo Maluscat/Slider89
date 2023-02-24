@@ -14,7 +14,6 @@ export default class Slider89 extends Slider89DOM {
 
   properties = {
     range: {
-      isDeepDefinedArray: true,
       default: [0, 100],
       setter: (val) => {
         if (val[0] === val[1]) {
@@ -39,7 +38,6 @@ export default class Slider89 extends Slider89DOM {
       }
     },
     values: {
-      isDeepDefinedArray: true,
       default: () => {
         return [this.vals.range[0]];
       },
@@ -111,11 +109,9 @@ export default class Slider89 extends Slider89DOM {
     },
     structure: {
       default: false,
-      initial: true
     },
     node: {
       default: {},
-      static: true
     },
     orientation: {
       default: 'horizontal',
@@ -136,11 +132,9 @@ export default class Slider89 extends Slider89DOM {
     },
     classList: {
       default: false,
-      initial: true,
     },
     events: {
       default: {},
-      initial: true,
       setter: (val) => {
         const errTypes = new Array();
         for (let eventType in val) {
@@ -214,14 +208,15 @@ export default class Slider89 extends Slider89DOM {
       // IE-support: item needs to be a scoped variable because defineProperty is async
       const item = _;
       const prop = this.properties[item];
+      const propData = Slider89.propertyData[item];
 
       Object.defineProperty(this, item, {
         set: (val) => {
-          if (prop.static) {
+          if (propData.readOnly) {
             throw new Slider89.Error('Property ‘' + item + '’ is read-only (It was just set with the value ‘' + val + '’)');
           }
-          if (prop.initial && !this.initial) {
-            throw new Slider89.Error('Property ‘' + item + '’ may only be set at init time (It was just set with the value ‘' + val + '’)');
+          if (propData.constructorOnly && !this.initial) {
+            throw new Slider89.Error('Property ‘' + item + '’ may only be defined in the constructor (It was just set with the value ‘' + val + '’)');
           }
           this.checkProp(item, val);
           if (!prop.setter || !prop.setter(val)) {
@@ -229,13 +224,13 @@ export default class Slider89 extends Slider89DOM {
           }
         },
         get: () => {
-          const getterEndpoint = (prop.isDeepDefinedArray ? this.vals.$intermediateThis : this.vals);
+          const getterEndpoint = (propData.isDeepDefinedArray ? this.vals.$intermediateThis : this.vals);
           return (prop.getter ? prop.getter(getterEndpoint[item]) : getterEndpoint[item]);
         },
         enumerable: true
       });
 
-      this.defineDeepProperty(this.vals, item, this.vals.$, prop.postSetter, prop.isDeepDefinedArray);
+      this.defineDeepProperty(this.vals, item, this.vals.$, prop.postSetter, propData.isDeepDefinedArray);
 
       if (item in config) {
         this[item] = config[item];
