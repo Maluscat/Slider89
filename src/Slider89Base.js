@@ -59,6 +59,7 @@ export default class Slider89Base extends Slider89Error {
   }
   static propertyData = {
     range: {
+      isDeepDefinedArray: true,
       descriptor: [
         {
           type: 'array',
@@ -71,21 +72,22 @@ export default class Slider89Base extends Slider89Error {
           ]
         },
         { type: 'boolean' }
-      ],
+      ]
     },
     values: {
+      isDeepDefinedArray: true,
       descriptor: [{
         type: 'array',
         // TODO condition: at least of size 1
         descriptor: [{
           type: 'number'
         }]
-      }],
+      }]
     },
     value: {
       descriptor: [{
         type: 'number'
-      }],
+      }]
     },
     precision: {
       descriptor: [
@@ -97,7 +99,7 @@ export default class Slider89Base extends Slider89Error {
           }
         },
         { type: 'false' }
-      ],
+      ]
     },
     step: {
       descriptor: [
@@ -108,9 +110,10 @@ export default class Slider89Base extends Slider89Error {
           }
         },
         { type: 'false' }
-      ],
+      ]
     },
     structure: {
+      constructorOnly: true,
       descriptor: [
         {
           type: 'string',
@@ -119,10 +122,10 @@ export default class Slider89Base extends Slider89Error {
           }
         },
         { type: 'false' }
-      ],
+      ]
     },
     node: {
-      default: {},
+      readOnly: true
     },
     orientation: {
       descriptor: [{
@@ -133,9 +136,10 @@ export default class Slider89Base extends Slider89Error {
             'vertical'
           ]
         }
-      }],
+      }]
     },
     classList: {
+      constructorOnly: true,
       descriptor: [
         {
           type: 'object',
@@ -149,9 +153,10 @@ export default class Slider89Base extends Slider89Error {
           }]
         },
         { type: 'false' }
-      ],
+      ]
     },
     events: {
+      constructorOnly: true,
       descriptor: [
         {
           type: 'object',
@@ -165,7 +170,7 @@ export default class Slider89Base extends Slider89Error {
           }]
         },
         { type: 'false' }
-      ],
+      ]
     }
   };
 
