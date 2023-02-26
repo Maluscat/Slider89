@@ -146,6 +146,22 @@ export default class Slider89DOM extends Slider89Properties {
   }
 
   // ---- Helper functions ----
+  removeLastThumbNode() {
+    this.domBuilder.thumbParent.removeChild(this.vals.node.thumb.pop());
+  }
+  addNewThumbNode(thumbIndex) {
+    this.vals.node.thumb.push(this.domBuilder.createNewThumb());
+    this.applyOneRatioDistance(thumbIndex);
+
+    // Expanding relevant structure variables
+    for (const [ propName, stringList ] of Object.entries(this.domBuilder.structureVarThumbStrings)) {
+      for (const varString of stringList) {
+        const nodeList = this.domBuilder.structureVars[propName][varString];
+        this.replaceStructureVarString(varString, nodeList);
+      }
+    }
+  }
+
   setValuesWithValueChange(thumbIndex, value) {
     const prevVal = this.vals.values[thumbIndex];
     if (!Slider89.floatIsEqual(value, prevVal)) {

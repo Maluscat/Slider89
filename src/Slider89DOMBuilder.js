@@ -8,6 +8,8 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
   thumbBase; // Clonable thumb node
   thumbParent;
 
+  structureVarThumbStrings = {};
+
   /** @type Record<string, Function> */
   thumbEvents = {};
 
@@ -67,6 +69,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
       if (node.track) {
         this.thumbParent = node.thumb.parentNode;
       }
+      this.findStructureVarStringsInThumb();
     }
     if (!node.track) {
       node.track = this.assembleElement(node, 'track', 'div');
@@ -76,6 +79,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
         node.slider.appendChild(node.track);
       }
     }
+
     // Remove original thumb node
     if (node.thumb) {
       node.thumb.parentNode.removeChild(node.thumb);
@@ -89,6 +93,22 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     node.thumb = new Array(thumbCount);
     for (let i = 0; i < thumbCount; i++) {
       node.thumb[i] = this.createNewThumb();
+    }
+  }
+  findStructureVarStringsInThumb() {
+    for (const [ propName, stringList ] of Object.entries(this.structureVars)) {
+      let thumbStrings = [];
+      for (const [ str, nodeList ] of Object.entries(stringList)) {
+        for (const node of nodeList) {
+          if (this.getStructureVarNodeOwner(node) === this.thumbBase) {
+            thumbStrings.push(str);
+            break;
+          }
+        }
+      }
+      if (thumbStrings.length > 0) {
+        this.structureVarThumbStrings[propName] = thumbStrings;
+      }
     }
   }
 
