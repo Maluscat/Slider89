@@ -45,12 +45,11 @@ export default class Slider89 extends Slider89DOM {
           // Add/remove thumbs if the given array is bigger/smaller than the current `values` array
           if (val.length > this.vals.values.length) {
             for (let i = this.vals.values.length; i < val.length; i++) {
-              this.vals.node.thumb.push(this.domBuilder.createNewThumb());
-              this.applyOneRatioDistance(i);
+              this.addNewThumbNode(i);
             }
           } else if (val.length < this.vals.values.length) {
             for (let i = val.length; i < this.vals.values.length; i++) {
-              this.domBuilder.thumbParent.removeChild(this.vals.node.thumb.pop());
+              this.removeLastThumbNode();
             }
           }
         }

@@ -112,20 +112,22 @@ export default class Slider89Properties extends Slider89Events {
   updatePotentialStructureVar(propName) {
     if (!Object.prototype.hasOwnProperty.call(this.domBuilder.structureVars, propName)) return;
 
-    for (const str in this.domBuilder.structureVars[propName]) {
-      const nodeList = this.domBuilder.structureVars[propName][str];
+    for (const [ str, nodeList ] of Object.entries(this.domBuilder.structureVars[propName])) {
+      this.replaceStructureVarString(str, nodeList);
+    }
+  }
 
-      const replacedStr = str.replace(Slider89StructureParser.regex.variable, (match, variableDelimit, variable) => {
-        return this.getValueFromStructureVar(variableDelimit || variable);
-      });
-      for (const node of nodeList) {
-        this.replaceStructureVarInNode(node, replacedStr);
-      }
+  replaceStructureVarString(str, nodeList) {
+    const replacedStr = str.replace(Slider89StructureParser.regex.variable, (match, variableDelimit, variable) => {
+      return this.getValueFromStructureVar(variableDelimit || variable);
+    });
+    for (const node of nodeList) {
+      this.replaceStructureVarInNode(node, replacedStr);
     }
   }
   replaceStructureVarInNode(node, replacedStr) {
     // Special case: Iterate over every thumb
-    if ((node.ownerElement || node) === this.domBuilder.thumbBase) {
+    if (this.domBuilder.getStructureVarNodeOwner(node) === this.domBuilder.thumbBase) {
       if (node.nodeType === Node.ATTRIBUTE_NODE) {
         this.vals.node.thumb.forEach(thumb => {
           thumb.getAttributeNode(node.name).textContent = replacedStr;
