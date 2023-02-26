@@ -1,6 +1,5 @@
 'use strict';
 import Slider89DOM from './Slider89DOM.js';
-import Slider89DOMBuilder from './Slider89DOMBuilder.js';
 
 export default class Slider89 extends Slider89DOM {
   methods = {
@@ -149,8 +148,6 @@ export default class Slider89 extends Slider89DOM {
     }
   };
 
-  domBuilder;
-
   constructor(target, config, replace = false) {
     super();
     this.initial = true;
@@ -159,12 +156,6 @@ export default class Slider89 extends Slider89DOM {
 
     if (config == null || config === false) config = {};
     this.testInitialConfig(config);
-
-    this.domBuilder = new Slider89DOMBuilder(this.vals, {
-      touchstart: this.touchStart,
-      mousedown: this.slideStart,
-      keydown: this.keyDown
-    });
 
     this.initializeClassProperties(config);
     this.initializeCustomProperties(config);

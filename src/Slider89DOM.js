@@ -1,5 +1,6 @@
 'use strict';
 import Slider89 from './Slider89.js';
+import Slider89DOMBuilder from './Slider89DOMBuilder.js';
 import Slider89Properties from './Slider89Properties.js';
 
 export default class Slider89DOM extends Slider89Properties {
@@ -9,6 +10,7 @@ export default class Slider89DOM extends Slider89Properties {
 
   trackStyle;
 
+  domBuilder;
 
   constructor() {
     super();
@@ -22,6 +24,12 @@ export default class Slider89DOM extends Slider89Properties {
     this.slideEnd = this.slideEnd.bind(this);
 
     this.keyDown = this.keyDown.bind(this);
+
+    this.domBuilder = new Slider89DOMBuilder(this.vals, {
+      touchstart: this.touchStart,
+      mousedown: this.slideStart,
+      keydown: this.keyDown
+    });
   }
 
 
