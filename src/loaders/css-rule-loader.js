@@ -1,13 +1,6 @@
 module.exports = function(css) {
-  const rules = css
-    .split('}')
-    .map(rule => {
-      rule = '"' + rule + '"';
-      return rule.replace(/(?! \.)\s/g, '');
-    });
-  rules.splice(rules.length - 1, 1);
-
+  css = css.replace(/(?! [.#])\s/g, '');
   return `
-    module.exports = [ ${rules.toString()} ]
+    module.exports = '${css}'
   `;
 }

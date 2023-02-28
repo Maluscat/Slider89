@@ -1,10 +1,11 @@
 'use strict';
-// Style rule strings which will be inserted into a newly created stylesheet
-import styles from './default-styles.css';
+import defaultStylesString from './default-styles.css';
 import Slider89 from './Slider89.js';
 import Slider89StructureParser from './Slider89StructureParser.js';
 
 export default class Slider89DOMBuilder extends Slider89StructureParser {
+  static hasInjectedStylesheet = false;
+
   thumbBase; // Clonable thumb node
   thumbParent;
 
@@ -160,20 +161,6 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     }
   }
 
-  createStyleSheet() {
-    const sheet = (function() {
-      const firstHeadChild = document.head.firstElementChild;
-      if (firstHeadChild) {
-        return document.head.insertBefore(document.createElement('style'), firstHeadChild).sheet;
-      } else {
-        return document.head.appendChild(document.createElement('style')).sheet;
-      }
-    })();
-    for (let i = 0; i < styles.length; i++) {
-      sheet.insertRule(styles[i], 0);
-    }
-  }
-
   // ---- Helper functions ----
   createNewThumb() {
     const newThumb = this.thumbBase.cloneNode(true);
@@ -186,5 +173,27 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     }
     this.thumbParent.appendChild(newThumb);
     return newThumb;
+  }
+
+  // ---- Static style sheet creation ----
+  // NOTE: I think that a global Object (like Slider89) cannot be in multiple
+  // documents at once. Thus, just setting a global flag to true should be
+  // sufficient to mark the current document as already injected.
+  static injectStyleSheetIfNeeded() {
+    if (Slider89DOMBuilder.hasInjectedStylesheet === false) {
+      const styleSheetElement = document.createElement('style');
+      const firstHeadChild = document.head.firstElementChild;
+
+      styleSheetElement.textContent = defaultStylesString;
+
+      // Ensure that it is the first style sheet in the document
+      if (firstHeadChild) {
+        document.head.insertBefore(styleSheetElement, firstHeadChild);
+      } else {
+        document.head.appendChild(styleSheetElement);
+      }
+
+      Slider89DOMBuilder.hasInjectedStylesheet = true;
+    }
   }
 }

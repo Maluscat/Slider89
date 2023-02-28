@@ -1,5 +1,6 @@
 'use strict';
 import Slider89DOM from './Slider89DOM.js';
+import Slider89DOMBuilder from './Slider89DOMBuilder.js';
 
 export default class Slider89 extends Slider89DOM {
   methods = {
@@ -268,7 +269,8 @@ export default class Slider89 extends Slider89DOM {
       this.domBuilder.addAttributesFromTarget(this.vals.node, target);
     }
     this.domBuilder.addClasses(this.vals.node, this.vals.classList, this.vals.orientation === 'vertical');
-    this.domBuilder.createStyleSheet();
+
+    Slider89DOMBuilder.injectStyleSheetIfNeeded();
 
     if (replace) {
       target.parentNode.replaceChild(this.vals.node.slider, target);
