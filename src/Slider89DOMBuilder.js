@@ -56,11 +56,11 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
   createSliderFromStructure(thumbCount, structureStr) {
     const node = this.parseStructure(structureStr);
-    this.createMissingElements(node, thumbCount);
+    this.parsePostProcess(node, thumbCount);
     return node;
   }
 
-  createMissingElements(node, thumbCount) {
+  parsePostProcess(node, thumbCount) {
     // NOTE: thumb and track can be defined independently
     // I.e. track gets the class `sl89-track`, but this.thumbParent can be a different node
     if (!node.thumb) {
@@ -70,7 +70,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
       if (node.track) {
         this.thumbParent = node.thumb.parentNode;
       }
-      this.findStructureVarStringsInThumb();
+      this.findStructureVarStringsInThumb(this.thumbBase);
     }
     if (!node.track) {
       node.track = this.assembleElement(node, 'track', 'div');
@@ -91,17 +91,21 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
     node.track.classList.add('sl89-track');
 
-    node.thumb = new Array(thumbCount);
+    // Push thumb & descendants into node arrays
+    for (const nodeName of [ ...this.thumbChildren, 'thumb' ]) {
+      node[nodeName] = new Array();
+    }
     for (let i = 0; i < thumbCount; i++) {
-      node.thumb[i] = this.createNewThumb();
+      this.addThumbToNode(node);
     }
   }
-  findStructureVarStringsInThumb() {
+
+  findStructureVarStringsInThumb(thumbBase) {
     for (const [ propName, stringList ] of Object.entries(this.structureVars)) {
       let thumbStrings = [];
       for (const [ str, nodeList ] of Object.entries(stringList)) {
         for (const node of nodeList) {
-          if (this.getStructureVarNodeOwner(node) === this.thumbBase) {
+          if (this.getStructureVarNodeOwner(node) === thumbBase) {
             thumbStrings.push(str);
             break;
           }
@@ -111,6 +115,25 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
         this.structureVarThumbStrings[propName] = thumbStrings;
       }
     }
+  }
+
+
+  // ---- Thumb helpers ----
+  addThumbToNode(node) {
+    const newThumb = this.createNewThumb();
+    node.thumb.push(newThumb);
+
+    Slider89DOMBuilder.findNodeChildren(newThumb)
+      .forEach((childNode, j) => {
+        const childName = this.thumbChildren[j];
+        node[childName].push(childNode);
+      });
+  }
+  removeThumbFromNode(node) {
+    for (const nodeName of this.thumbChildren) {
+      node[nodeName].pop();
+    }
+    return node.thumb.pop();
   }
 
 
@@ -196,4 +219,22 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
       Slider89DOMBuilder.hasInjectedStylesheet = true;
     }
   }
+
+  /**
+   * Recursively iterate through a node's children, collecting them in an array in order.
+   * When used on a thumb node, the result is analogous to {@link thumbChildren}.
+   * @param { HTMLElement } node The input node.
+   * @param { Array<HTMLElement> } collector
+   * @return { Array<HTMLElement> } All children of the input node.
+   */
+  static findNodeChildren(node, collector = []) {
+    if (node.childElementCount === 0) return collector;
+
+    for (const child of node.children) {
+      collector.push(child);
+      Slider89DOMBuilder.findNodeChildren(child, collector);
+    }
+    return collector;
+  }
+
 }
