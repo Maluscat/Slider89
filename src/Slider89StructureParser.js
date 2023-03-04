@@ -37,6 +37,8 @@ export default class Slider89StructureParser {
 
   // ---- Properties ----
   structureVars = {};
+  thumbChildren = [];
+
   vals;
 
 
@@ -51,8 +53,6 @@ export default class Slider89StructureParser {
       slider: document.createElement('div')
     };
 
-    const variables = {};
-
     structureStr = structureStr.trim();
 
     // Reset the global RegExp-internal `lastIndex` flag
@@ -65,6 +65,7 @@ export default class Slider89StructureParser {
 
     const stack = new Array();
     let currentIndex = 0;
+    let isThumbChild = false;
     let match;
     // match: [matchedStr, type, name, tag, innerContent, attributes]
     while (match = Slider89StructureParser.regex.tag.exec(structureStr)) {
@@ -82,6 +83,12 @@ export default class Slider89StructureParser {
         if (match[1] == null) {
           stack.push(match[2]);
         }
+        // Detecting thumb so that we know when we are inside it
+        if (match[2] === 'thumb') {
+          isThumbChild = true;
+        } else if (isThumbChild === true) {
+          this.thumbChildren.push(match[2]);
+        }
       } else {
         const lastItem = stack.pop();
         if (lastItem !== match[2]) {
@@ -91,6 +98,9 @@ export default class Slider89StructureParser {
             throw new Slider89.StructureError(
               "The closing tag ‘</" + match[2] + ">’ couldn't find a matching opening tag");
           }
+        }
+        if (lastItem === 'thumb') {
+          isThumbChild = false;
         }
       }
     }

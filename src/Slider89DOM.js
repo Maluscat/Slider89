@@ -147,10 +147,11 @@ export default class Slider89DOM extends Slider89Properties {
 
   // ---- Helper functions ----
   removeLastThumbNode() {
-    this.domBuilder.thumbParent.removeChild(this.vals.node.thumb.pop());
+    const thumb = this.domBuilder.removeThumbFromNode(this.vals.node);
+    this.domBuilder.thumbParent.removeChild(thumb);
   }
   addNewThumbNode(thumbIndex) {
-    this.vals.node.thumb.push(this.domBuilder.createNewThumb());
+    this.domBuilder.addThumbToNode(this.vals.node);
     this.applyOneRatioDistance(thumbIndex);
 
     // Expanding relevant structure variables
