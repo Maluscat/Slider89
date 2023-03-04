@@ -115,9 +115,9 @@ export default class Slider89StructureParser {
     }
     const elem = document.createElement(tag || 'div');
 
+    elem.textContent = content;
     if (Slider89StructureParser.stringHasVariable(content)) {
       this.parseVariables(content, elem);
-      elem.textContent = content;
     }
 
     if (attributes) {
