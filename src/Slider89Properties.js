@@ -135,8 +135,9 @@ export default class Slider89Properties extends Slider89Events {
           element.getAttributeNode(node.name).textContent = replacedStr;
         });
       } else {
+        // The text node is always the first child
         elements.forEach(element => {
-          element.textContent = replacedStr;
+          element.childNodes[0].textContent = replacedStr;
         });
       }
     } else {

@@ -208,7 +208,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
   nodeHasBaseElementOwner(node) {
     for (const [ baseName, element ] of Object.entries(this.baseElements)) {
-      if (Slider89StructureParser.getStructureVarNodeOwner(node) === element) return baseName;
+      if (Slider89StructureParser.getNodeOwner(node) === element) return baseName;
     }
     return false;
   }
