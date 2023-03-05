@@ -127,14 +127,16 @@ export default class Slider89Properties extends Slider89Events {
   }
   replaceStructureVarInNode(node, replacedStr) {
     // Special case: Iterate over every thumb
-    if (this.domBuilder.getStructureVarNodeOwner(node) === this.domBuilder.thumbBase) {
+    const baseName = this.domBuilder.nodeHasBaseElementOwner(node);
+    if (baseName) {
+      const elements = this.vals.node[baseName];
       if (node.nodeType === Node.ATTRIBUTE_NODE) {
-        this.vals.node.thumb.forEach(thumb => {
-          thumb.getAttributeNode(node.name).textContent = replacedStr;
+        elements.forEach(element => {
+          element.getAttributeNode(node.name).textContent = replacedStr;
         });
       } else {
-        this.vals.node.thumb.forEach(thumb => {
-          thumb.textContent = replacedStr;
+        elements.forEach(element => {
+          element.textContent = replacedStr;
         });
       }
     } else {
