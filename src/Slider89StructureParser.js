@@ -191,7 +191,7 @@ export default class Slider89StructureParser {
 
 
   // ---- Static helpers ----
-  getStructureVarNodeOwner(node) {
+  static getStructureVarNodeOwner(node) {
     return node.ownerElement || node;
   }
 

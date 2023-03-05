@@ -9,6 +9,8 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
   thumbBase; // Clonable thumb node
   thumbParent;
 
+  baseElements = {};
+
   structureVarThumbStrings = {};
 
   /** @type Record<string, Function> */
@@ -70,7 +72,8 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
       if (node.track) {
         this.thumbParent = node.thumb.parentNode;
       }
-      this.findStructureVarStringsInThumb(this.thumbBase);
+      // baseElements is only effective if a structure thumb has been defined
+      this.baseElements.thumb = this.thumbBase;
     }
     if (!node.track) {
       node.track = this.assembleElement(node, 'track', 'div');
@@ -92,9 +95,14 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     node.track.classList.add('sl89-track');
 
     // Push thumb & descendants into node arrays
-    for (const nodeName of [ ...this.thumbChildren, 'thumb' ]) {
+    node.thumb = new Array();
+    for (const nodeName of this.thumbChildren) {
+      this.baseElements[nodeName] = node[nodeName];
       node[nodeName] = new Array();
     }
+
+    this.findStructureVarStringsInThumb(this.thumbBase);
+
     for (let i = 0; i < thumbCount; i++) {
       this.addThumbToNode(node);
     }
@@ -105,7 +113,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
       let thumbStrings = [];
       for (const [ str, nodeList ] of Object.entries(stringList)) {
         for (const node of nodeList) {
-          if (this.getStructureVarNodeOwner(node) === thumbBase) {
+          if (this.nodeHasBaseElementOwner(node)) {
             thumbStrings.push(str);
             break;
           }
@@ -196,6 +204,13 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     }
     this.thumbParent.appendChild(newThumb);
     return newThumb;
+  }
+
+  nodeHasBaseElementOwner(node) {
+    for (const [ baseName, element ] of Object.entries(this.baseElements)) {
+      if (Slider89StructureParser.getStructureVarNodeOwner(node) === element) return baseName;
+    }
+    return false;
   }
 
   // ---- Static style sheet creation ----
