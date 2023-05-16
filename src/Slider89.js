@@ -1,4 +1,5 @@
 'use strict';
+import LibraryTypeCheck from './LibraryTypeCheck.js';
 import Slider89DOM from './Slider89DOM.js';
 import Slider89DOMBuilder from './Slider89DOMBuilder.js';
 
@@ -181,12 +182,12 @@ export default class Slider89 extends Slider89DOM {
     if (!target) {
       throw new Slider89.InitializationError('No first argument has been supplied. It needs to be the DOM target node for the slider');
     } else if (!target.nodeType || target.nodeType !== 1) {
-      throw new Slider89.InitializationError('The first argument must be a valid DOM node (got ' + Slider89.TypeCheck.getType(target) + ')');
+      throw new Slider89.InitializationError('The first argument must be a valid DOM node (got ' + LibraryTypeCheck.getType(target) + ')');
     }
   }
   testInitialConfig(config) {
     if (typeof config !== 'object' || Array.isArray(config)) {
-      throw new Slider89.InitializationError('The optional second argument needs to be a configuration object (got ' + Slider89.TypeCheck.getType(config) + ')');
+      throw new Slider89.InitializationError('The optional second argument needs to be a configuration object (got ' + LibraryTypeCheck.getType(config) + ')');
     } else if ('value' in config && 'values' in config) {
       throw new Slider89.InitializationError('Only one of ‘value’ and ‘values’ may be defined at once');
     }
@@ -288,7 +289,7 @@ export default class Slider89 extends Slider89DOM {
     // If the next argument (argList.length - 1 + 1) is not optional, a required arg is missing
     for (let i in argList) {
       const arg = argList[i];
-      const typeMsg = Slider89.TypeCheck.checkTypes(arg, obj.args[i].descriptor);
+      const typeMsg = LibraryTypeCheck.checkTypes(arg, obj.args[i].descriptor);
       if (typeMsg) throw new Slider89.MethodArgTypeError(method, i, typeMsg);
     }
     if (obj.args[argList.length] && !obj.args[argList.length].optional) {
@@ -297,7 +298,7 @@ export default class Slider89 extends Slider89DOM {
   }
   checkProp(prop, val) {
     const propertyInfo = Slider89.propertyData[prop];
-    const typeMsg = Slider89.TypeCheck.checkTypes(val, propertyInfo.descriptor);
+    const typeMsg = LibraryTypeCheck.checkTypes(val, propertyInfo.descriptor);
     if (typeMsg) {
       throw new Slider89.PropertyTypeError(this, prop, propertyInfo, typeMsg);
     }

@@ -1,4 +1,5 @@
 'use strict';
+import LibraryTypeCheck from './LibraryTypeCheck.js';
 import Slider89 from './Slider89.js';
 
 export default class Slider89Error {
@@ -69,7 +70,7 @@ export default class Slider89Error {
       const msg =
         'The ' + Slider89Error.getMethodArgMessage(argInfo, index)
         + ' has been omitted but it is required'
-        + ' (It must be of type ' + Slider89.TypeCheck.buildDescriptorTypeMessage(argInfo.descriptor) + ').';
+        + ' (It must be of type ' + LibraryTypeCheck.buildDescriptorTypeMessage(argInfo.descriptor) + ').';
 
       super(msg, methodName);
     }
@@ -93,7 +94,7 @@ export default class Slider89Error {
 
   // ---- Helper functions ----
   static getTypeErrorMessage(descriptor, typeMsg) {
-    return ' Expected ' + Slider89.TypeCheck.buildDescriptorTypeMessage(descriptor) + ','
+    return ' Expected ' + LibraryTypeCheck.buildDescriptorTypeMessage(descriptor) + ','
          + ' got ' + typeMsg;
   }
 

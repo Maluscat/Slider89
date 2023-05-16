@@ -1,10 +1,7 @@
 'use strict';
 import Slider89Error from './Slider89Error.js';
-import LibraryTypeCheck from './LibraryTypeCheck.js';
 
 export default class Slider89Base extends Slider89Error {
-  static TypeCheck = LibraryTypeCheck;
-
   static methodData = {
     addEvent: {
       args: [
@@ -176,8 +173,6 @@ export default class Slider89Base extends Slider89Error {
 
   methods;
   properties;
-
-  TypeCheck;
 
   vals = {}; // holding every class property
   initial = false;
