@@ -1,5 +1,5 @@
 'use strict';
-import defaultStylesString from './default-styles.css';
+import defaultStylesString from '../css/default-styles.css';
 import Slider89 from './Slider89.js';
 import Slider89StructureParser from './Slider89StructureParser.js';
 

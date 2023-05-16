@@ -2,11 +2,11 @@ const path = require('path');
 const pnpPlugin = require('pnp-webpack-plugin');
 
 const common = {
-  entry: './src/Slider89.js',
+  entry: './src/core/Slider89.js',
   target: ['web', 'es5'],
   output: {
     filename: 'slider89.js',
-    path: path.resolve('dist'),
+    path: path.resolve('./dist'),
     library: 'Slider89',
     libraryTarget: 'umd',
     libraryExport: 'default',
@@ -16,7 +16,7 @@ const common = {
     plugins: [ pnpPlugin ]
   },
   resolveLoader: {
-    modules: [ path.resolve('src/loaders') ],
+    modules: [ path.resolve('./src/loaders') ],
     plugins: [ pnpPlugin.moduleLoader(module) ]
   },
   module: {
