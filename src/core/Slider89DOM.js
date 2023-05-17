@@ -181,7 +181,7 @@ export default class Slider89DOM extends Slider89Properties {
     e.preventDefault();
     if (this.activeTouchID == null) {
       this.activeTouchID = e.changedTouches[0].identifier;
-      this.slideStart.call(this, e.changedTouches[0], e);
+      this.slideStart(e.changedTouches[0], e);
 
       this.vals.node.thumb.addEventListener('touchmove', this.touchMove);
       this.vals.node.thumb.addEventListener('touchend', this.touchEnd);
@@ -192,7 +192,7 @@ export default class Slider89DOM extends Slider89Properties {
     e.preventDefault();
     for (let i = 0; i < e.changedTouches.length; i++) {
       if (e.changedTouches[i].identifier === this.activeTouchID) {
-        this.slideMove.call(this, e.changedTouches[i], e);
+        this.slideMove(e.changedTouches[i], e);
         break;
       }
     }
@@ -205,7 +205,7 @@ export default class Slider89DOM extends Slider89Properties {
         this.vals.node.thumb.removeEventListener('touchend', this.touchEnd);
         this.vals.node.thumb.removeEventListener('touchcancel', this.touchEnd);
 
-        this.slideEnd.call(this, e.changedTouches[i], e);
+        this.slideEnd(e.changedTouches[i], e);
         this.activeTouchID = null;
         break;
       }
@@ -215,7 +215,7 @@ export default class Slider89DOM extends Slider89Properties {
 
   // ---- Mouse events ----
   slideStart(e, touchEvent) {
-    this.activeThumb = e.currentTarget;
+    this.activeThumb = (touchEvent ? e.target : e.currentTarget);
 
     document.body.classList.add('sl89-noselect');
     this.activeThumb.classList.add('active');
