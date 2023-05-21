@@ -4,8 +4,8 @@ import Slider89DOMBuilder from './Slider89DOMBuilder.js';
 import Slider89Properties from './Slider89Properties.js';
 
 export default class Slider89DOM extends Slider89Properties {
+  activeTouchIDs = new Map();
   activeThumb;
-  activeTouchID;
   mouseDownPos;
 
   trackStyle;
@@ -15,19 +15,19 @@ export default class Slider89DOM extends Slider89Properties {
   constructor() {
     super();
 
+    this.mouseStart = this.mouseStart.bind(this);
+    this.mouseMove = this.mouseMove.bind(this);
+    this.mouseEnd = this.mouseEnd.bind(this);
+
     this.touchStart = this.touchStart.bind(this);
     this.touchMove = this.touchMove.bind(this);
     this.touchEnd = this.touchEnd.bind(this);
-
-    this.slideStart = this.slideStart.bind(this);
-    this.slideMove = this.slideMove.bind(this);
-    this.slideEnd = this.slideEnd.bind(this);
 
     this.keyDown = this.keyDown.bind(this);
 
     this.domBuilder = new Slider89DOMBuilder(this.vals, {
       touchstart: this.touchStart,
-      mousedown: this.slideStart,
+      mousedown: this.mouseStart,
       keydown: this.keyDown
     });
   }
@@ -179,35 +179,41 @@ export default class Slider89DOM extends Slider89Properties {
   // ---- Touch events ----
   touchStart(e) {
     e.preventDefault();
-    if (this.activeTouchID == null) {
-      this.activeTouchID = e.changedTouches[0].identifier;
-      this.slideStart(e.changedTouches[0], e);
+    // changedTouches should always be of length 1 because no two touches can trigger one event.
+    const touch = e.changedTouches[0];
+    if (!this.activeTouchIDs.has(touch.identifier)) {
+      const thumbNode = e.target;
+      this.activeTouchIDs.set(touch.identifier, thumbNode);
 
-      this.vals.node.thumb.addEventListener('touchmove', this.touchMove);
-      this.vals.node.thumb.addEventListener('touchend', this.touchEnd);
-      this.vals.node.thumb.addEventListener('touchcancel', this.touchEnd);
+      this.slideStart(thumbNode, touch, e);
+
+      thumbNode.addEventListener('touchmove', this.touchMove);
+      thumbNode.addEventListener('touchend', this.touchEnd);
+      thumbNode.addEventListener('touchcancel', this.touchEnd);
     }
   }
   touchMove(e) {
     e.preventDefault();
-    for (let i = 0; i < e.changedTouches.length; i++) {
-      if (e.changedTouches[i].identifier === this.activeTouchID) {
-        this.slideMove(e.changedTouches[i], e);
-        break;
+    for (const touch of e.changedTouches) {
+      if (this.activeTouchIDs.has(touch.identifier)) {
+        const thumbNode = this.activeTouchIDs.get(touch.identifier);
+
+        this.slideMove(thumbNode, touch, e);
       }
     }
   }
   touchEnd(e) {
     e.preventDefault();
-    for (let i = 0; i < e.changedTouches.length; i++) {
-      if (e.changedTouches[i].identifier === this.activeTouchID) {
-        this.vals.node.thumb.removeEventListener('touchmove', this.touchMove);
-        this.vals.node.thumb.removeEventListener('touchend', this.touchEnd);
-        this.vals.node.thumb.removeEventListener('touchcancel', this.touchEnd);
+    for (const touch of e.changedTouches) {
+      if (this.activeTouchIDs.has(touch.identifier)) {
+        const thumbNode = this.activeTouchIDs.get(touch.identifier);
+        this.activeTouchIDs.delete(touch.identifier);
 
-        this.slideEnd(e.changedTouches[i], e);
-        this.activeTouchID = null;
-        break;
+        this.slideEnd(thumbNode, touch, e);
+
+        thumbNode.removeEventListener('touchmove', this.touchMove);
+        thumbNode.removeEventListener('touchend', this.touchEnd);
+        thumbNode.removeEventListener('touchcancel', this.touchEnd);
       }
     }
   }
