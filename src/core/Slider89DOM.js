@@ -212,14 +212,35 @@ export default class Slider89DOM extends Slider89Properties {
     }
   }
 
-
   // ---- Mouse events ----
-  slideStart(e, touchEvent) {
-    this.activeThumb = (touchEvent ? e.target : e.currentTarget);
-
+  mouseStart(e) {
+    const thumbNode = e.currentTarget;
     document.body.classList.add('sl89-noselect');
-    this.activeThumb.classList.add('active');
-    // invokeEvent(['start'], touchEvent || e);
+
+    this.slideStart(thumbNode, e);
+
+    if (!this.activeThumb) {
+      this.activeThumb = thumbNode;
+      window.addEventListener('mousemove', this.mouseMove);
+      window.addEventListener('mouseup', this.mouseEnd);
+    }
+  }
+  mouseMove(e) {
+    this.slideMove(this.activeThumb, e);
+  }
+  mouseEnd(e) {
+    this.slideEnd(this.activeThumb, e);
+
+    window.removeEventListener('mousemove', this.mouseMove);
+    window.removeEventListener('mouseup', this.mouseEnd);
+    this.mouseDownPos = null;
+    this.activeThumb = null;
+  }
+
+  // ---- General event handlers ----
+  slideStart(thumbNode, e, eventArg = e) {
+    thumbNode.classList.add('active');
+    // invokeEvent(['start'], eventArg);
 
     if (this.vals.orientation === 'vertical') {
       var posAnchor = 'top';
@@ -228,19 +249,14 @@ export default class Slider89DOM extends Slider89Properties {
       var posAnchor = 'left';
       var clientDim = e.clientX;
     }
-    const distance = this.getDistance(this.activeThumb);
+    const distance = this.getDistance(thumbNode);
     this.mouseDownPos = clientDim - distance;
-    this.moveThumbTranslate(this.activeThumb, distance);
-    this.activeThumb.style.removeProperty(posAnchor);
-
-    if (!touchEvent) {
-      window.addEventListener('mouseup', this.slideEnd);
-      window.addEventListener('mousemove', this.slideMove);
-    }
+    this.moveThumbTranslate(thumbNode, distance);
+    thumbNode.style.removeProperty(posAnchor);
   }
-  slideMove(e, touchEvent) {
-    const thumbIndex = this.vals.node.thumb.indexOf(this.activeThumb);
-    const absSize = this.getAbsoluteTrackSize(this.activeThumb);
+  slideMove(thumbNode, e, eventArg = e) {
+    const thumbIndex = this.vals.node.thumb.indexOf(thumbNode);
+    const absSize = this.getAbsoluteTrackSize(thumbNode);
     let distance = (this.vals.orientation === 'vertical' ? e.clientY : e.clientX) - this.mouseDownPos;
 
     if (distance > absSize)
@@ -248,7 +264,7 @@ export default class Slider89DOM extends Slider89Properties {
     else if (distance < 0)
       distance = 0;
 
-    let value = this.computeDistanceValue(this.activeThumb, distance, absSize);
+    let value = this.computeDistanceValue(thumbNode, distance, absSize);
     if (this.vals.step !== false) {
       const computedProperties = this.computeRatioDistance(thumbIndex, { value: value });
       value = computedProperties.value;
@@ -256,27 +272,19 @@ export default class Slider89DOM extends Slider89Properties {
     }
 
     if (this.setValuesWithValueChange(thumbIndex, value)) {
-      this.moveThumbTranslate(this.activeThumb, distance);
-      this.invokeEvent(['move'], touchEvent || e);
+      this.moveThumbTranslate(thumbNode, distance);
+      this.invokeEvent(['move'], eventArg);
     }
   }
-  slideEnd(e, touchEvent) {
-    if (!touchEvent) {
-      window.removeEventListener('mouseup', this.slideEnd);
-      window.removeEventListener('mousemove', this.slideMove);
-    }
-
-    const thumbIndex = this.vals.node.thumb.indexOf(this.activeThumb);
+  slideEnd(thumbNode, e, eventArg = e) {
+    const thumbIndex = this.vals.node.thumb.indexOf(thumbNode);
 
     this.applyOneRatioDistance(thumbIndex);
-    this.activeThumb.style.removeProperty('transform');
+    thumbNode.style.removeProperty('transform');
 
-    this.invokeEvent(['end'], touchEvent || e);
-    this.activeThumb.classList.remove('active');
+    this.invokeEvent(['end'], eventArg);
+    thumbNode.classList.remove('active');
     document.body.classList.remove('sl89-noselect');
-
-    this.mouseDownPos = null;
-    this.activeThumb = null;
   }
 
 
