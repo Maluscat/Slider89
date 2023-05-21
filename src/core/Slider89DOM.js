@@ -187,7 +187,7 @@ export default class Slider89DOM extends Slider89Properties {
 
       this.slideStart(thumbNode, touch, e);
 
-      thumbNode.addEventListener('touchmove', this.touchMove);
+      thumbNode.addEventListener('touchmove', this.touchMove, { passive: false });
       thumbNode.addEventListener('touchend', this.touchEnd);
       thumbNode.addEventListener('touchcancel', this.touchEnd);
     }
@@ -211,7 +211,7 @@ export default class Slider89DOM extends Slider89Properties {
 
         this.slideEnd(thumbNode, touch, e);
 
-        thumbNode.removeEventListener('touchmove', this.touchMove);
+        thumbNode.removeEventListener('touchmove', this.touchMove, { passive: false });
         thumbNode.removeEventListener('touchend', this.touchEnd);
         thumbNode.removeEventListener('touchcancel', this.touchEnd);
       }
