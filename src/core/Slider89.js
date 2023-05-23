@@ -60,6 +60,7 @@ export default class Slider89 extends Slider89DOM {
         if (!this.initial) {
           // Manually invoke `value` property change
           this.handleInternalPropertyChange('value', prevVal[0]);
+          this.handleInternalPropertyChange('node');
         }
       },
       keySetter: (val, key) => {
