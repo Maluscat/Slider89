@@ -1,8 +1,41 @@
 'use strict';
 import Slider89 from './Slider89.js';
 
+/**
+ * @typedef {Object} SpecialVariableData
+ * @prop { (node: HTMLElement, slider?: Slider89) => any } getter
+ * @prop { string } [mandatoryTag]
+ */
+
 export default class Slider89StructureParser {
   // ---- Static properties ----
+  /**
+   * Special variables inside the structure system.
+   * Instead of being linked to properties, these can call arbitrary functions.
+   * @type { Record<string, SpecialVariableData>  }
+   */
+  static specialVariables = {
+    tag_node: {
+      getter: node => node
+    },
+    thumb_index: {
+      mandatoryTag: 'thumb',
+      getter: (node, slider) => slider.node.thumb.indexOf(node)
+    },
+    thumb_value: {
+      mandatoryTag: 'thumb',
+      getter: (node, slider) => slider.values[slider.node.thumb.indexOf(node)]
+    },
+  };
+  /**
+   * Links {@link specialVariables} to potential slider properties they depend on,
+   * so that the special variables get updated when the property updates.
+   * @type { Record<string, string[]> }
+   */
+  static specialVariableProxy = {
+    values: [ 'thumb_index', 'thumb_value' ]
+  };
+
   // Static initialization blocks don't work with my current workflow
   static regex = (function() {
     const reg = {
@@ -131,7 +164,7 @@ export default class Slider89StructureParser {
       elem.appendChild(textNode);
 
       if (Slider89StructureParser.stringHasVariable(content)) {
-        this.parseVariables(content, textNode);
+        this.parseVariables(content, textNode, name);
       }
     }
 
@@ -146,7 +179,7 @@ export default class Slider89StructureParser {
         elem.setAttributeNode(attribNode);
 
         if (Slider89StructureParser.stringHasVariable(attribValue)) {
-          this.parseVariables(attribValue, attribNode);
+          this.parseVariables(attribValue, attribNode, name);
         }
       }
     }
@@ -155,7 +188,7 @@ export default class Slider89StructureParser {
   }
 
   // ---- Structure variables register ----
-  parseVariables(str, targetNode) {
+  parseVariables(str, targetNode, tagName) {
     // Memorize & skip already handled variables for the current string
     const propNameCache = new Array();
     let match;
@@ -166,7 +199,9 @@ export default class Slider89StructureParser {
         : varName;
 
       if (!propNameCache.hasOwnProperty(propName)) {
-        if (!Object.prototype.hasOwnProperty.call(this.vals, propName)) {
+        if (!Object.prototype.hasOwnProperty.call(this.vals, propName)
+            && !Slider89StructureParser.checkForSpecialVariables(propName, tagName)
+        ) {
           throw new Slider89.StructureError(
             "‘" + propName + "’ is not a recognized property and cannot be used as variable. Please check its spelling or initialize it in the constructor");
         }
@@ -204,5 +239,17 @@ export default class Slider89StructureParser {
   static stringHasVariable(str) {
     // Need to use a RegExp without /g/ because the internal `lastIndex` mustn't be advanced by a mere test
     return Slider89StructureParser.regex.variableNoFlag.test(str);
+  }
+
+  static checkForSpecialVariables(varName, tagName) {
+    if (Object.prototype.hasOwnProperty.call(Slider89StructureParser.specialVariables, varName)) {
+      const varData = Slider89StructureParser.specialVariables[varName];
+      if ('mandatoryTag' in varData && varData.mandatoryTag !== tagName) {
+        throw new Slider89.StructureError(
+          "The variable ‘$" + varName + "’ may only be used inside the ‘<" + varData.mandatoryTag + ">’ tag (It was found in ‘<" + tagName + ">’)");
+      }
+      return true;
+    }
+    return false;
   }
 }
