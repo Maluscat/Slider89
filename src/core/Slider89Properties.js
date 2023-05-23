@@ -113,41 +113,55 @@ export default class Slider89Properties extends Slider89Events {
     if (!Object.prototype.hasOwnProperty.call(this.domBuilder.structureVars, propName)) return;
 
     for (const [ str, nodeList ] of Object.entries(this.domBuilder.structureVars[propName])) {
-      this.replaceStructureVarString(str, nodeList);
+      this.replaceStructureVarStringInNodes(str, nodeList);
     }
-  }
 
-  replaceStructureVarString(str, nodeList) {
-    const replacedStr = str.replace(Slider89StructureParser.regex.variable, (match, variableDelimit, variable) => {
-      return this.getValueFromStructureVar(variableDelimit || variable);
-    });
-    for (const node of nodeList) {
-      this.replaceStructureVarInNode(node, replacedStr);
-    }
-  }
-  replaceStructureVarInNode(node, replacedStr) {
-    // Special case: Iterate over every thumb
-    const baseName = this.domBuilder.nodeHasBaseElementOwner(node);
-    if (baseName) {
-      const elements = this.vals.node[baseName];
-      if (node.nodeType === Node.ATTRIBUTE_NODE) {
-        elements.forEach(element => {
-          element.getAttributeNode(node.name).textContent = replacedStr;
-        });
-      } else {
-        // The text node is always the first child
-        elements.forEach(element => {
-          element.childNodes[0].textContent = replacedStr;
-        });
+    if (Object.prototype.hasOwnProperty.call(Slider89StructureParser.specialVariableProxy, propName)) {
+      for (const varName of Slider89StructureParser.specialVariableProxy[propName]) {
+        this.updatePotentialStructureVar(varName);
       }
-    } else {
-      node.textContent = replacedStr;
     }
   }
 
-  getValueFromStructureVar(varName) {
+  replaceStructureVarStringInNodes(str, nodeList) {
+    for (const node of nodeList) {
+      // Special case: Iterate over every thumb
+      const baseName = this.domBuilder.nodeHasBaseElementOwner(node);
+      if (baseName) {
+        const elements = this.vals.node[baseName];
+        if (node.nodeType === Node.ATTRIBUTE_NODE) {
+          elements.forEach(element => {
+            element.getAttributeNode(node.name).textContent =
+              this.getReplacedStructureStr(str, element);
+          });
+        } else {
+          // The text node is always the first child
+          elements.forEach(element => {
+            element.childNodes[0].textContent =
+              this.getReplacedStructureStr(str, element);
+          });
+        }
+      } else {
+        const element = Slider89StructureParser.getNodeOwner(node);
+        node.textContent = this.getReplacedStructureStr(str, element);
+      }
+    }
+  }
+
+  getReplacedStructureStr(str, node) {
+    return str.replace(Slider89StructureParser.regex.variable, (match, variableDelimit, variable) => {
+      return this.getValueFromStructureVar(variableDelimit || variable, node);
+    });
+  }
+
+  getValueFromStructureVar(varName, node) {
     const recursiveVar = varName.split('.');
-    let value = this[recursiveVar[0]];
+    let value;
+    if (recursiveVar[0] in Slider89StructureParser.specialVariables) {
+      value = Slider89StructureParser.specialVariables[recursiveVar[0]].getter(node, this);
+    } else {
+      value = this[recursiveVar[0]];
+    }
     if (recursiveVar.length > 1) {
       for (let i = 1; i < recursiveVar.length; i++) {
         try {

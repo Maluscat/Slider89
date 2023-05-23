@@ -153,14 +153,6 @@ export default class Slider89DOM extends Slider89Properties {
   addNewThumbNode(thumbIndex) {
     this.domBuilder.addThumbToNode(this.vals.node);
     this.applyOneRatioDistance(thumbIndex);
-
-    // Expanding relevant structure variables
-    for (const [ propName, stringList ] of Object.entries(this.domBuilder.structureVarThumbStrings)) {
-      for (const varString of stringList) {
-        const nodeList = this.domBuilder.structureVars[propName][varString];
-        this.replaceStructureVarString(varString, nodeList);
-      }
-    }
   }
 
   setValuesWithValueChange(thumbIndex, value) {
