@@ -96,9 +96,8 @@ export default class Slider89StructureParser {
       }
     }
 
-    const stack = new Array();
+    const stack = [];
     let currentIndex = 0;
-    let isThumbChild = false;
     let match;
     // match: [matchedStr, type, name, tag, innerContent, attributes]
     while (match = Slider89StructureParser.regex.tag.exec(structureStr)) {
@@ -113,14 +112,14 @@ export default class Slider89StructureParser {
         const elem = this.assembleElement(node, match[2], match[3], match[4], match[5]);
         node[match[2]] = elem;
         node[stack[stack.length - 1] || 'slider'].appendChild(elem);
+
+        // This detects thumb children (Because it's called BEFORE 'thumb' is pushed onto the stack)
+        if (stack.includes('thumb')) {
+          this.thumbChildren.push(match[2]);
+        }
+
         if (match[1] == null) {
           stack.push(match[2]);
-        }
-        // Detecting thumb so that we know when we are inside it
-        if (match[2] === 'thumb') {
-          isThumbChild = true;
-        } else if (isThumbChild === true) {
-          this.thumbChildren.push(match[2]);
         }
       } else {
         const lastItem = stack.pop();
@@ -131,9 +130,6 @@ export default class Slider89StructureParser {
             throw new Slider89.StructureError(
               "The closing tag ‘</" + match[2] + ">’ couldn't find a matching opening tag");
           }
-        }
-        if (lastItem === 'thumb') {
-          isThumbChild = false;
         }
       }
     }
