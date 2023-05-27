@@ -124,34 +124,36 @@ export default class Slider89Properties extends Slider89Events {
   }
 
   replaceStructureVarStringInNodes(str, nodeList) {
+    for (const [ element, node ] of this.iterateStructureVarNodeList(nodeList)) {
+      node.textContent =
+        str.replace(Slider89StructureParser.regex.variable, (match, variableDelimit, variable) => {
+          return this.getValueFromStructureVar(variableDelimit || variable, element);
+        });
+    }
+  }
+
+  *iterateStructureVarNodeList(nodeList) {
     for (const node of nodeList) {
       // Special case: Iterate over every thumb
       const baseName = this.domBuilder.nodeHasBaseElementOwner(node);
       if (baseName) {
         const elements = this.vals.node[baseName];
+
         if (node.nodeType === Node.ATTRIBUTE_NODE) {
-          elements.forEach(element => {
-            element.getAttributeNode(node.name).textContent =
-              this.getReplacedStructureStr(str, element);
-          });
+          for (const element of elements) {
+            yield [ element, element.getAttributeNode(node.name) ];
+          };
         } else {
-          // The text node is always the first child
-          elements.forEach(element => {
-            element.childNodes[0].textContent =
-              this.getReplacedStructureStr(str, element);
-          });
+          for (const element of elements) {
+            // The text node is always the first child
+            yield [ element, element.childNodes[0] ];
+          };
         }
       } else {
         const element = Slider89StructureParser.getNodeOwner(node);
-        node.textContent = this.getReplacedStructureStr(str, element);
+        yield [ element, node ];
       }
     }
-  }
-
-  getReplacedStructureStr(str, node) {
-    return str.replace(Slider89StructureParser.regex.variable, (match, variableDelimit, variable) => {
-      return this.getValueFromStructureVar(variableDelimit || variable, node);
-    });
   }
 
   getValueFromStructureVar(varName, node) {
