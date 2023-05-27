@@ -253,5 +253,4 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     }
     return collector;
   }
-
 }

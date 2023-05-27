@@ -3,12 +3,11 @@ import Slider89 from './Slider89.js';
 
 /**
  * @typedef {Object} SpecialVariableData
- * @prop { (node: HTMLElement, slider?: Slider89) => any } getter
- * @prop { string } [mandatoryTag]
+ * @prop { (node: HTMLElement, slider?: Slider89, baseName?: string | false) => any } getter
+ * @prop { boolean } [thumbOnly] Whether the variable should only be available in <thumb> and its children.
  */
 
 export default class Slider89StructureParser {
-  // ---- Static properties ----
   /**
    * Special variables inside the structure system.
    * Instead of being linked to properties, these can call arbitrary functions.
@@ -19,12 +18,12 @@ export default class Slider89StructureParser {
       getter: node => node
     },
     thumb_index: {
-      mandatoryTag: 'thumb',
-      getter: (node, slider) => slider.node.thumb.indexOf(node)
+      thumbOnly: true,
+      getter: (node, slider, baseName) => slider.node[baseName].indexOf(node)
     },
     thumb_value: {
-      mandatoryTag: 'thumb',
-      getter: (node, slider) => slider.values[slider.node.thumb.indexOf(node)]
+      thumbOnly: true,
+      getter: (node, slider, baseName) => slider.values[slider.node[baseName].indexOf(node)]
     },
   };
   /**
@@ -109,9 +108,10 @@ export default class Slider89StructureParser {
       currentIndex = Slider89StructureParser.regex.tag.lastIndex;
 
       if (match[1] !== '/') {
-        const elem = this.assembleElement(node, match[2], match[3], match[4], match[5]);
-        node[match[2]] = elem;
-        node[stack[stack.length - 1] || 'slider'].appendChild(elem);
+        const lastName = stack[stack.length - 1] || 'slider';
+        const element = this.assembleElement(node, match[2], stack, match[3], match[4], match[5]);
+        node[match[2]] = element;
+        node[lastName].appendChild(element);
 
         // This detects thumb children (Because it's called BEFORE 'thumb' is pushed onto the stack)
         if (stack.includes('thumb')) {
@@ -147,8 +147,8 @@ export default class Slider89StructureParser {
     return node;
   }
 
-  assembleElement(node, name, tag, content, attributes) {
-    if (name in node) {
+  assembleElement(node, name, nameStack, tag, content, attributes) {
+    if (Object.prototype.hasOwnProperty.call(node, name)) {
       throw new Slider89.StructureError(
         'Every element must have a unique name but there are mutiple elements called ‘' + name + '’');
     }
@@ -160,7 +160,7 @@ export default class Slider89StructureParser {
       elem.appendChild(textNode);
 
       if (Slider89StructureParser.stringHasVariable(content)) {
-        this.parseVariables(content, textNode, name);
+        this.parseVariables(content, textNode, name, nameStack);
       }
     }
 
@@ -175,7 +175,7 @@ export default class Slider89StructureParser {
         elem.setAttributeNode(attribNode);
 
         if (Slider89StructureParser.stringHasVariable(attribValue)) {
-          this.parseVariables(attribValue, attribNode, name);
+          this.parseVariables(attribValue, attribNode, name, nameStack);
         }
       }
     }
@@ -184,7 +184,7 @@ export default class Slider89StructureParser {
   }
 
   // ---- Structure variables register ----
-  parseVariables(str, targetNode, tagName) {
+  parseVariables(str, targetNode, tagName, tagNameStack) {
     // Memorize & skip already handled variables for the current string
     const propNameCache = new Array();
     let match;
@@ -196,7 +196,7 @@ export default class Slider89StructureParser {
 
       if (!propNameCache.hasOwnProperty(propName)) {
         if (!Object.prototype.hasOwnProperty.call(this.vals, propName)
-            && !Slider89StructureParser.checkForSpecialVariables(propName, tagName)
+            && !Slider89StructureParser.checkForSpecialVariables(propName, tagName, tagNameStack)
         ) {
           throw new Slider89.StructureError(
             "‘" + propName + "’ is not a recognized property and cannot be used as variable. Please check its spelling or initialize it in the constructor");
@@ -237,12 +237,13 @@ export default class Slider89StructureParser {
     return Slider89StructureParser.regex.variableNoFlag.test(str);
   }
 
-  static checkForSpecialVariables(varName, tagName) {
+  static checkForSpecialVariables(varName, tagName, tagNameStack) {
     if (Object.prototype.hasOwnProperty.call(Slider89StructureParser.specialVariables, varName)) {
       const varData = Slider89StructureParser.specialVariables[varName];
-      if ('mandatoryTag' in varData && varData.mandatoryTag !== tagName) {
+      if (varData.thumbOnly && tagName !== 'thumb' && !tagNameStack.includes('thumb')) {
         throw new Slider89.StructureError(
-          "The variable ‘$" + varName + "’ may only be used inside the ‘<" + varData.mandatoryTag + ">’ tag (It was found in ‘<" + tagName + ">’)");
+          "The variable ‘$" + varName + "’ may only be used inside the ‘<thumb>’ tag and its children "
+          + "(It was found in ‘<" + tagNameStack[tagNameStack.length - 1] + ">’)");
       }
       return true;
     }

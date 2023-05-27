@@ -124,10 +124,10 @@ export default class Slider89Properties extends Slider89Events {
   }
 
   replaceStructureVarStringInNodes(str, nodeList) {
-    for (const [ element, node ] of this.iterateStructureVarNodeList(nodeList)) {
+    for (const [ element, node, baseName ] of this.iterateStructureVarNodeList(nodeList)) {
       node.textContent =
         str.replace(Slider89StructureParser.regex.variable, (match, variableDelimit, variable) => {
-          return this.getValueFromStructureVar(variableDelimit || variable, element);
+          return this.getValueFromStructureVar(variableDelimit || variable, element, baseName);
         });
     }
   }
@@ -141,26 +141,26 @@ export default class Slider89Properties extends Slider89Events {
 
         if (node.nodeType === Node.ATTRIBUTE_NODE) {
           for (const element of elements) {
-            yield [ element, element.getAttributeNode(node.name) ];
+            yield [ element, element.getAttributeNode(node.name), baseName ];
           };
         } else {
           for (const element of elements) {
             // The text node is always the first child
-            yield [ element, element.childNodes[0] ];
+            yield [ element, element.childNodes[0], baseName ];
           };
         }
       } else {
         const element = Slider89StructureParser.getNodeOwner(node);
-        yield [ element, node ];
+        yield [ element, node, baseName ];
       }
     }
   }
 
-  getValueFromStructureVar(varName, node) {
+  getValueFromStructureVar(varName, node, baseName) {
     const recursiveVar = varName.split('.');
     let value;
     if (recursiveVar[0] in Slider89StructureParser.specialVariables) {
-      value = Slider89StructureParser.specialVariables[recursiveVar[0]].getter(node, this);
+      value = Slider89StructureParser.specialVariables[recursiveVar[0]].getter(node, this, baseName);
     } else {
       value = this[recursiveVar[0]];
     }
