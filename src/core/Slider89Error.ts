@@ -1,6 +1,6 @@
 'use strict';
-import LibraryTypeCheck from './LibraryTypeCheck.js';
-import Slider89 from './Slider89.js';
+import LibraryTypeCheck from './LibraryTypeCheck';
+import Slider89 from './Slider89';
 
 export default class Slider89Error {
   static COUNTS = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth'];

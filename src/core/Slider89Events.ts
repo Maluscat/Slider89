@@ -1,6 +1,6 @@
 'use strict';
-import Slider89 from './Slider89.js';
-import Slider89Base from './Slider89Base.js';
+import Slider89 from './Slider89';
+import Slider89Base from './Slider89Base';
 
 export default class Slider89Events extends Slider89Base {
   static eventTypes = [

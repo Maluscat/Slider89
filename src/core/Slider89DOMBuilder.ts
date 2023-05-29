@@ -1,7 +1,7 @@
 'use strict';
 import defaultStylesString from '../css/default-styles.css';
-import Slider89 from './Slider89.js';
-import Slider89StructureParser from './Slider89StructureParser.js';
+import Slider89 from './Slider89';
+import Slider89StructureParser from './Slider89StructureParser';
 
 export default class Slider89DOMBuilder extends Slider89StructureParser {
   static hasInjectedStylesheet = false;

@@ -1,5 +1,5 @@
 'use strict';
-import Slider89 from './Slider89.js';
+import Slider89 from './Slider89';
 
 /**
  * @typedef {Object} SpecialVariableData

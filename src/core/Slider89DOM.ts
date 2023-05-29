@@ -1,7 +1,7 @@
 'use strict';
-import Slider89 from './Slider89.js';
-import Slider89DOMBuilder from './Slider89DOMBuilder.js';
-import Slider89Properties from './Slider89Properties.js';
+import Slider89 from './Slider89';
+import Slider89DOMBuilder from './Slider89DOMBuilder';
+import Slider89Properties from './Slider89Properties';
 
 export default class Slider89DOM extends Slider89Properties {
   activeTouchIDs = new Map();

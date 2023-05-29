@@ -1,7 +1,7 @@
 'use strict';
-import Slider89 from './Slider89.js';
-import Slider89Events from './Slider89Events.js';
-import Slider89StructureParser from './Slider89StructureParser.js';
+import Slider89 from './Slider89';
+import Slider89Events from './Slider89Events';
+import Slider89StructureParser from './Slider89StructureParser';
 
 export default class Slider89Properties extends Slider89Events {
   // ------ Object definition ------

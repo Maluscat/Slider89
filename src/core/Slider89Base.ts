@@ -1,5 +1,5 @@
 'use strict';
-import Slider89Error from './Slider89Error.js';
+import Slider89Error from './Slider89Error';
 
 export default class Slider89Base extends Slider89Error {
   static methodData = {
