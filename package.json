@@ -13,8 +13,13 @@
   },
   "devDependencies": {
     "pnp-webpack-plugin": "^1.7.0",
+    "ts-loader": "^9.4.2",
+    "typescript": "^5.0.4",
     "webpack": "^5.79.0",
     "webpack-cli": "^5.0.1"
   },
-  "packageManager": "yarn@3.5.0"
+  "packageManager": "yarn@3.5.0",
+  "resolutions": {
+    "typescript": "portal:/usr/lib/node_modules/typescript"
+  }
 }
