@@ -2,7 +2,7 @@ const path = require('path');
 const pnpPlugin = require('pnp-webpack-plugin');
 
 const common = {
-  entry: './src/core/Slider89.js',
+  entry: './src/core/Slider89.ts',
   target: ['web', 'es5'],
   output: {
     filename: 'slider89.js',
@@ -13,17 +13,24 @@ const common = {
     globalObject: 'this'
   },
   resolve: {
+    extensions: [ '.ts', '.tsx', '.js' ],
     plugins: [ pnpPlugin ]
   },
   resolveLoader: {
-    modules: [ path.resolve('./src/loaders') ],
+    modules: [ 'node_modules', path.resolve('./src/loaders') ],
     plugins: [ pnpPlugin.moduleLoader(module) ]
   },
   module: {
     rules: [
       {
+        test: /\.tsx?$/i,
+        use: 'ts-loader',
+        exclude: /node_modules/
+      },
+      {
         test: /\.css$/i,
-        use: [ 'css-rule-loader' ]
+        use: 'css-rule-loader',
+        exclude: /node_modules/
       }
     ]
   }
