@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "sourceMap": true,
+    "target": "es2015",
+    "module": "es2015",
+    "lib": [ "esnext", "dom", "dom.iterable" ],
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "checkJs": true
+  },
+  "include": [
+    "./**/*.js",
+    "./**/*.ts"
+  ],
+  "exclude": [
+    "./loaders/**/*"
+  ]
+}
