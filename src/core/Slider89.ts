@@ -1,9 +1,24 @@
 'use strict';
+import type { Properties } from 'Slider89Base';
 import LibraryTypeCheck from './LibraryTypeCheck.js';
 import Slider89DOM from './Slider89DOM.js';
 import Slider89DOMBuilder from './Slider89DOMBuilder.js';
 
 export default class Slider89 extends Slider89DOM {
+  // TypeScript does not allow custom properties in classes
+  // because they are busy ignoring all open issues with good suggestions
+  // Thus, NOTE: Expand this (copy-paste) whenever the properties change.
+  range: Properties['range']
+  values: Properties['values']
+  value: Properties['value']
+  precision: Properties['precision']
+  step: Properties['step']
+  structure: Properties['structure']
+  node: Properties['node']
+  orientation: Properties['orientation']
+  classList: Properties['classList']
+  events: Properties['events']
+
   methods = {
     addEvent: {
       function: this.addEvent,
