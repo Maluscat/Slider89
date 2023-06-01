@@ -1,8 +1,33 @@
 'use strict';
 import Slider89Error from './Slider89Error';
 
+type DeepPropertyNames = 'range' | 'values';
+
+export type PropertyNode = Record<string, HTMLElement> & { thumb?: HTMLElement[] };
+
+export interface Properties {
+  range: [ number, number ];
+  values: number[];
+  value: number;
+  precision: number | false;
+  step: number | false;
+  structure: string | false;
+  node: PropertyNode;
+  orientation: 'vertical' | 'horizontal';
+  classList: Record<string, string[]> | false;
+  events: Record<string, Function[]> | false;
+}
+type PropertiesDeep = {
+  [ prop in DeepPropertyNames ]: Properties[prop]
+}
+type PropertiesVals = Properties & {
+  readonly $: Properties;
+  readonly $intermediateThis: PropertiesDeep;
+  readonly $intermediateVals: PropertiesDeep;
+}
+
 export default class Slider89Base extends Slider89Error {
-  static methodData = {
+  static methodData = <const> ({
     addEvent: {
       args: [
         {
@@ -53,7 +78,7 @@ export default class Slider89Base extends Slider89Error {
         }
       ]
     }
-  }
+  });
   static propertyData = {
     range: {
       isDeepDefinedArray: true,
@@ -75,7 +100,6 @@ export default class Slider89Base extends Slider89Error {
       isDeepDefinedArray: true,
       descriptor: [{
         type: 'array',
-        // TODO condition: at least of size 1
         descriptor: [{
           type: 'number'
         }]
@@ -174,7 +198,8 @@ export default class Slider89Base extends Slider89Error {
   methods;
   properties;
 
-  vals = {}; // holding every class property
+  // @ts-ignore
+  vals: PropertiesVals = {}; // holding every class property
   initial = false;
 
   constructor() {
