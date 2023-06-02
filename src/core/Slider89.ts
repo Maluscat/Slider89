@@ -4,6 +4,33 @@ import LibraryTypeCheck from './LibraryTypeCheck.js';
 import Slider89DOM from './Slider89DOM.js';
 import Slider89DOMBuilder from './Slider89DOMBuilder.js';
 
+type PropertiesOutline = {
+  [ Prop in keyof Properties ]: PropertyOutline.self<Properties[Prop]>;
+}
+
+namespace PropertyOutline {
+  export type self<Type> =
+      Default<Type> & Partial<GetterSetter<Type>> & Partial<Additional<Type>>
+    | GetterSetter<Type> & Partial<Default<Type>> & Partial<Additional<Type>>;
+
+  type Default<Type> = {
+    default: Type | (() => Type);
+  }
+  type GetterSetter<Type> = {
+    setter: (val?: Type) => void | boolean;
+    getter: (val?: Type) => Type;
+  }
+  type Additional<Type> = {
+    postSetter: (val: Type, prevVal: Type) => void | boolean;
+    keySetter: Type extends Array<any>
+      ? (val?: Type[0], key?: number) => void | boolean
+      : never;
+    keyGetter: Type extends Array<any>
+      ? (val?: Type[0], key?: number) => Type[0]
+      : never;
+  }
+}
+
 export default class Slider89 extends Slider89DOM {
   // TypeScript does not allow custom properties in classes
   // because they are busy ignoring all open issues with good suggestions
@@ -28,7 +55,7 @@ export default class Slider89 extends Slider89DOM {
     }
   };
 
-  properties = {
+  properties: PropertiesOutline = {
     range: {
       default: [0, 100],
       setter: (val) => {
@@ -223,7 +250,7 @@ export default class Slider89 extends Slider89DOM {
   initializeClassProperties(config) {
     for (let _ in this.properties) {
       // IE-support: item needs to be a scoped variable because defineProperty is async
-      const item = _;
+      const item = _ as keyof Properties;
       const prop = this.properties[item];
       const propData = Slider89.propertyData[item];
 
