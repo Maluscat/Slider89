@@ -26,6 +26,53 @@ type PropertiesVals = Properties & {
   readonly $intermediateVals: PropertiesDeep;
 }
 
+namespace PropertyDescriptor {
+  interface TypesWithConditions {
+    boolean: never;
+    true: never;
+    false: never;
+    object: never;
+    function: never;
+    array: 'length';
+    number: 'nonnegative' | 'positive' | 'integer';
+    string: 'filled' | 'wordChar' | 'keywords';
+  }
+  interface Conditions {
+    nonnegative: boolean;
+    positive: boolean;
+    integer: boolean;
+    length: number;
+    keywords: string[];
+    filled: boolean;
+    wordChar: boolean
+  }
+
+  export type self = {
+    type: keyof TypesWithConditions;
+    conditions?: Partial<{
+      [ Cond in TypesWithConditions[self['type']] ]: Conditions[Cond];
+    }>;
+    shape?: string;
+  } | {
+    type: 'array';
+    descriptor: Array<self>;
+  } | {
+    type: 'object';
+    descriptor: Array<self>;
+    keyName?: string;
+  }
+}
+
+type PropertyData = {
+  [ Prop in keyof Properties ]: {
+    constructorOnly?: boolean;
+    isDeepDefinedArray?: boolean;
+    descriptor: Array<PropertyDescriptor.self>;
+  } | {
+    readOnly: true;
+  }
+}
+
 export default class Slider89Base extends Slider89Error {
   static methodData = <const> ({
     addEvent: {
@@ -79,7 +126,7 @@ export default class Slider89Base extends Slider89Error {
       ]
     }
   });
-  static propertyData = {
+  static propertyData: PropertyData = {
     range: {
       isDeepDefinedArray: true,
       descriptor: [
