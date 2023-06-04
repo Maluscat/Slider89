@@ -1,16 +1,28 @@
 'use strict';
+import type { Properties } from 'Slider89Base';
 import Slider89 from './Slider89';
 import Slider89DOMBuilder from './Slider89DOMBuilder';
 import Slider89Properties from './Slider89Properties';
 
+interface ClientXY {
+  clientX: number;
+  clientY: number;
+}
+
+type StyleDirection = 'Top' | 'Right' | 'Bottom' | 'Left';
+
+type RecomputationNewVals = Partial<{
+  [ Prop in 'value' | 'range' | 'step' ]: Properties[Prop]
+}>
+
 export default class Slider89DOM extends Slider89Properties {
-  activeTouchIDs = new Map();
-  activeThumb;
-  mouseDownPos;
+  activeTouchIDs = new Map<number, HTMLDivElement>();
+  activeThumb: HTMLDivElement;
+  mouseDownPos: number;
 
-  trackStyle;
+  trackStyle: CSSStyleDeclaration;
 
-  domBuilder;
+  domBuilder: Slider89DOMBuilder;
 
   constructor() {
     super();
@@ -34,15 +46,15 @@ export default class Slider89DOM extends Slider89Properties {
 
 
   // ---- DOM getters ----
-  getTrackPadding(direction) {
+  getTrackPadding(direction): number {
     return parseFloat(this.trackStyle['padding' + direction]);
   }
-  getTrackOffset(direction) {
+  getTrackOffset(direction): number {
     return parseFloat(this.trackStyle['border' + direction + 'Width'])
       + this.getTrackPadding(direction);
   }
 
-  getDistance(thumb) {
+  getDistance(thumb: HTMLDivElement): number {
     if (this.vals.orientation === 'vertical') {
       return thumb.getBoundingClientRect().top
         - this.vals.node.track.getBoundingClientRect().top
@@ -53,7 +65,7 @@ export default class Slider89DOM extends Slider89Properties {
         - this.getTrackOffset('Left');
     }
   }
-  getAbsoluteTrackSize(thumb) {
+  getAbsoluteTrackSize(thumb: HTMLDivElement): number {
     if (this.vals.orientation === 'vertical') {
       return this.vals.node.track.getBoundingClientRect().height
         - this.getTrackOffset('Top')
@@ -68,11 +80,11 @@ export default class Slider89DOM extends Slider89Properties {
   }
 
   // ---- Thumb moving ----
-  moveThumbTranslate(thumb, distance) {
+  moveThumbTranslate(thumb: HTMLDivElement, distance: number) {
     const axis = this.vals.orientation === 'vertical' ? 'Y' : 'X';
     thumb.style.transform = 'translate' + axis + '(' + distance + 'px)';
   }
-  moveThumbRelative(thumb, distance) {
+  moveThumbRelative(thumb: HTMLDivElement, distance: number) {
     // Relative positioning starts at the padding, so looking at the border is not needed
     if (this.vals.orientation === 'vertical') {
       var offsetStart = this.getTrackPadding('Top');
@@ -93,12 +105,12 @@ export default class Slider89DOM extends Slider89Properties {
     thumb.style[posAnchor] = 'calc(' + (distance * 100) + '% - ' + subtract + ')';
   }
 
-  applyAllRatioDistances(newVals) {
+  applyAllRatioDistances(newVals?: RecomputationNewVals) {
     for (let i = 0; i < this.vals.values.length; i++) {
       this.applyOneRatioDistance(i, newVals);
     }
   }
-  applyOneRatioDistance(thumbIndex, newVals) {
+  applyOneRatioDistance(thumbIndex: number, newVals?: RecomputationNewVals) {
     const { value, prevRatio, ratio } = this.computeRatioDistance(thumbIndex, newVals);
 
     this.setValuesWithValueChange(thumbIndex, value);
@@ -106,13 +118,15 @@ export default class Slider89DOM extends Slider89Properties {
   }
 
   // ---- Distance computation ----
-  computeDistanceValue(thumb, distance, absSize) {
+  computeDistanceValue(thumb: HTMLDivElement, distance: number, absSize: number): number {
     if (absSize == null) absSize = this.getAbsoluteTrackSize(thumb);
     return distance / absSize * (this.vals.range[1] - this.vals.range[0]) + this.vals.range[0];
   }
 
-  computeRatioDistance(thumbIndex, newVals) {
-    let value, ratio;
+  computeRatioDistance(thumbIndex: number, newVals?: RecomputationNewVals) {
+    let value: Properties['value'];
+    let ratio: number;
+
     if (!newVals) {
       newVals = this.vals;
       value = this.vals.values[thumbIndex];
@@ -150,12 +164,12 @@ export default class Slider89DOM extends Slider89Properties {
     const thumb = this.domBuilder.removeThumbFromNode(this.vals.node);
     this.domBuilder.thumbParent.removeChild(thumb);
   }
-  addNewThumbNode(thumbIndex) {
+  addNewThumbNode(thumbIndex: number) {
     this.domBuilder.addThumbToNode(this.vals.node);
     this.applyOneRatioDistance(thumbIndex);
   }
 
-  setValuesWithValueChange(thumbIndex, value) {
+  setValuesWithValueChange(thumbIndex: number, value: Properties['value']): boolean {
     const prevVal = this.vals.values[thumbIndex];
     if (!Slider89.floatIsEqual(value, prevVal)) {
       this.vals.values[thumbIndex] = value;
@@ -169,12 +183,12 @@ export default class Slider89DOM extends Slider89Properties {
 
 
   // ---- Touch events ----
-  touchStart(e) {
+  touchStart(e: TouchEvent) {
     e.preventDefault();
     // changedTouches should always be of length 1 because no two touches can trigger one event.
     const touch = e.changedTouches[0];
     if (!this.activeTouchIDs.has(touch.identifier)) {
-      const thumbNode = e.target;
+      const thumbNode = e.target as HTMLDivElement;
       this.activeTouchIDs.set(touch.identifier, thumbNode);
 
       this.slideStart(thumbNode, touch, e);
@@ -184,7 +198,7 @@ export default class Slider89DOM extends Slider89Properties {
       thumbNode.addEventListener('touchcancel', this.touchEnd);
     }
   }
-  touchMove(e) {
+  touchMove(e: TouchEvent) {
     e.preventDefault();
     for (const touch of e.changedTouches) {
       if (this.activeTouchIDs.has(touch.identifier)) {
@@ -194,7 +208,7 @@ export default class Slider89DOM extends Slider89Properties {
       }
     }
   }
-  touchEnd(e) {
+  touchEnd(e: TouchEvent) {
     e.preventDefault();
     for (const touch of e.changedTouches) {
       if (this.activeTouchIDs.has(touch.identifier)) {
@@ -203,6 +217,7 @@ export default class Slider89DOM extends Slider89Properties {
 
         this.slideEnd(thumbNode, touch, e);
 
+        // @ts-ignore
         thumbNode.removeEventListener('touchmove', this.touchMove, { passive: false });
         thumbNode.removeEventListener('touchend', this.touchEnd);
         thumbNode.removeEventListener('touchcancel', this.touchEnd);
@@ -211,11 +226,11 @@ export default class Slider89DOM extends Slider89Properties {
   }
 
   // ---- Mouse events ----
-  mouseStart(e) {
-    const thumbNode = e.currentTarget;
+  mouseStart(e: MouseEvent) {
+    const thumbNode = e.currentTarget as HTMLDivElement;
     document.body.classList.add('sl89-noselect');
 
-    this.slideStart(thumbNode, e);
+    this.slideStart(thumbNode, e, e);
 
     if (!this.activeThumb) {
       this.activeThumb = thumbNode;
@@ -223,11 +238,11 @@ export default class Slider89DOM extends Slider89Properties {
       window.addEventListener('mouseup', this.mouseEnd);
     }
   }
-  mouseMove(e) {
-    this.slideMove(this.activeThumb, e);
+  mouseMove(e: MouseEvent) {
+    this.slideMove(this.activeThumb, e, e);
   }
-  mouseEnd(e) {
-    this.slideEnd(this.activeThumb, e);
+  mouseEnd(e: MouseEvent) {
+    this.slideEnd(this.activeThumb, e, e);
 
     window.removeEventListener('mousemove', this.mouseMove);
     window.removeEventListener('mouseup', this.mouseEnd);
@@ -236,7 +251,7 @@ export default class Slider89DOM extends Slider89Properties {
   }
 
   // ---- General event handlers ----
-  slideStart(thumbNode, e, eventArg = e) {
+  slideStart(thumbNode: HTMLDivElement, e: ClientXY, eventArg: UIEvent) {
     thumbNode.classList.add('active');
     // invokeEvent(['start'], eventArg);
 
@@ -252,7 +267,7 @@ export default class Slider89DOM extends Slider89Properties {
     this.moveThumbTranslate(thumbNode, distance);
     thumbNode.style.removeProperty(posAnchor);
   }
-  slideMove(thumbNode, e, eventArg = e) {
+  slideMove(thumbNode: HTMLDivElement, e: ClientXY, eventArg: UIEvent) {
     const thumbIndex = this.vals.node.thumb.indexOf(thumbNode);
     const absSize = this.getAbsoluteTrackSize(thumbNode);
     let distance = (this.vals.orientation === 'vertical' ? e.clientY : e.clientX) - this.mouseDownPos;
@@ -274,7 +289,7 @@ export default class Slider89DOM extends Slider89Properties {
       this.invokeEvent(['move'], eventArg);
     }
   }
-  slideEnd(thumbNode, e, eventArg = e) {
+  slideEnd(thumbNode: HTMLDivElement, e: ClientXY, eventArg: UIEvent) {
     const thumbIndex = this.vals.node.thumb.indexOf(thumbNode);
 
     this.applyOneRatioDistance(thumbIndex);
@@ -287,10 +302,10 @@ export default class Slider89DOM extends Slider89Properties {
 
 
   // ---- Misc events ----
-  keyDown(e) {
+  keyDown(e: KeyboardEvent) {
     if (!e.key.startsWith('Arrow')) return;
 
-    const thumbIndex = this.vals.node.thumb.indexOf(e.currentTarget);
+    const thumbIndex = this.vals.node.thumb.indexOf(e.currentTarget as HTMLDivElement);
 
     let modifier = Math.round((this.vals.range[1] - this.vals.range[0]) / 100);
     if (e.shiftKey && e.ctrlKey) {
