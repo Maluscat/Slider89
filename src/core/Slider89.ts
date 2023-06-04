@@ -187,7 +187,9 @@ export default class Slider89 extends Slider89DOM {
     }
   };
 
-  constructor(target, config, replace = false) {
+  // TODO Make separate typ `PropertiesConfig`, excluding readOnly properties
+  // (Like `node`)
+  constructor(target: HTMLElement, config?: Partial<Properties> | false, replace = false) {
     super();
     this.initial = true;
 
@@ -216,14 +218,14 @@ export default class Slider89 extends Slider89DOM {
   }
 
 
-  testInitialTarget(target) {
+  testInitialTarget(target: HTMLElement) {
     if (!target) {
       throw new Slider89.InitializationError('No first argument has been supplied. It needs to be the DOM target node for the slider');
     } else if (!target.nodeType || target.nodeType !== 1) {
       throw new Slider89.InitializationError('The first argument must be a valid DOM node (got ' + LibraryTypeCheck.getType(target) + ')');
     }
   }
-  testInitialConfig(config) {
+  testInitialConfig(config: Partial<Properties>) {
     if (typeof config !== 'object' || Array.isArray(config)) {
       throw new Slider89.InitializationError('The optional second argument needs to be a configuration object (got ' + LibraryTypeCheck.getType(config) + ')');
     } else if ('value' in config && 'values' in config) {
@@ -233,34 +235,40 @@ export default class Slider89 extends Slider89DOM {
 
 
   // Initialize properties and methods
-  initializeClassProperties(config) {
+  initializeClassProperties(config: Partial<Properties>) {
+    // NOTE: This section has no strong type checking because propData is of type any
+    // Don't even bother trying to fix this, for your own sake
     for (let _ in this.properties) {
       // IE-support: item needs to be a scoped variable because defineProperty is async
-      const item = _ as keyof Properties;
+      const item = _;
       const prop = this.properties[item];
       const propData = Slider89.propertyData[item];
 
       Object.defineProperty(this, item, {
-        set: (val) => {
+        set: (val: Properties[keyof Properties]) => {
           if (propData.readOnly) {
             throw new Slider89.Error('Property ‘' + item + '’ is read-only (It was just set with the value ‘' + val + '’)');
           }
           if (propData.constructorOnly && !this.initial) {
             throw new Slider89.Error('Property ‘' + item + '’ may only be defined in the constructor (It was just set with the value ‘' + val + '’)');
           }
+
           this.checkProp(item, val);
+
           if (!prop.setter || !prop.setter(val)) {
             this.vals[item] = val;
           }
         },
         get: () => {
-          const getterEndpoint = (propData.isDeepDefinedArray ? this.vals.$intermediateThis : this.vals);
+          const getterEndpoint = (propData.isDeepDefinedArray)
+            ? this.vals.$intermediateThis
+            : this.vals;
           return (prop.getter ? prop.getter(getterEndpoint[item]) : getterEndpoint[item]);
         },
         enumerable: true
       });
 
-      this.defineDeepProperty(this.vals, item, this.vals.$, prop.postSetter, propData.isDeepDefinedArray);
+      this.defineDeepProperty(this.vals, item as keyof Properties, this.vals.$, prop.postSetter, propData.isDeepDefinedArray);
 
       if (item in config) {
         this[item] = config[item];
@@ -272,12 +280,12 @@ export default class Slider89 extends Slider89DOM {
     }
   }
 
-  initializeCustomProperties(config) {
+  initializeCustomProperties(config: Partial<Properties>) {
     for (let _ in config) {
       const item = _;
 
       if (item[0] === '_') {
-        this.defineDeepProperty(this, item, this.vals);
+        this.defineDeepProperty(this, item as keyof Properties, this.vals);
         this.vals[item] = config[item];
       } else {
         throw new Slider89.InitializationError(
@@ -301,7 +309,7 @@ export default class Slider89 extends Slider89DOM {
     }
   }
 
-  buildSlider(target, replace) {
+  buildSlider(target: HTMLElement, replace: boolean) {
     this.vals.node = this.domBuilder.createSliderNode(this.vals.values.length, this.vals.structure);
 
     if (replace) {
@@ -342,7 +350,7 @@ export default class Slider89 extends Slider89DOM {
     }
   }
 
-  adaptValueToRange(value) {
+  adaptValueToRange(value: Properties['value']) {
     if (this.vals.range[0] < this.vals.range[1]) {
       if (value < this.vals.range[0]) {
         return this.vals.range[0];
@@ -360,7 +368,7 @@ export default class Slider89 extends Slider89DOM {
   }
 
   // ---- Helper functions ----
-  static floatIsEqual(val0, val1) {
+  static floatIsEqual(val0: number, val1: number) {
     return Math.abs(val0 - val1) < 0.00000000001;
   }
 }
