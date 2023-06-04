@@ -1,5 +1,12 @@
 'use strict';
+import type { Properties, PropertiesVals } from 'Slider89Base';
 import Slider89 from './Slider89';
+
+type CustomVariableName = `_${string}`;
+
+type StructureVariables = Partial<{
+  [ Variable in (keyof Properties | CustomVariableName) ]: Record<string, Node[]>;
+}>
 
 /**
  * @typedef {Object} SpecialVariableData
@@ -13,7 +20,7 @@ export default class Slider89StructureParser {
    * Instead of being linked to properties, these can call arbitrary functions.
    * @type { Record<string, SpecialVariableData>  }
    */
-  static specialVariables = {
+  static specialVariables = <const> ({
     tag_node: {
       getter: node => node
     },
@@ -25,7 +32,7 @@ export default class Slider89StructureParser {
       thumbOnly: true,
       getter: (node, slider, baseName) => slider.values[slider.node[baseName].indexOf(node)]
     },
-  };
+  });
   /**
    * Links {@link specialVariables} to potential slider properties they depend on,
    * so that the special variables get updated when the property updates.
@@ -37,7 +44,8 @@ export default class Slider89StructureParser {
 
   // Static initialization blocks don't work with my current workflow
   static regex = (function() {
-    const reg = {
+    // Fuck you
+    const reg: any = {
       attr: {
         name: '[\\w-]+'
       },
@@ -54,9 +62,9 @@ export default class Slider89StructureParser {
       variable: '\\{' + reg.varContent + '\\}|' + reg.varContent,
       attributes: '(' + reg.attr.name + ')=\\[(' + reg.attr.value + ')\\](?:\\s+|$)',
       tag: '<([/:])?' + reg.capName + reg.tagType + reg.content + '(' + reg.attribs + ')\\s*?>\\s*'
-    };
+    } as const;
 
-    const finalExpressions = {};
+    const finalExpressions = {} as { [ p in keyof typeof rgx ]: RegExp } & { variableNoFlag: RegExp };
     // ES5 can't `new RegExp` from another RegExp
     for (let expr in rgx) {
       finalExpressions[expr] = new RegExp(rgx[expr], 'g');
@@ -68,20 +76,20 @@ export default class Slider89StructureParser {
 
 
   // ---- Properties ----
-  structureVars = {};
-  thumbChildren = [];
+  structureVars: StructureVariables = {};
+  thumbChildren: string[] = [];
 
-  vals;
+  vals: PropertiesVals;
 
 
-  constructor(vals) {
+  constructor(vals: PropertiesVals) {
     this.vals = vals;
   }
 
 
   // ---- Structure parser ----
-  parseStructure(structureStr) {
-    const node = {
+  parseStructure(structureStr: string) {
+    const node: Partial<Properties['node']> = {
       slider: document.createElement('div')
     };
 
@@ -95,9 +103,9 @@ export default class Slider89StructureParser {
       }
     }
 
-    const stack = [];
+    const stack: string[] = [];
     let currentIndex = 0;
-    let match;
+    let match: RegExpExecArray;
     // match: [matchedStr, type, name, tag, innerContent, attributes]
     while (match = Slider89StructureParser.regex.tag.exec(structureStr)) {
       if (match.index !== currentIndex) {
@@ -144,10 +152,17 @@ export default class Slider89StructureParser {
       this.closingTagError(stack[0]);
     }
 
-    return node;
+    return node as Properties['node'];
   }
 
-  assembleElement(node, name, nameStack, tag, content, attributes) {
+  assembleElement(
+    node: Partial<Properties['node']>,
+    name: string,
+    nameStack: string[],
+    tag: string,
+    content?: string,
+    attributes?: string
+  ) {
     if (Object.prototype.hasOwnProperty.call(node, name)) {
       throw new Slider89.StructureError(
         'Every element must have a unique name but there are mutiple elements called ‘' + name + '’');
@@ -184,10 +199,10 @@ export default class Slider89StructureParser {
   }
 
   // ---- Structure variables register ----
-  parseVariables(str, targetNode, tagName, tagNameStack) {
+  parseVariables(str: string, targetNode: Node, tagName: string, tagNameStack: string[]) {
     // Memorize & skip already handled variables for the current string
-    const propNameCache = new Array();
-    let match;
+    const propNameCache: string[] = [];
+    let match: RegExpExecArray;
     while (match = Slider89StructureParser.regex.variable.exec(str)) {
       const varName = match[1] || match[2];
       const propName = varName.indexOf('.') !== -1
@@ -202,14 +217,14 @@ export default class Slider89StructureParser {
             "‘" + propName + "’ is not a recognized property and cannot be used as variable. Please check its spelling or initialize it in the constructor");
         }
 
-        this.registerVariable(propName, str, targetNode);
+        this.registerVariable(propName as keyof StructureVariables, str, targetNode);
 
         propNameCache.push(propName);
       }
     }
   }
 
-  registerVariable(propName, str, targetNode) {
+  registerVariable(propName: keyof StructureVariables, str: string, targetNode: Node) {
     if (this.structureVars[propName] == null) {
       this.structureVars[propName] = {}
     }
@@ -221,23 +236,24 @@ export default class Slider89StructureParser {
 
 
   // ---- Error helpers ----
-  closingTagError(tagName) {
+  closingTagError(tagName: string) {
     throw new Slider89.StructureError(
       "Couldn't find a closing tag for the element ‘<" + tagName + ">’ (Should it be a self-closing tag marked with ‘:’?)");
   }
 
 
   // ---- Static helpers ----
-  static getNodeOwner(node) {
+  static getNodeOwner(node: Node): HTMLElement {
+    // @ts-ignore
     return node.ownerElement || node.parentElement;
   }
 
-  static stringHasVariable(str) {
+  static stringHasVariable(str: string): boolean {
     // Need to use a RegExp without /g/ because the internal `lastIndex` mustn't be advanced by a mere test
     return Slider89StructureParser.regex.variableNoFlag.test(str);
   }
 
-  static checkForSpecialVariables(varName, tagName, tagNameStack) {
+  static checkForSpecialVariables(varName: string, tagName: string, tagNameStack: string[]): boolean {
     if (Object.prototype.hasOwnProperty.call(Slider89StructureParser.specialVariables, varName)) {
       const varData = Slider89StructureParser.specialVariables[varName];
       if (varData.thumbOnly && tagName !== 'thumb' && !tagNameStack.includes('thumb')) {
