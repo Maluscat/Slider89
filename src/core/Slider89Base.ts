@@ -74,6 +74,20 @@ type PropertyData = {
 }
 
 export default class Slider89Base extends Slider89Error {
+  // TypeScript does not allow custom properties in classes
+  // because they are busy ignoring all open issues with good suggestions
+  // Thus, NOTE: Expand this (copy-paste) whenever the properties change.
+  range: Properties['range']
+  values: Properties['values']
+  value: Properties['value']
+  precision: Properties['precision']
+  step: Properties['step']
+  structure: Properties['structure']
+  node: Properties['node']
+  orientation: Properties['orientation']
+  classList: Properties['classList']
+  events: Properties['events']
+
   static methodData = <const> ({
     addEvent: {
       args: [
