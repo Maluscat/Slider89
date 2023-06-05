@@ -1,6 +1,14 @@
 'use strict';
 import Slider89Error from './Slider89Error';
 
+// ---- Utility types ----
+// From https://stackoverflow.com/a/60839718
+export type DeepReadonlyObject<T> = T extends object ? {
+  readonly [P in keyof T]: DeepReadonlyObject<T[P]>;
+} : T;
+
+
+// ---- Slider89 types ----
 type DeepPropertyNames = 'range' | 'values';
 
 export type PropertyNode = Partial<Record<string, HTMLElement>> & {
@@ -67,7 +75,7 @@ namespace PropertyDescriptor {
   }
 }
 
-type PropertyData = {
+type PropertyData = DeepReadonlyObject<{
   [ Prop in keyof Properties ]: {
     constructorOnly?: boolean;
     isDeepDefinedArray?: boolean;
@@ -75,7 +83,7 @@ type PropertyData = {
   } | {
     readOnly: true;
   }
-}
+}>
 
 export default class Slider89Base extends Slider89Error {
   // TypeScript does not allow custom properties in classes
@@ -144,7 +152,7 @@ export default class Slider89Base extends Slider89Error {
       ]
     }
   });
-  static propertyData: PropertyData = {
+  static propertyData: PropertyData = <const> ({
     range: {
       isDeepDefinedArray: true,
       descriptor: [
@@ -258,7 +266,7 @@ export default class Slider89Base extends Slider89Error {
         { type: 'false' }
       ]
     }
-  };
+  });
 
   methods;
   properties;
