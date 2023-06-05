@@ -8,7 +8,7 @@ export type DeepReadonlyObject<T> = T extends object ? {
 } : T;
 
 
-// ---- Slider89 types ----
+// ---- Misc types ----
 type CustomPropertyName = `_${string}`;
 
 export type PropertyNode = Partial<Record<string, HTMLElement>> & {
@@ -17,33 +17,37 @@ export type PropertyNode = Partial<Record<string, HTMLElement>> & {
   thumb: HTMLDivElement[];
 };
 
-export interface Properties {
-  range: [ number, number ];
-  values: number[];
-  value: number;
-  precision: number | false;
-  step: number | false;
-  structure: string | false;
-  node: PropertyNode;
-  orientation: 'vertical' | 'horizontal';
-  classList: Record<string, string[]> | false;
-  events: Record<string, Function[]> | false;
-}
-export interface PropertiesVals extends Properties {
-  readonly $: Properties;
-  readonly $intermediateThis: PropertiesDeep;
-  readonly $intermediateVals: PropertiesDeep;
-}
-export type PropertiesCustom = {
-  [ key: CustomPropertyName ]: any
-};
-export type PropertiesAndCustom = Properties & PropertiesCustom;
-export type PropertiesConfig = Omit<PropertiesAndCustom, ReadonlyPropertyNames>;
+// ---- Property types ----
+export namespace Properties {
+  export interface Base {
+    range: [ number, number ];
+    values: number[];
+    value: number;
+    precision: number | false;
+    step: number | false;
+    structure: string | false;
+    node: PropertyNode;
+    orientation: 'vertical' | 'horizontal';
+    classList: Record<string, string[]> | false;
+    events: Record<string, Function[]> | false;
+  }
+  export interface Vals extends Base {
+    readonly $: Base;
+    readonly $intermediateThis: Deep;
+    readonly $intermediateVals: Deep;
+  }
+  export type Custom = {
+    [ key: CustomPropertyName ]: any
+  };
+  export type WithCustom = Base & Custom;
+  export type Config = Omit<WithCustom, ReadonlyPropertyNames>;
 
-type PropertiesDeep = {
-  [ Prop in DeepPropertyNames ]: Properties[Prop]
+  type Deep = {
+    [ Prop in DeepPropertyNames ]: Base[Prop]
+  }
 }
 
+// ---- Property/method data descriptor ----
 namespace PropertyDescriptor {
   interface TypesWithConditions {
     boolean: never;
@@ -82,7 +86,7 @@ namespace PropertyDescriptor {
 }
 
 type PropertyData = DeepReadonlyObject<{
-  [ Prop in keyof Properties ]: {
+  [ Prop in keyof Properties.Base ]: {
     constructorOnly?: boolean;
     isDeepDefinedArray?: boolean;
     descriptor: Array<PropertyDescriptor.self>;
@@ -103,16 +107,16 @@ export default class Slider89Base extends Slider89Error {
   // TypeScript does not allow custom properties in classes
   // because they are busy ignoring all open issues with good suggestions
   // Thus, NOTE: Expand this (copy-paste) whenever the properties change.
-  range: Properties['range']
-  values: Properties['values']
-  value: Properties['value']
-  precision: Properties['precision']
-  step: Properties['step']
-  structure: Properties['structure']
-  node: Properties['node']
-  orientation: Properties['orientation']
-  classList: Properties['classList']
-  events: Properties['events']
+  range: Properties.Base['range']
+  values: Properties.Base['values']
+  value: Properties.Base['value']
+  precision: Properties.Base['precision']
+  step: Properties.Base['step']
+  structure: Properties.Base['structure']
+  node: Properties.Base['node']
+  orientation: Properties.Base['orientation']
+  classList: Properties.Base['classList']
+  events: Properties.Base['events']
 
   static methodData = <const> ({
     addEvent: {
@@ -286,7 +290,7 @@ export default class Slider89Base extends Slider89Error {
   properties;
 
   // @ts-ignore
-  vals: PropertiesVals = {}; // holding every class property
+  vals: Properties.Vals = {}; // holding every class property
   initial = false;
 
   constructor() {

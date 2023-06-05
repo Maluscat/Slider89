@@ -12,7 +12,7 @@ interface ClientXY {
 type StyleDirection = 'Top' | 'Right' | 'Bottom' | 'Left';
 
 type RecomputationNewVals = Partial<{
-  [ Prop in 'value' | 'range' | 'step' ]: Properties[Prop]
+  [ Prop in 'value' | 'range' | 'step' ]: Properties.Base[Prop]
 }>
 
 export default class Slider89DOM extends Slider89Properties {
@@ -124,7 +124,7 @@ export default class Slider89DOM extends Slider89Properties {
   }
 
   computeRatioDistance(thumbIndex: number, newVals?: RecomputationNewVals) {
-    let value: Properties['value'];
+    let value: Properties.Base['value'];
     let ratio: number;
 
     if (!newVals) {
@@ -169,7 +169,7 @@ export default class Slider89DOM extends Slider89Properties {
     this.applyOneRatioDistance(thumbIndex);
   }
 
-  setValuesWithValueChange(thumbIndex: number, value: Properties['value']): boolean {
+  setValuesWithValueChange(thumbIndex: number, value: Properties.Base['value']): boolean {
     const prevVal = this.vals.values[thumbIndex];
     if (!Slider89.floatIsEqual(value, prevVal)) {
       this.vals.values[thumbIndex] = value;

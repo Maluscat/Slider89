@@ -1,9 +1,9 @@
 'use strict';
-import type { Properties, PropertiesVals, PropertiesAndCustom } from 'Slider89Base';
+import type { Properties } from 'Slider89Base';
 import Slider89 from './Slider89';
 
 type StructureVariables = Partial<{
-  [ Variable in keyof PropertiesAndCustom ]: Record<string, Node[]>;
+  [ Variable in keyof Properties.WithCustom ]: Record<string, Node[]>;
 }>
 
 interface SpecialVariableData {
@@ -78,17 +78,17 @@ export default class Slider89StructureParser {
   structureVars: StructureVariables = {};
   thumbChildren: string[] = [];
 
-  vals: PropertiesVals;
+  vals: Properties.Vals;
 
 
-  constructor(vals: PropertiesVals) {
+  constructor(vals: Properties.Vals) {
     this.vals = vals;
   }
 
 
   // ---- Structure parser ----
   parseStructure(structureStr: string) {
-    const node: Partial<Properties['node']> = {
+    const node: Partial<Properties.Base['node']> = {
       slider: document.createElement('div')
     };
 
@@ -151,11 +151,11 @@ export default class Slider89StructureParser {
       this.closingTagError(stack[0]);
     }
 
-    return node as Properties['node'];
+    return node as Properties.Base['node'];
   }
 
   assembleElement(
-    node: Partial<Properties['node']>,
+    node: Partial<Properties.Base['node']>,
     name: string,
     nameStack: string[],
     tag: string,
