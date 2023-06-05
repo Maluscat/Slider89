@@ -2,25 +2,36 @@
 import type { Properties } from 'Slider89Base';
 import Slider89 from './Slider89';
 
-type StructureVariables = Partial<{
-  [ Variable in keyof Properties.WithCustom ]: Record<string, Node[]>;
-}>
 
-interface SpecialVariableData {
-  /** Whether the variable should only be available in <thumb> and its children. */
-  thumbOnly?: boolean;
-  getter: (node: HTMLElement, slider?: Slider89, baseName?: string | false) => any;
+// ---- Special variables ----
+namespace SpecialVariables {
+  interface Data {
+    /** Whether the variable should only be available in <thumb> and its children. */
+    thumbOnly?: boolean;
+    getter: (node: HTMLElement, slider?: Slider89, baseName?: string | false) => any;
+  }
+
+  export type Base = Record<string, Data>;
+  export type Proxy = Partial<Record<keyof StructureVariables, SpecialVariableNames[]>>;
 }
 
-type SpecialVariables = Record<string, SpecialVariableData>;
-type SpecialVariableProxy = Partial<Record<keyof StructureVariables, Array<keyof SpecialVariables>>>;
+
+// ---- Structure variables ----
+type StructureVariableNames = SpecialVariableNames | keyof Properties.WithCustom;
+
+type StructureVariables = Partial<Record<StructureVariableNames, Record<string, Node[]>>>;
+
+
+// ---- Types to keep track of ----
+type SpecialVariableNames = 'tag_node' | 'thumb_index' | 'thumb_value';
+
 
 export default class Slider89StructureParser {
   /**
    * Special variables inside the structure system.
    * Instead of being linked to properties, these can call arbitrary functions.
    */
-  static specialVariables: SpecialVariables = <const> ({
+  static specialVariables: SpecialVariables.Base = <const> ({
     tag_node: {
       getter: node => node
     },
@@ -37,7 +48,7 @@ export default class Slider89StructureParser {
    * Links {@link specialVariables} to potential slider properties they depend on,
    * so that the special variables get updated when the property updates.
    */
-  static specialVariableProxy: SpecialVariableProxy = {
+  static specialVariableProxy: SpecialVariables.Proxy = {
     values: [ 'thumb_index', 'thumb_value' ]
   };
 
