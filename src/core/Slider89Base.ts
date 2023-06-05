@@ -17,13 +17,13 @@ export interface Properties {
   classList: Record<string, string[]> | false;
   events: Record<string, Function[]> | false;
 }
-type PropertiesDeep = {
-  [ prop in DeepPropertyNames ]: Properties[prop]
-}
-type PropertiesVals = Properties & {
+export interface PropertiesVals extends Properties {
   readonly $: Properties;
   readonly $intermediateThis: PropertiesDeep;
   readonly $intermediateVals: PropertiesDeep;
+}
+type PropertiesDeep = {
+  [ prop in DeepPropertyNames ]: Properties[prop]
 }
 
 namespace PropertyDescriptor {
