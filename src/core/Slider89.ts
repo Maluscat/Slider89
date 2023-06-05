@@ -1,5 +1,5 @@
 'use strict';
-import type { Properties } from 'Slider89Base';
+import type { Properties, PropertiesCustom, PropertiesConfig } from 'Slider89Base';
 import LibraryTypeCheck from './LibraryTypeCheck.js';
 import Slider89DOM from './Slider89DOM.js';
 import Slider89DOMBuilder from './Slider89DOMBuilder.js';
@@ -60,7 +60,7 @@ export default class Slider89 extends Slider89DOM {
             'The new range of [' + val + ', ' + val + '] defines the same value for both range start and end');
         }
         if (!this.initial) {
-          const newRange = Array.from(this.vals.range);
+          const newRange = Array.from(this.vals.range) as typeof this.vals.range;
           newRange[key] = val;
           this.applyAllRatioDistances({ range: newRange });
         }
@@ -189,7 +189,7 @@ export default class Slider89 extends Slider89DOM {
 
   // TODO Make separate typ `PropertiesConfig`, excluding readOnly properties
   // (Like `node`)
-  constructor(target: HTMLElement, config?: Partial<Properties> | false, replace = false) {
+  constructor(target: HTMLElement, config?: Partial<PropertiesConfig> | false, replace = false) {
     super();
     this.initial = true;
 
@@ -225,7 +225,7 @@ export default class Slider89 extends Slider89DOM {
       throw new Slider89.InitializationError('The first argument must be a valid DOM node (got ' + LibraryTypeCheck.getType(target) + ')');
     }
   }
-  testInitialConfig(config: Partial<Properties>) {
+  testInitialConfig(config: Partial<PropertiesConfig>) {
     if (typeof config !== 'object' || Array.isArray(config)) {
       throw new Slider89.InitializationError('The optional second argument needs to be a configuration object (got ' + LibraryTypeCheck.getType(config) + ')');
     } else if ('value' in config && 'values' in config) {
@@ -235,7 +235,7 @@ export default class Slider89 extends Slider89DOM {
 
 
   // Initialize properties and methods
-  initializeClassProperties(config: Partial<Properties>) {
+  initializeClassProperties(config: Partial<PropertiesConfig>) {
     // NOTE: This section has no strong type checking because propData is of type any
     // Don't even bother trying to fix this, for your own sake
     for (let _ in this.properties) {
@@ -280,12 +280,12 @@ export default class Slider89 extends Slider89DOM {
     }
   }
 
-  initializeCustomProperties(config: Partial<Properties>) {
+  initializeCustomProperties(config: Partial<PropertiesCustom>) {
     for (let _ in config) {
       const item = _;
 
       if (item[0] === '_') {
-        this.defineDeepProperty(this, item as keyof Properties, this.vals);
+        this.defineDeepProperty(this, item as keyof PropertiesCustom, this.vals);
         this.vals[item] = config[item];
       } else {
         throw new Slider89.InitializationError(

@@ -1,11 +1,9 @@
 'use strict';
-import type { Properties, PropertiesVals } from 'Slider89Base';
+import type { Properties, PropertiesVals, PropertiesAndCustom } from 'Slider89Base';
 import Slider89 from './Slider89';
 
-type CustomVariableName = `_${string}`;
-
 type StructureVariables = Partial<{
-  [ Variable in (keyof Properties | CustomVariableName) ]: Record<string, Node[]>;
+  [ Variable in keyof PropertiesAndCustom ]: Record<string, Node[]>;
 }>
 
 interface SpecialVariableData {

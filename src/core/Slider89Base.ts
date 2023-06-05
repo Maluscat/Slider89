@@ -9,7 +9,7 @@ export type DeepReadonlyObject<T> = T extends object ? {
 
 
 // ---- Slider89 types ----
-type DeepPropertyNames = 'range' | 'values';
+type CustomPropertyName = `_${string}`;
 
 export type PropertyNode = Partial<Record<string, HTMLElement>> & {
   slider: HTMLDivElement;
@@ -34,8 +34,14 @@ export interface PropertiesVals extends Properties {
   readonly $intermediateThis: PropertiesDeep;
   readonly $intermediateVals: PropertiesDeep;
 }
+export type PropertiesCustom = {
+  [ key: CustomPropertyName ]: any
+};
+export type PropertiesAndCustom = Properties & PropertiesCustom;
+export type PropertiesConfig = Omit<PropertiesAndCustom, ReadonlyPropertyNames>;
+
 type PropertiesDeep = {
-  [ prop in DeepPropertyNames ]: Properties[prop]
+  [ Prop in DeepPropertyNames ]: Properties[Prop]
 }
 
 namespace PropertyDescriptor {
@@ -84,6 +90,14 @@ type PropertyData = DeepReadonlyObject<{
     readOnly: true;
   }
 }>
+
+
+// ---- Types to keep track of ----
+// This information cannot be extracted from the readonly `propertyData` below.
+// This, NOTE: Keep track of this when modifying properties.
+type DeepPropertyNames = 'range' | 'values';
+type ReadonlyPropertyNames = 'node';
+
 
 export default class Slider89Base extends Slider89Error {
   // TypeScript does not allow custom properties in classes
