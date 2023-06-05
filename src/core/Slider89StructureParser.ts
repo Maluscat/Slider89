@@ -8,19 +8,21 @@ type StructureVariables = Partial<{
   [ Variable in (keyof Properties | CustomVariableName) ]: Record<string, Node[]>;
 }>
 
-/**
- * @typedef {Object} SpecialVariableData
- * @prop { (node: HTMLElement, slider?: Slider89, baseName?: string | false) => any } getter
- * @prop { boolean } [thumbOnly] Whether the variable should only be available in <thumb> and its children.
- */
+interface SpecialVariableData {
+  /** Whether the variable should only be available in <thumb> and its children. */
+  thumbOnly?: boolean;
+  getter: (node: HTMLElement, slider?: Slider89, baseName?: string | false) => any;
+}
+
+type SpecialVariables = Record<string, SpecialVariableData>;
+type SpecialVariableProxy = Partial<Record<keyof StructureVariables, Array<keyof SpecialVariables>>>;
 
 export default class Slider89StructureParser {
   /**
    * Special variables inside the structure system.
    * Instead of being linked to properties, these can call arbitrary functions.
-   * @type { Record<string, SpecialVariableData>  }
    */
-  static specialVariables = <const> ({
+  static specialVariables: SpecialVariables = <const> ({
     tag_node: {
       getter: node => node
     },
@@ -36,9 +38,8 @@ export default class Slider89StructureParser {
   /**
    * Links {@link specialVariables} to potential slider properties they depend on,
    * so that the special variables get updated when the property updates.
-   * @type { Record<string, string[]> }
    */
-  static specialVariableProxy = {
+  static specialVariableProxy: SpecialVariableProxy = {
     values: [ 'thumb_index', 'thumb_value' ]
   };
 
@@ -214,7 +215,8 @@ export default class Slider89StructureParser {
             && !Slider89StructureParser.checkForSpecialVariables(propName, tagName, tagNameStack)
         ) {
           throw new Slider89.StructureError(
-            "‘" + propName + "’ is not a recognized property and cannot be used as variable. Please check its spelling or initialize it in the constructor");
+            "‘" + propName + "’ is not a recognized property and cannot be used as variable."
+            + "Please check its spelling or initialize it in the constructor");
         }
 
         this.registerVariable(propName as keyof StructureVariables, str, targetNode);
