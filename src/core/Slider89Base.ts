@@ -3,7 +3,11 @@ import Slider89Error from './Slider89Error';
 
 type DeepPropertyNames = 'range' | 'values';
 
-export type PropertyNode = Record<string, HTMLElement> & { thumb?: HTMLElement[] };
+export type PropertyNode = Partial<Record<string, HTMLElement>> & {
+  slider: HTMLDivElement;
+  track: HTMLDivElement;
+  thumb: HTMLDivElement[];
+};
 
 export interface Properties {
   range: [ number, number ];
