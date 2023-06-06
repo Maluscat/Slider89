@@ -44,14 +44,16 @@ export namespace Properties {
 }
 
 
+export type PropertyInfo<Prop> = Prop extends ReadonlyPropertyNames
+  ? { readOnly: true; }
+  : {
+      constructorOnly?: boolean;
+      isDeepDefinedArray?: boolean;
+      descriptor: Descriptor.self;
+    }
+
 type PropertyData = DeepReadonlyObject<{
-  [ Prop in keyof Properties.Base ]: {
-    constructorOnly?: boolean;
-    isDeepDefinedArray?: boolean;
-    descriptor: PropertyDescriptor.self;
-  } | {
-    readOnly: true;
-  }
+  [ Prop in keyof Properties.Base ]: PropertyInfo<Prop>
 }>
 
 
