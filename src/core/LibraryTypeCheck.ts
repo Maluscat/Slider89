@@ -1,4 +1,12 @@
 'use strict';
+// ---- Utility types ----
+// From https://stackoverflow.com/a/60839718
+export type DeepReadonlyObject<T> = T extends object ? {
+  readonly [P in keyof T]: DeepReadonlyObject<T[P]>;
+} : T;
+
+
+// ---- Type: Descriptor ----
 export namespace Descriptor {
   interface TypesWithConditions {
     boolean: never;
@@ -40,7 +48,7 @@ export namespace Descriptor {
     }>;
   }
 
-  export type self = Array<Base>;
+  export type self = DeepReadonlyObject<Array<Base>>;
 }
 
 

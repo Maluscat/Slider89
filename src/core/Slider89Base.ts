@@ -1,13 +1,6 @@
 'use strict';
-import { Descriptor } from 'LibraryTypeCheck';
+import { DeepReadonlyObject, Descriptor } from 'LibraryTypeCheck';
 import Slider89Error from './Slider89Error';
-
-// ---- Utility types ----
-// From https://stackoverflow.com/a/60839718
-export type DeepReadonlyObject<T> = T extends object ? {
-  readonly [P in keyof T]: DeepReadonlyObject<T[P]>;
-} : T;
-
 
 // ---- Misc types ----
 type CustomPropertyName = `_${string}`;
