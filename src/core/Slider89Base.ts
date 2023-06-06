@@ -1,5 +1,5 @@
 'use strict';
-import { PropertyDescriptor } from 'LibraryTypeCheck';
+import { Descriptor } from 'LibraryTypeCheck';
 import Slider89Error from './Slider89Error';
 
 // ---- Utility types ----

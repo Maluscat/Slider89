@@ -1,6 +1,5 @@
 'use strict';
-// ---- Type: Property/method data descriptor ----
-export namespace PropertyDescriptor {
+export namespace Descriptor {
   interface TypesWithConditions {
     boolean: never;
     true: never;
@@ -11,7 +10,7 @@ export namespace PropertyDescriptor {
     number: 'nonnegative' | 'positive' | 'integer';
     string: 'filled' | 'wordChar' | 'keywords';
   }
-  interface Conditions {
+  export interface Conditions {
     nonnegative: boolean;
     positive: boolean;
     integer: boolean;
@@ -21,26 +20,30 @@ export namespace PropertyDescriptor {
     wordChar: boolean
   }
 
-  type Base = {
-    type: keyof TypesWithConditions;
-    conditions?: Partial<{
-      [ Cond in TypesWithConditions[Base['type']] ]: Conditions[Cond];
-    }>;
-    shape?: string;
-  } | {
+  export type ArrayType = {
     type: 'array';
     descriptor: self;
-  } | {
+  }
+  export type ObjectType = {
     type: 'object';
     descriptor: self;
     keyName?: string;
+  }
+  type DefaultType = {
+    type: keyof Omit<TypesWithConditions, (ArrayType | ObjectType)['type']>;
+  }
+
+  type Base = (ObjectType | ArrayType | DefaultType) & {
+    shape?: string;
+    conditions?: Partial<{
+      [ Cond in TypesWithConditions[Base['type']] ]: Conditions[Cond];
+    }>;
   }
 
   export type self = Array<Base>;
 }
 
 
-// ---- Class ----
 export default class LibraryTypeCheck {
   static getType(value) {
     if (Array.isArray(value))
@@ -53,8 +56,9 @@ export default class LibraryTypeCheck {
       return typeof value;
   }
 
-  static checkTypes(val, descriptor) {
-    let msg;
+  static checkTypes(val: any, descriptor: Descriptor.self): string | false {
+    let msg: string | false;
+
     for (let i = 0; i < descriptor.length; i++) {
       const typeData = descriptor[i];
       const type = typeData.type;
@@ -85,10 +89,11 @@ export default class LibraryTypeCheck {
         else return false;
       }
     }
+
     return msg || LibraryTypeCheck.getType(val);
   }
 
-  static buildConditionTypeMessage(conditions, val) {
+  static buildConditionTypeMessage(conditions: Partial<Descriptor.Conditions>, val: any) {
     if (!conditions) return;
 
     if (conditions.nonnegative && val < 0) {
@@ -115,7 +120,7 @@ export default class LibraryTypeCheck {
   }
 
   // Compute an automated error message regarding the property's types and conditions
-  static buildDescriptorTypeMessage(descriptor) {
+  static buildDescriptorTypeMessage(descriptor: Descriptor.self) {
     let msg = '';
     for (let i = 0; i < descriptor.length; i++) {
       const typeData = descriptor[i];
@@ -185,7 +190,7 @@ export default class LibraryTypeCheck {
   }
 
   // ---- Helper functions ----
-  static toTitleCase(str) {
+  static toTitleCase(str: string): string {
     return str.slice(0, 1).toUpperCase() + str.slice(1);
   }
 }
