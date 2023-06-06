@@ -181,7 +181,7 @@ export default class Slider89 extends Slider89DOM {
         if (errTypes.length > 0) {
           throw new Slider89.PropertyError(this, 'events',
             'The given object contains items which are no valid event types:' + Slider89.arrayToListString(errTypes)
-            + 'Available event types are:' + Slider89.arrayToListString(Slider89.eventTypes));
+            + 'Available event types are:' + Slider89.arrayToListString(Slider89.availableEventTypes));
         }
       }
     }

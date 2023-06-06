@@ -3,12 +3,29 @@ import Slider89 from './Slider89';
 import Slider89Base from './Slider89Base';
 
 export default class Slider89Events extends Slider89Base {
-  static eventTypes = [
+  static #eventTypes = [
     'start',
     'move',
     'end',
-    'change:$property'
   ];
+  static #eventTypesSpecial = {
+    'change:$property': {
+      prefix: 'change:',
+      fn: (slider, customProp, eventType) => {
+        if (!Object.prototype.hasOwnProperty.call(slider.vals, customProp)) {
+          const msg =
+            "‘" + eventType + "’ refers to ‘" + customProp + "’, which isn't a recognized property. "
+            + "Check its spelling and be aware that custom properties need to be initialized";
+          throw new Slider89.Error(msg, 'addEvent');
+        }
+      }
+    }
+  }
+
+  // Statically getting the name of all event types. This is just for humans.
+  static availableEventTypes = (() => {
+    return this.#eventTypes.concat(Object.keys(this.#eventTypesSpecial));
+  })();
 
 
   eventList = {}; // Storing event data (most notably the identifier) for event removability
@@ -18,9 +35,10 @@ export default class Slider89Events extends Slider89Base {
   // ---- Class methods ----
   addEvent(type, fn, name) {
     if (!this.checkEventType(type)) {
-      throw new Slider89.Error(
-        'The specified event type ‘' + type + '’ is not valid. Available types are:' + Slider89.arrayToListString(Slider89Events.eventTypes),
-        'addEvent');
+      const msg =
+        'The specified event type ‘' + type + '’ is not valid. Available types are:'
+        + Slider89.arrayToListString(Slider89Events.availableEventTypes);
+      throw new Slider89.Error(msg, 'addEvent');
     }
 
     if (!Array.isArray(this.vals.events[type])) this.vals.events[type] = new Array();
@@ -71,16 +89,13 @@ export default class Slider89Events extends Slider89Base {
   }
 
   checkEventType(type) {
-    if (type.indexOf('change:') === 0) {
-      // Edge case for 'change:$property'
-      const customProp = type.slice('change:'.length);
-      if (!Object.prototype.hasOwnProperty.call(this.vals, customProp)) {
-        const msg =
-          "‘" + type + "’ refers to ‘" + customProp + "’, which isn't a recognized property. "
-          + "Check its spelling and be aware that custom properties need to be initialized";
-        throw new Slider89.Error(msg, 'addEvent');
+    for (const eventTypeData of Object.values(Slider89Events.#eventTypesSpecial)) {
+      if (type.startsWith(eventTypeData.prefix)) {
+        const suffix = type.slice(eventTypeData.prefix.length);
+        eventTypeData.fn(this, suffix, type);
+        return true;
       }
-    } else if (Slider89Events.eventTypes.indexOf(type) === -1) return false;
-    return true;
+    }
+    return Slider89Events.#eventTypes.includes(type);
   }
 }
