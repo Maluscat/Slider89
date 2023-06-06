@@ -38,11 +38,12 @@ export namespace Properties {
     readonly $intermediateThis: Deep;
     readonly $intermediateVals: Deep;
   }
-  export type Custom = {
-    [ key: CustomPropertyName ]: any
-  };
+
+  export type Custom = Record<CustomPropertyName, any>;
   export type WithCustom = Base & Custom;
   export type Config = Omit<WithCustom, ReadonlyPropertyNames>;
+
+  export type Writable = Omit<Base, ReadonlyPropertyNames>;
 
   type Deep = {
     [ Prop in DeepPropertyNames ]: Base[Prop]

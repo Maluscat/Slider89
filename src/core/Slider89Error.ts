@@ -1,12 +1,14 @@
 'use strict';
+import { Descriptor } from 'LibraryTypeCheck';
+import { Properties, PropertyInfo } from 'Slider89Base';
 import LibraryTypeCheck from './LibraryTypeCheck';
 import Slider89 from './Slider89';
 
 export default class Slider89Error {
-  static COUNTS = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth'];
+  static COUNTS = <const> ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth'];
 
   static Error = class extends Error {
-    constructor(msg, target, abort = false) {
+    constructor(msg: string, target?: string, abort = false) {
       if (target) {
         msg = '@ ' + target + ': ' + msg;
       }
@@ -24,14 +26,14 @@ export default class Slider89Error {
 
   // ---- Constructor error ----
   static InitializationError = class extends Slider89Error.Error {
-    constructor(msg) {
+    constructor(msg: string) {
       super(msg, 'constructor', true);
     }
   }
 
   // ---- Property errors ----
   static PropertyError = class extends Slider89Error.Error {
-    constructor(slider, property, msg) {
+    constructor(slider: Slider89, property: string, msg: string) {
       let prevVal = slider[property];
       if (prevVal !== undefined) {
         if (Array.isArray(prevVal)) {
@@ -44,7 +46,12 @@ export default class Slider89Error {
     }
   }
   static PropertyTypeError = class extends Slider89Error.PropertyError {
-    constructor(slider, propertyName, propertyInfo, typeMsg) {
+    constructor(
+      slider: Slider89,
+      propertyName: keyof Properties.Writable,
+      propertyInfo: PropertyInfo<typeof propertyName>,
+      typeMsg: string
+    ) {
       let msg =
         'Type mismatch.'
         + Slider89.getTypeErrorMessage(propertyInfo.descriptor, typeMsg);
@@ -55,7 +62,7 @@ export default class Slider89Error {
 
   // ---- Method errors ----
   static MethodArgTypeError = class extends Slider89Error.Error {
-    constructor(methodName, index, typeMsg) {
+    constructor(methodName: string, index: number, typeMsg: string) {
       const argInfo = Slider89.getMethodArgInfo(methodName, index);
       const msg =
         'Type mismatch on the ' + Slider89Error.getMethodArgMessage(argInfo, index) + '.'
@@ -65,7 +72,7 @@ export default class Slider89Error {
     }
   }
   static MethodArgOmitError = class extends Slider89Error.Error {
-    constructor(methodName, index) {
+    constructor(methodName: string, index: number) {
       const argInfo = Slider89.getMethodArgInfo(methodName, index);
       const msg =
         'The ' + Slider89Error.getMethodArgMessage(argInfo, index)
@@ -78,12 +85,12 @@ export default class Slider89Error {
 
   // ---- Structure errors ----
   static StructureError = class extends Slider89Error.Error {
-    constructor(msg) {
+    constructor(msg: string) {
       super(msg, 'structure', true);
     }
   }
   static StructureParseError = class extends Slider89Error.StructureError {
-    constructor(beforeFailure, pointOfFailure) {
+    constructor(beforeFailure: string, pointOfFailure: string) {
       const msg =
         "Something has been declared wrongly and couldn't be parsed. Point of failure "
         + "(before " + beforeFailure + "):\n\n"
@@ -93,12 +100,12 @@ export default class Slider89Error {
   }
 
   // ---- Helper functions ----
-  static getTypeErrorMessage(descriptor, typeMsg) {
+  static getTypeErrorMessage(descriptor: Descriptor.self, typeMsg: string) {
     return ' Expected ' + LibraryTypeCheck.buildDescriptorTypeMessage(descriptor) + ','
          + ' got ' + typeMsg;
   }
 
-  static getMethodArgMessage(argInfo, index) {
+  static getMethodArgMessage(argInfo, index: number) {
     let msg = '';
     if (argInfo.optional) {
       msg += 'optional ';
@@ -107,11 +114,11 @@ export default class Slider89Error {
     return msg;
   }
 
-  static getMethodArgInfo(methodName, index) {
+  static getMethodArgInfo(methodName: string, index: number) {
     return Slider89.methodData[methodName].args[index];
   }
 
-  static arrayToListString(arr) {
+  static arrayToListString(arr: Array<any>) {
     return '\n - "' + arr.join('"\n - "') + '"\n';
   }
 }
