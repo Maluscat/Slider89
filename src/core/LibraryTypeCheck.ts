@@ -1,4 +1,46 @@
 'use strict';
+// ---- Type: Property/method data descriptor ----
+export namespace PropertyDescriptor {
+  interface TypesWithConditions {
+    boolean: never;
+    true: never;
+    false: never;
+    object: never;
+    function: never;
+    array: 'length';
+    number: 'nonnegative' | 'positive' | 'integer';
+    string: 'filled' | 'wordChar' | 'keywords';
+  }
+  interface Conditions {
+    nonnegative: boolean;
+    positive: boolean;
+    integer: boolean;
+    length: number;
+    keywords: string[];
+    filled: boolean;
+    wordChar: boolean
+  }
+
+  type Base = {
+    type: keyof TypesWithConditions;
+    conditions?: Partial<{
+      [ Cond in TypesWithConditions[Base['type']] ]: Conditions[Cond];
+    }>;
+    shape?: string;
+  } | {
+    type: 'array';
+    descriptor: self;
+  } | {
+    type: 'object';
+    descriptor: self;
+    keyName?: string;
+  }
+
+  export type self = Array<Base>;
+}
+
+
+// ---- Class ----
 export default class LibraryTypeCheck {
   static getType(value) {
     if (Array.isArray(value))

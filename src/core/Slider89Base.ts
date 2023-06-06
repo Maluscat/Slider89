@@ -1,4 +1,5 @@
 'use strict';
+import { PropertyDescriptor } from 'LibraryTypeCheck';
 import Slider89Error from './Slider89Error';
 
 // ---- Utility types ----
@@ -47,49 +48,12 @@ export namespace Properties {
   }
 }
 
-// ---- Property/method data descriptor ----
-namespace PropertyDescriptor {
-  interface TypesWithConditions {
-    boolean: never;
-    true: never;
-    false: never;
-    object: never;
-    function: never;
-    array: 'length';
-    number: 'nonnegative' | 'positive' | 'integer';
-    string: 'filled' | 'wordChar' | 'keywords';
-  }
-  interface Conditions {
-    nonnegative: boolean;
-    positive: boolean;
-    integer: boolean;
-    length: number;
-    keywords: string[];
-    filled: boolean;
-    wordChar: boolean
-  }
-
-  export type self = {
-    type: keyof TypesWithConditions;
-    conditions?: Partial<{
-      [ Cond in TypesWithConditions[self['type']] ]: Conditions[Cond];
-    }>;
-    shape?: string;
-  } | {
-    type: 'array';
-    descriptor: Array<self>;
-  } | {
-    type: 'object';
-    descriptor: Array<self>;
-    keyName?: string;
-  }
-}
 
 type PropertyData = DeepReadonlyObject<{
   [ Prop in keyof Properties.Base ]: {
     constructorOnly?: boolean;
     isDeepDefinedArray?: boolean;
-    descriptor: Array<PropertyDescriptor.self>;
+    descriptor: PropertyDescriptor.self;
   } | {
     readOnly: true;
   }
