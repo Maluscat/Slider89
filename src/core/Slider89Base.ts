@@ -12,7 +12,8 @@ export type DeepReadonlyObject<T> = T extends object ? {
 // ---- Misc types ----
 type CustomPropertyName = `_${string}`;
 
-export type PropertyNode = Partial<Record<string, HTMLElement>> & {
+export type PropertyNode = {
+  [ key: string ]: HTMLElement | HTMLElement[];
   slider: HTMLDivElement;
   track: HTMLDivElement;
   thumb: HTMLDivElement[];
