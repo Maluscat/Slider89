@@ -1,14 +1,47 @@
 'use strict';
+import type { Properties } from 'Slider89Base';
 import Slider89 from './Slider89';
 import Slider89Base from './Slider89Base';
 
+namespace EventType {
+  type NamesBasic = typeof Slider89Events.eventTypes[number];
+  type NamesSpecial = keyof typeof Slider89Events.eventTypesSpecial;
+
+  export type HumanList = Array<NamesBasic | NamesSpecial>;
+  export interface Special {
+    [ Key: string ]: {
+      prefix: string,
+      fn: (slider: Slider89, suffix: string, eventType: string) => void;
+    }
+  }
+
+  // ---- Types to keep track of ----
+  export type Base = NamesBasic | `change:${keyof Properties.WithCustom}`;
+}
+
+
+namespace EventData {
+  export type Fn = (this: Slider89, ...args: any[]) => any;
+  export type List = Record<EventListenerIdentifier, Base[]>;
+
+  export interface Base {
+    type: EventType.Base,
+    fn: Fn
+  }
+}
+
+type EventListenerIdentifier = number | string;
+
+
 export default class Slider89Events extends Slider89Base {
-  static #eventTypes = [
+  // ---- Constant statics ----
+  static eventTypes = [
     'start',
     'move',
     'end',
-  ];
-  static #eventTypesSpecial = {
+  ] as const;
+
+  static eventTypesSpecial = ({
     'change:$property': {
       prefix: 'change:',
       fn: (slider, customProp, eventType) => {
@@ -20,20 +53,23 @@ export default class Slider89Events extends Slider89Base {
         }
       }
     }
-  }
+  }) as const satisfies EventType.Special;
 
   // Statically getting the name of all event types. This is just for humans.
   static availableEventTypes = (() => {
-    return this.#eventTypes.concat(Object.keys(this.#eventTypesSpecial));
+    // @ts-ignore
+    return this.eventTypes.concat(Object.keys(this.eventTypesSpecial)) as EventType.HumanList;
   })();
 
 
-  eventList = {}; // Storing event data (most notably the identifier) for event removability
+  // ---- Properties ----
+  // Storing event data for removability
+  eventList: EventData.List = {};
   eventID = 0;
 
 
-  // ---- Class methods ----
-  addEvent(type, fn, name) {
+  // ---- Methods ----
+  addEvent(type: EventType.Base, fn: EventData.Fn, name?: string): EventListenerIdentifier {
     if (!this.checkEventType(type)) {
       const msg =
         'The specified event type ‘' + type + '’ is not valid. Available types are:'
@@ -44,19 +80,19 @@ export default class Slider89Events extends Slider89Base {
     if (!Array.isArray(this.vals.events[type])) this.vals.events[type] = new Array();
     this.vals.events[type].push(fn);
     const key = name || this.eventID;
-    const obj = {
+    const data = {
       type: type,
       fn: fn
     };
     if (name) {
       if (!Array.isArray(this.eventList[key])) this.eventList[key] = new Array();
-      this.eventList[key].push(obj);
+      this.eventList[key].push(data);
     } else {
-      this.eventList[key] = obj;
+      this.eventList[key] = data;
     }
     return name || this.eventID++;
   }
-  removeEvent(key) {
+  removeEvent(key: EventListenerIdentifier): false | EventData.Fn[] {
     const eventInfo = this.eventList[key];
     if (!eventInfo) return false;
     delete this.eventList[key];
@@ -67,7 +103,7 @@ export default class Slider89Events extends Slider89Base {
 
 
   // ---- Helper functions ----
-  handleRemoveEvent(deleteCollection, eventInfo) {
+  handleRemoveEvent(deleteCollection: EventData.Fn[], eventInfo: EventData.Base) {
     const typeEvents = this.vals.events[eventInfo.type];
     const deleted = typeEvents.splice(typeEvents.indexOf(eventInfo.fn), 1)[0];
     if (typeEvents.length === 0) delete this.vals.events[eventInfo.type];
@@ -75,8 +111,7 @@ export default class Slider89Events extends Slider89Base {
     return deleteCollection;
   }
 
-  invokeEvent(types) {
-    const args = Array.from(arguments);
+  invokeEvent(types: string[], ...args: any[]) {
     args[0] = this;
     for (let i = 0; i < types.length; i++) {
       const functions = this.vals.events[types[i]];
@@ -88,14 +123,15 @@ export default class Slider89Events extends Slider89Base {
     }
   }
 
-  checkEventType(type) {
-    for (const eventTypeData of Object.values(Slider89Events.#eventTypesSpecial)) {
+  checkEventType(type: EventType.Base) {
+    for (const eventTypeData of Object.values(Slider89Events.eventTypesSpecial)) {
       if (type.startsWith(eventTypeData.prefix)) {
         const suffix = type.slice(eventTypeData.prefix.length);
-        eventTypeData.fn(this, suffix, type);
+        eventTypeData.fn(this as unknown as Slider89, suffix, type);
         return true;
       }
     }
-    return Slider89Events.#eventTypes.includes(type);
+    // @ts-ignore
+    return Slider89Events.eventTypes.includes(type);
   }
 }
