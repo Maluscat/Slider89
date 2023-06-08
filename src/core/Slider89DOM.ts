@@ -46,11 +46,11 @@ export default class Slider89DOM extends Slider89Properties {
 
 
   // ---- DOM getters ----
-  getTrackPadding(direction): number {
-    return parseFloat(this.trackStyle['padding' + direction]);
+  getTrackPadding(direction: StyleDirection): number {
+    return parseFloat(this.trackStyle.getPropertyValue('padding' + direction));
   }
-  getTrackOffset(direction): number {
-    return parseFloat(this.trackStyle['border' + direction + 'Width'])
+  getTrackOffset(direction: StyleDirection): number {
+    return parseFloat(this.trackStyle.getPropertyValue('border' + direction + 'Width'))
       + this.getTrackPadding(direction);
   }
 
@@ -131,9 +131,9 @@ export default class Slider89DOM extends Slider89Properties {
       newVals = this.vals;
       value = this.vals.values[thumbIndex];
     } else {
-      const props = ['range', 'step'];
-      for (let i in props) {
-        if (newVals[props[i]] == null) newVals[props[i]] = this.vals[props[i]];
+      const props = ['range', 'step'] as const;
+      for (let prop of props) {
+        if (newVals[prop] == null) newVals[prop] = this.vals[prop];
       }
       if (newVals.value != null) {
         value = newVals.value;
