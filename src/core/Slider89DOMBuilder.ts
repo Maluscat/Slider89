@@ -1,30 +1,40 @@
 'use strict';
+// @ts-ignore (Webpack import)
 import defaultStylesString from '../css/default-styles.css';
+
+import type { Properties, PropertyNode, PropertyNodeBaseElements } from 'Slider89Base';
+import type { PropertyNodeWithoutArray, VariableNames } from 'Slider89StructureParser';
 import Slider89 from './Slider89';
 import Slider89StructureParser from './Slider89StructureParser';
+
+type VariableThumbStrings = Partial<Record<VariableNames, string[]>>
 
 export default class Slider89DOMBuilder extends Slider89StructureParser {
   static hasInjectedStylesheet = false;
 
-  thumbBase; // Clonable thumb node
-  thumbParent;
+  /** A basic thumb node used for cloning. */
+  thumbBase: HTMLDivElement;
+  thumbParent: HTMLElement;
 
-  baseElements = {};
+  baseElements: Record<string, HTMLElement> = {};
 
-  structureVarThumbStrings = {};
+  /**
+   * Keeps track of structure variables and their respective variable strings
+   * which are used in the thumb and its descendants.
+   */
+  structureVarThumbStrings: VariableThumbStrings = {};
 
-  /** @type Record<string, Function> */
-  thumbEvents = {};
+  thumbEvents: Record<string, EventListenerOrEventListenerObject> = {};
 
 
-  constructor(vals, thumbEvents) {
+  constructor(vals: Properties.Vals, thumbEvents: Record<string, EventListenerOrEventListenerObject>) {
     super(vals);
     this.thumbEvents = thumbEvents;
   }
 
 
   // ---- Element builder ----
-  createSliderNode(thumbCount, structureStr) {
+  createSliderNode(thumbCount: number, structureStr: Properties.Base['structure']): PropertyNode {
     return structureStr === false
       ? this.createSliderManually(thumbCount)
       : this.createSliderFromStructure(thumbCount, structureStr);
@@ -32,11 +42,12 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
 
   // In case no custom structure is defined, manually build the node to ensure best performance (parseStructure takes a while)
-  createSliderManually(thumbCount) {
-    const node = {
+  createSliderManually(thumbCount: number) {
+    // @ts-ignore
+    const node: PropertyNodeBaseElements = {
       slider: document.createElement('div'),
       track: document.createElement('div'),
-      thumb: new Array(thumbCount)
+      thumb: new Array<HTMLDivElement>(thumbCount)
     };
 
     this.thumbBase = document.createElement('div');
@@ -53,30 +64,30 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
         node[element].classList.add('sl89-' + element);
       }
     }
-    return node;
+    return node as PropertyNode;
   }
 
-  createSliderFromStructure(thumbCount, structureStr) {
+  createSliderFromStructure(thumbCount: number, structureStr: string) {
     const node = this.parseStructure(structureStr);
     this.parsePostProcess(node, thumbCount);
-    return node;
+    return node as unknown as PropertyNode;
   }
 
-  parsePostProcess(node, thumbCount) {
+  parsePostProcess(node: PropertyNodeWithoutArray, thumbCount: number) {
     // NOTE: thumb and track can be defined independently
     // I.e. track gets the class `sl89-track`, but this.thumbParent can be a different node
     if (!node.thumb) {
-      this.thumbBase = this.assembleElement(node, 'thumb', 'div');
+      this.thumbBase = this.assembleElement(node, 'thumb', [], 'div');
     } else {
       this.thumbBase = node.thumb;
       if (node.track) {
-        this.thumbParent = node.thumb.parentNode;
+        this.thumbParent = node.thumb.parentNode as HTMLElement;
       }
       // baseElements is only effective if a structure thumb has been defined
       this.baseElements.thumb = this.thumbBase;
     }
     if (!node.track) {
-      node.track = this.assembleElement(node, 'track', 'div');
+      node.track = this.assembleElement(node, 'track', [], 'div');
       if (node.thumb) {
         node.thumb.parentNode.appendChild(node.track);
       } else {
@@ -94,23 +105,25 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
     node.track.classList.add('sl89-track');
 
+    // NOTE: From here on, `node` is of type `PropertyNode`
+
     // Push thumb & descendants into node arrays
-    node.thumb = new Array();
+    (node as unknown as PropertyNode).thumb = [];
     for (const nodeName of this.thumbChildren) {
       this.baseElements[nodeName] = node[nodeName];
-      node[nodeName] = new Array();
+      (node as unknown as PropertyNode)[nodeName] = [];
     }
 
     this.findStructureVarStringsInThumb(this.thumbBase);
 
     for (let i = 0; i < thumbCount; i++) {
-      this.addThumbToNode(node);
+      this.addThumbToNode((node as unknown as PropertyNode));
     }
   }
 
-  findStructureVarStringsInThumb(thumbBase) {
+  findStructureVarStringsInThumb(thumbBase: typeof this.thumbBase) {
     for (const [ propName, stringList ] of Object.entries(this.structureVars)) {
-      let thumbStrings = [];
+      let thumbStrings: string[] = [];
       for (const [ str, nodeList ] of Object.entries(stringList)) {
         for (const node of nodeList) {
           if (this.nodeHasBaseElementOwner(node)) {
@@ -127,33 +140,33 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
 
   // ---- Thumb helpers ----
-  addThumbToNode(node) {
+  addThumbToNode(node: PropertyNode) {
     const newThumb = this.createNewThumb();
     node.thumb.push(newThumb);
 
     Slider89DOMBuilder.findNodeChildren(newThumb)
       .forEach((childNode, j) => {
         const childName = this.thumbChildren[j];
-        node[childName].push(childNode);
+        (node[childName] as HTMLElement[]).push(childNode);
       });
   }
-  removeThumbFromNode(node) {
+  removeThumbFromNode(node: PropertyNode) {
     for (const nodeName of this.thumbChildren) {
-      node[nodeName].pop();
+      (node[nodeName] as HTMLElement[]).pop();
     }
     return node.thumb.pop();
   }
 
 
   // ---- Misc functions ----
-  addAttributesFromTarget(node, targetNode) {
+  addAttributesFromTarget(node: PropertyNode, targetNode: HTMLElement) {
     const attributes = targetNode.attributes;
     for (let i = 0; i < attributes.length; i++) {
       node.slider.setAttribute(attributes[i].name, attributes[i].value);
     }
   }
 
-  addClasses(node, classList, isVertical) {
+  addClasses(node: PropertyNode, classList: Properties.Base['classList'], isVertical: boolean) {
     node.slider.classList.add('slider89');
     if (isVertical) {
       node.slider.classList.add('vertical');
@@ -164,8 +177,8 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
   }
 
   // Add the specified classes and collecting all nonexistent nodes in `errNodes`
-  addClassesFromClassList(node, classList) {
-    const errNodes = new Array();
+  addClassesFromClassList(node: PropertyNode, classList: Exclude<Properties.Base['classList'], false>) {
+    const errNodes: string[] = [];
 
     for (let nodeName in classList) {
       const classArr = classList[nodeName];
@@ -194,9 +207,9 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
   // ---- Helper functions ----
   createNewThumb() {
-    const newThumb = this.thumbBase.cloneNode(true);
+    const newThumb = this.thumbBase.cloneNode(true) as typeof this.thumbBase;
     newThumb.classList.add('sl89-thumb');
-    if (newThumb.tabindex == null) {
+    if (newThumb.tabIndex == null) {
       newThumb.tabIndex = 0;
     }
     for (const [ eventName, callback ] of Object.entries(this.thumbEvents)) {
@@ -208,7 +221,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     return newThumb;
   }
 
-  nodeHasBaseElementOwner(node) {
+  nodeHasBaseElementOwner(node: Node) {
     for (const [ baseName, element ] of Object.entries(this.baseElements)) {
       if (Slider89StructureParser.getNodeOwner(node) === element) return baseName;
     }
@@ -240,11 +253,10 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
   /**
    * Recursively iterate through a node's children, collecting them in an array in order.
    * When used on a thumb node, the result is analogous to {@link thumbChildren}.
-   * @param { HTMLElement } node The input node.
-   * @param { Array<HTMLElement> } collector
-   * @return { Array<HTMLElement> } All children of the input node.
+   * @param node The input node.
+   * @return All children of the input node.
    */
-  static findNodeChildren(node, collector = []) {
+  static findNodeChildren(node: Element, collector: (typeof node)[] = []) {
     if (node.childElementCount === 0) return collector;
 
     for (const child of node.children) {

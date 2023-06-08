@@ -2,6 +2,14 @@
 import type { Properties } from 'Slider89Base';
 import Slider89 from './Slider89';
 
+// ---- Type: Misc ----
+export type PropertyNodeWithoutArray = {
+  [ key: string ]: Element;
+  slider: HTMLDivElement;
+  track?: HTMLDivElement;
+  thumb?: HTMLDivElement;
+}
+
 
 // ---- Special variables ----
 namespace SpecialVariables {
@@ -99,7 +107,7 @@ export default class Slider89StructureParser {
 
   // ---- Structure parser ----
   parseStructure(structureStr: string) {
-    const node: Partial<Properties.Base['node']> = {
+    const node: Partial<PropertyNodeWithoutArray> = {
       slider: document.createElement('div')
     };
 
@@ -162,7 +170,7 @@ export default class Slider89StructureParser {
       this.closingTagError(stack[0]);
     }
 
-    return node as Properties.Base['node'];
+    return node as PropertyNodeWithoutArray;
   }
 
   assembleElement(
