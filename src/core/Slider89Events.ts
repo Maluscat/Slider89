@@ -69,7 +69,7 @@ export default class Slider89Events extends Slider89Base {
 
 
   // ---- Methods ----
-  addEvent(type: EventType.Base, fn: EventData.Fn, name?: string): EventListenerIdentifier {
+  addEvent(type: EventType.Base, fn: EventData.Fn, customID?: string): EventListenerIdentifier {
     if (!this.checkEventType(type)) {
       const msg =
         'The specified event type ‘' + type + '’ is not valid. Available types are:'
@@ -77,47 +77,60 @@ export default class Slider89Events extends Slider89Base {
       throw new Slider89.Error(msg, 'addEvent');
     }
 
-    if (!Array.isArray(this.vals.events[type])) this.vals.events[type] = new Array();
+    if (!Array.isArray(this.vals.events[type])) {
+      this.vals.events[type] = [];
+    }
     this.vals.events[type].push(fn);
-    const key = name || this.eventID;
-    const data = {
+    const identifier = customID || this.eventID;
+    const eventData = {
       type: type,
       fn: fn
     };
-    if (name) {
-      if (!Array.isArray(this.eventList[key])) this.eventList[key] = new Array();
-      this.eventList[key].push(data);
+
+    if (customID) {
+      if (!Array.isArray(this.eventList[identifier])) {
+        this.eventList[identifier] = new Array();
+      }
+      this.eventList[identifier].push(eventData);
     } else {
-      this.eventList[key] = data;
+      this.eventList[identifier] = eventData;
     }
-    return name || this.eventID++;
+
+    return customID || this.eventID++;
   }
   removeEvent(key: EventListenerIdentifier): false | EventData.Fn[] {
-    const eventInfo = this.eventList[key];
-    if (!eventInfo) return false;
+    if (!(key in this.eventList)) {
+      return false;
+    }
+    const eventData = this.eventList[key];
     delete this.eventList[key];
-    return Array.isArray(eventInfo)
-      ? eventInfo.reduce(this.handleRemoveEvent.bind(this), new Array())
-      : this.handleRemoveEvent(new Array(), eventInfo);
+
+    return Array.isArray(eventData)
+      ? eventData.reduce(this.handleRemoveEvent.bind(this), [])
+      : this.handleRemoveEvent([], eventData);
   }
 
 
   // ---- Helper functions ----
   handleRemoveEvent(deleteCollection: EventData.Fn[], eventInfo: EventData.Base) {
-    const typeEvents = this.vals.events[eventInfo.type];
-    const deleted = typeEvents.splice(typeEvents.indexOf(eventInfo.fn), 1)[0];
-    if (typeEvents.length === 0) delete this.vals.events[eventInfo.type];
-    deleteCollection.push(deleted);
+    const type = eventInfo.type;
+    const eventFns = this.vals.events[type];
+    const deletedFn = eventFns.splice(eventFns.indexOf(eventInfo.fn), 1)[0];
+
+    if (eventFns.length === 0) {
+      delete this.vals.events[type];
+    }
+    deleteCollection.push(deletedFn);
+
     return deleteCollection;
   }
 
-  invokeEvent(types: string[], ...args: any[]) {
+  invokeEvent(types: EventType.Base[], ...args: any[]) {
     args[0] = this;
-    for (let i = 0; i < types.length; i++) {
-      const functions = this.vals.events[types[i]];
-      if (functions) {
-        for (let n = 0; n < functions.length; n++) {
-          functions[n].apply(this, args);
+    for (const type of types) {
+      if (type in this.vals.events) {
+        for (const eventFunc of this.vals.events[type]) {
+          eventFunc.apply(this, args);
         }
       }
     }
