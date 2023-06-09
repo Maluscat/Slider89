@@ -1,11 +1,32 @@
 'use strict';
+import type { Properties } from 'Slider89Base';
+import type { EventType } from 'Slider89Events';
+import type { VariableName } from 'Slider89StructureParser';
 import Slider89 from './Slider89';
 import Slider89Events from './Slider89Events';
 import Slider89StructureParser from './Slider89StructureParser';
 
+
+namespace DeepKey {
+  export type Type<Prop extends keyof Properties.Deep> = Properties.Deep[Prop][number];
+
+  export type Setter<Prop extends keyof Properties.Deep> =
+    (val: Type<Prop>, index: number) => void | boolean;
+
+  export type Getter<Prop extends keyof Properties.Deep> =
+    (val: Type<Prop>, index: number) => typeof val;
+}
+
+
 export default class Slider89Properties extends Slider89Events {
   // ------ Object definition ------
-  defineDeepProperty(target, item, endpoint, postSetter, isDeepDefinedArray) {
+  defineDeepProperty(
+    target: Object,
+    item: keyof Properties.WithCustom,
+    endpoint: keyof Properties.Vals,
+    postSetter?: (val: Properties.WithCustom[typeof item], prevVal: typeof val) => void | boolean,
+    isDeepDefinedArray?: boolean
+  ) {
     Object.defineProperty(target, item, {
       set: (val) => {
         if (!this.initial) {
@@ -33,20 +54,26 @@ export default class Slider89Properties extends Slider89Events {
   }
 
   // ------ Object definitions for the keys/indexes of deeply defined arrays ------
-  defineDeepArrayIntermediateThis(parentItem, parentValue, keySetter, keyGetter) {
+  defineDeepArrayIntermediateThis(
+    parentItem: keyof Properties.Deep,
+    parentValue: Properties.Deep[typeof parentItem],
+    keySetter?: DeepKey.Setter<typeof parentItem>,
+    keyGetter?: DeepKey.Getter<typeof parentItem>
+  ) {
     const endpoint = this.vals;
 
+    // @ts-ignore (Only setup)
     this.vals.$intermediateThis[parentItem] = [];
     for (let i = 0; i < parentValue.length; i++) {
       const value = parentValue[i];
 
       Object.defineProperty(this.vals.$intermediateThis[parentItem], i, {
-        set: function(val) {
+        set: (val: DeepKey.Type<typeof parentItem>) => {
           if (!keySetter || !keySetter(val, i)) {
             endpoint[parentItem][i] = val;
           }
         },
-        get: function() {
+        get: () => {
           return (keyGetter ? keyGetter(endpoint[parentItem][i], i) : endpoint[parentItem][i]);
         },
         enumerable: true
@@ -55,15 +82,19 @@ export default class Slider89Properties extends Slider89Events {
       this.vals.$intermediateThis[parentItem][i] = parentValue[i];
     }
   }
-  defineDeepArrayIntermediateVals(parentItem, parentValue) {
+  defineDeepArrayIntermediateVals(
+    parentItem: keyof Properties.Deep,
+    parentValue: Properties.Deep[typeof parentItem]
+  ) {
     const endpoint = this.vals.$;
 
+    // @ts-ignore (Only Setup)
     this.vals.$intermediateVals[parentItem] = [];
     for (let i = 0; i < parentValue.length; i++) {
       const value = parentValue[i];
 
       Object.defineProperty(this.vals.$intermediateVals[parentItem], i, {
-        set: (val) => {
+        set: (val: DeepKey.Type<typeof parentItem>) => {
           if (!this.initial) {
             var prevVal = Array.from(this[parentItem]);
           }
@@ -81,15 +112,23 @@ export default class Slider89Properties extends Slider89Events {
 
   // ------ Property change tracking ------
   // `that` items are compared to accomodate for getters (e.g. `value` (precision))
-  handleInternalPropertyChange(item, prevVal) {
+  handleInternalPropertyChange(
+    item: keyof Properties.WithCustom,
+    prevVal?: Properties.WithCustom[typeof item]
+  ) {
     // Object types (arrays included) always invoke a variable update
     // due to inability to deeply compare them (efficiently)
     if (!this.initial && (typeof this[item] === 'object' || prevVal !== this[item])) {
       this.updatePotentialStructureVar(item);
-      this.invokeEvent(['change:' + item], prevVal);
+      this.invokeEvent(['change:' + item] as EventType.Base[], prevVal);
     }
   }
-  handleInternalDeepArrayChange(item, prevVal, val, deepDefinedIndex) {
+  handleInternalDeepArrayChange(
+    item: keyof Properties.WithCustom,
+    prevVal: Properties.WithCustom[typeof item],
+    val: Properties.WithCustom[typeof item],
+    deepDefinedIndex?: number
+  ) {
     if (!this.initial) {
       this.updatePotentialStructureVar(item);
       if (deepDefinedIndex != null) {
@@ -102,14 +141,18 @@ export default class Slider89Properties extends Slider89Events {
     }
   }
 
-  invokeDeepArrayChangeEvent(item, prevVal, deepDefinedIndex) {
+  invokeDeepArrayChangeEvent(
+    item: keyof Properties.WithCustom,
+    prevVal: Properties.WithCustom[typeof item],
+    deepDefinedIndex: number
+  ) {
     if (prevVal[deepDefinedIndex] !== this[item][deepDefinedIndex]) {
-      this.invokeEvent(['change:' + item], prevVal, deepDefinedIndex);
+      this.invokeEvent(['change:' + item] as EventType.Base[], prevVal, deepDefinedIndex);
     }
   }
 
   // ---- Structure variables ----
-  updatePotentialStructureVar(propName) {
+  updatePotentialStructureVar(propName: VariableName) {
     if (!Object.prototype.hasOwnProperty.call(this.domBuilder.structureVars, propName)) return;
 
     for (const [ str, nodeList ] of Object.entries(this.domBuilder.structureVars[propName])) {
@@ -123,7 +166,7 @@ export default class Slider89Properties extends Slider89Events {
     }
   }
 
-  replaceStructureVarStringInNodes(str, nodeList) {
+  replaceStructureVarStringInNodes(str: string, nodeList: Node[]) {
     for (const [ element, node, baseName ] of this.iterateStructureVarNodeList(nodeList)) {
       node.textContent =
         str.replace(Slider89StructureParser.regex.variable, (match, variableDelimit, variable) => {
@@ -132,19 +175,19 @@ export default class Slider89Properties extends Slider89Events {
     }
   }
 
-  *iterateStructureVarNodeList(nodeList) {
+  *iterateStructureVarNodeList(nodeList: Node[]) {
     for (const node of nodeList) {
       // Special case: Iterate over every thumb
-      const baseName = this.domBuilder.nodeHasBaseElementOwner(node);
+      const baseName: string = this.domBuilder.nodeHasBaseElementOwner(node);
       if (baseName) {
         const elements = this.vals.node[baseName];
 
         if (node.nodeType === Node.ATTRIBUTE_NODE) {
-          for (const element of elements) {
+          for (const element of elements as Element[]) {
             yield [ element, element.getAttributeNode(node.name), baseName ];
           };
         } else {
-          for (const element of elements) {
+          for (const element of elements as Element[]) {
             // The text node is always the first child
             yield [ element, element.childNodes[0], baseName ];
           };
@@ -156,11 +199,15 @@ export default class Slider89Properties extends Slider89Events {
     }
   }
 
-  getValueFromStructureVar(varName, node, baseName) {
+  getValueFromStructureVar(
+    varName: VariableName,
+    element: Element,
+    baseName: string
+  ): Properties.WithCustom[keyof Properties.WithCustom] {
     const recursiveVar = varName.split('.');
-    let value;
+    let value: Properties.WithCustom[keyof Properties.WithCustom;
     if (recursiveVar[0] in Slider89StructureParser.specialVariables) {
-      value = Slider89StructureParser.specialVariables[recursiveVar[0]].getter(node, this, baseName);
+      value = Slider89StructureParser.specialVariables[recursiveVar[0]].getter(element, this, baseName);
     } else {
       value = this[recursiveVar[0]];
     }

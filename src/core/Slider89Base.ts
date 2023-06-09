@@ -40,7 +40,7 @@ export namespace Properties {
 
   export type Writable = Omit<Base, ReadonlyPropertyNames>;
 
-  type Deep = {
+  export type Deep = {
     [ Prop in DeepPropertyNames ]: Base[Prop]
   }
 }
