@@ -173,11 +173,11 @@ export default class Slider89StructureParser {
     return node as PropertyNodeWithoutArray;
   }
 
-  assembleElement(
-    node: Partial<Properties.Base['node']>,
+  assembleElement<T extends string>(
+    node: Partial<Properties.Base['node'] | PropertyNodeWithoutArray>,
     name: string,
     nameStack: string[],
-    tag: string,
+    tag?: T,
     content?: string,
     attributes?: string
   ) {
@@ -185,7 +185,7 @@ export default class Slider89StructureParser {
       throw new Slider89.StructureError(
         'Every element must have a unique name but there are mutiple elements called ‘' + name + '’');
     }
-    const elem = document.createElement(tag || 'div');
+    const elem = document.createElement(tag || 'div') as (T extends 'div' ? HTMLDivElement : HTMLElement);
 
     if (content != null) {
       const textNode = document.createTextNode(content);
