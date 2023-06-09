@@ -11,23 +11,27 @@ export type PropertyNodeWithoutArray = {
 }
 
 
-// ---- Special variables ----
+// ---- Type: Special variables ----
 namespace SpecialVariables {
-  interface Data {
+  type Data<VarName> = {
     /** Whether the variable should only be available in <thumb> and its children. */
     thumbOnly?: boolean;
-    getter: (node: HTMLElement, slider?: Slider89, baseName?: string | false) => any;
+    getter: VarName extends `thumb_${string}`
+      ? (node: HTMLElement, slider?: Slider89, baseName?: string) => any
+      : (node: HTMLElement, slider?: Slider89) => any
   }
 
-  export type Base = Record<string, Data>;
+  export type Base = {
+    [ VarName in SpecialVariableNames ]: Data<VarName>
+  };
   export type Proxy = Partial<Record<keyof StructureVariables, SpecialVariableNames[]>>;
 }
 
 
-// ---- Structure variables ----
-type StructureVariableNames = SpecialVariableNames | keyof Properties.WithCustom;
+// ---- Type: Structure variables ----
+export type VariableNames = SpecialVariableNames | keyof Properties.WithCustom;
 
-type StructureVariables = Partial<Record<StructureVariableNames, Record<string, Node[]>>>;
+type StructureVariables = Partial<Record<VariableNames, Record<string, Node[]>>>;
 
 
 // ---- Types to keep track of ----
