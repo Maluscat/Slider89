@@ -17,8 +17,8 @@ namespace SpecialVariables {
     /** Whether the variable should only be available in <thumb> and its children. */
     thumbOnly?: boolean;
     getter: VarName extends `thumb_${string}`
-      ? (node: HTMLElement, slider?: Slider89, baseName?: string) => any
-      : (node: HTMLElement, slider?: Slider89) => any
+      ? (node: HTMLDivElement, slider: Slider89, baseName: string) => any
+      : (node: Element, slider: Slider89) => any
   }
 
   export type Base = {

@@ -1,15 +1,17 @@
 'use strict';
-import { DeepReadonlyObject, Descriptor } from 'LibraryTypeCheck';
+import type { DeepReadonlyObject, Descriptor } from 'LibraryTypeCheck';
 import Slider89Error from './Slider89Error';
 
 // ---- Misc types ----
 type CustomPropertyName = `_${string}`;
 
-export type PropertyNode = {
-  [ key: string ]: HTMLElement | HTMLElement[];
+export interface PropertyNodeBaseElements {
   slider: HTMLDivElement;
   track: HTMLDivElement;
   thumb: HTMLDivElement[];
+}
+export type PropertyNode = PropertyNodeBaseElements & {
+  [ Key: string ]: Element | Element[];
 };
 
 // ---- Property types ----

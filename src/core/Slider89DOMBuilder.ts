@@ -14,9 +14,9 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
   /** A basic thumb node used for cloning. */
   thumbBase: HTMLDivElement;
-  thumbParent: HTMLElement;
+  thumbParent: Element;
 
-  baseElements: Record<string, HTMLElement> = {};
+  baseElements: Record<string, Element> = {};
 
   /**
    * Keeps track of structure variables and their respective variable strings
@@ -147,12 +147,12 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     Slider89DOMBuilder.findNodeChildren(newThumb)
       .forEach((childNode, j) => {
         const childName = this.thumbChildren[j];
-        (node[childName] as HTMLElement[]).push(childNode);
+        (node[childName] as Element[]).push(childNode);
       });
   }
   removeThumbFromNode(node: PropertyNode) {
     for (const nodeName of this.thumbChildren) {
-      (node[nodeName] as HTMLElement[]).pop();
+      (node[nodeName] as Element[]).pop();
     }
     return node.thumb.pop();
   }
