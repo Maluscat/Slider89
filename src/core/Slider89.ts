@@ -1,5 +1,6 @@
 'use strict';
 import type { Properties } from 'Slider89Base';
+import type { VariableName } from 'Slider89StructureParser';
 import LibraryTypeCheck from './LibraryTypeCheck.js';
 import Slider89DOM from './Slider89DOM.js';
 import Slider89DOMBuilder from './Slider89DOMBuilder.js';
@@ -18,7 +19,7 @@ namespace PropertyOutline {
   }
   type GetterSetter<Type> = {
     setter: (val?: Type) => void | boolean;
-    getter: (val?: Type) => Type;
+    getter: (val?: Type) => typeof val;
   }
   type Additional<Type> = {
     postSetter: (val: Type, prevVal: Type) => void | boolean;
@@ -26,7 +27,7 @@ namespace PropertyOutline {
       ? (val?: Type[0], key?: number) => void | boolean
       : never;
     keyGetter: Type extends Array<any>
-      ? (val?: Type[0], key?: number) => Type[0]
+      ? (val?: Type[0], key?: number) => typeof val
       : never;
   }
 }
@@ -210,7 +211,7 @@ export default class Slider89 extends Slider89DOM {
     // This happens so late to ensure that $node can be accessed properly
     if (this.vals.structure !== false) {
       for (let variable in this.domBuilder.structureVars) {
-        this.updatePotentialStructureVar(variable);
+        this.updatePotentialStructureVar(variable as VariableName);
       }
     }
 
