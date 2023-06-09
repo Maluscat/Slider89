@@ -3,7 +3,7 @@ import type { Properties } from 'Slider89Base';
 import Slider89 from './Slider89';
 import Slider89Base from './Slider89Base';
 
-namespace EventType {
+export namespace EventType {
   type NamesBasic = typeof Slider89Events.eventTypes[number];
   type NamesSpecial = keyof typeof Slider89Events.eventTypesSpecial;
 
@@ -22,7 +22,7 @@ namespace EventType {
 
 namespace EventData {
   export type Fn = (this: Slider89, ...args: any[]) => any;
-  export type List = Record<EventListenerIdentifier, Base[]>;
+  export type List = Record<EventListenerIdentifier, Base[] | Base>;
 
   export interface Base {
     type: EventType.Base,
@@ -89,9 +89,9 @@ export default class Slider89Events extends Slider89Base {
 
     if (customID) {
       if (!Array.isArray(this.eventList[identifier])) {
-        this.eventList[identifier] = new Array();
+        this.eventList[identifier] = [];
       }
-      this.eventList[identifier].push(eventData);
+      (this.eventList[identifier] as EventData.Base[]).push(eventData);
     } else {
       this.eventList[identifier] = eventData;
     }
