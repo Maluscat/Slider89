@@ -3,11 +3,11 @@
 import defaultStylesString from '../css/default-styles.css';
 
 import type { Properties, PropertyNode, PropertyNodeBaseElements } from 'Slider89Base';
-import type { PropertyNodeWithoutArray, VariableNames } from 'Slider89StructureParser';
+import type { PropertyNodeWithoutArray, VariableName } from 'Slider89StructureParser';
 import Slider89 from './Slider89';
 import Slider89StructureParser from './Slider89StructureParser';
 
-type VariableThumbStrings = Partial<Record<VariableNames, string[]>>
+type VariableThumbStrings = Partial<Record<VariableName, string[]>>
 
 export default class Slider89DOMBuilder extends Slider89StructureParser {
   static hasInjectedStylesheet = false;

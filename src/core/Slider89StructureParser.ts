@@ -29,9 +29,11 @@ namespace SpecialVariables {
 
 
 // ---- Type: Structure variables ----
-export type VariableNames = SpecialVariableNames | keyof Properties.WithCustom;
+export type VariableName = SpecialVariableNames | keyof Properties.WithCustom;
 
-type StructureVariables = Partial<Record<VariableNames, Record<string, Node[]>>>;
+type StructureVariables = Partial<{
+  [ V in VariableName ]: Record<string, Node[]>
+}>
 
 
 // ---- Types to keep track of ----
