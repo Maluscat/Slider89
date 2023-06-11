@@ -1,6 +1,6 @@
 'use strict';
-import type { DeepReadonlyObject, Descriptor } from 'LibraryTypeCheck';
-import type { EventType, EventData } from 'Slider89Events';
+import type { DeepReadonlyObject, Descriptor } from './LibraryTypeCheck';
+import type { EventType, EventData } from './Slider89Events';
 import Slider89Error from './Slider89Error';
 
 // ---- Misc types ----

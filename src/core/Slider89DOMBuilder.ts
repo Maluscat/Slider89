@@ -2,8 +2,8 @@
 // @ts-ignore (Webpack import)
 import defaultStylesString from '../css/default-styles.css';
 
-import type { Properties, PropertyNode, PropertyNodeBaseElements } from 'Slider89Base';
-import type { PropertyNodeWithoutArray, VariableName } from 'Slider89StructureParser';
+import type { Properties, PropertyNode, PropertyNodeBaseElements } from './Slider89Base';
+import type { PropertyNodeWithoutArray, VariableName } from './Slider89StructureParser';
 import Slider89 from './Slider89';
 import Slider89StructureParser from './Slider89StructureParser';
 

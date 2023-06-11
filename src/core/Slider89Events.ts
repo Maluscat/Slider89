@@ -1,5 +1,5 @@
 'use strict';
-import type { Properties } from 'Slider89Base';
+import type { Properties } from './Slider89Base';
 import Slider89 from './Slider89';
 import Slider89Base from './Slider89Base';
 
