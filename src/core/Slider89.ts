@@ -19,16 +19,16 @@ namespace PropertyOutline {
     default: Type | (() => Type);
   }
   type GetterSetter<Type> = {
-    setter: (val?: Type) => void | boolean;
-    getter: (val?: Type) => typeof val;
+    setter: (val: Type) => void | boolean;
+    getter: (val: Type) => typeof val;
   }
   type Additional<Type> = {
     postSetter: (val: Type, prevVal: Type) => void | boolean;
     keySetter: Type extends Array<any>
-      ? (val?: Type[0], key?: number) => void | boolean
+      ? (val: Type[0], key: number) => void | boolean
       : never;
     keyGetter: Type extends Array<any>
-      ? (val?: Type[0], key?: number) => typeof val
+      ? (val: Type[0], key: number) => typeof val
       : never;
   }
 }
