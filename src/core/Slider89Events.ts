@@ -128,9 +128,11 @@ export default class Slider89Events extends Slider89Base {
   invokeEvent(types: EventType.Base[], ...args: any[]) {
     args[0] = this;
     for (const type of types) {
-      if (type in this.vals.events) {
-        for (const eventFunc of this.vals.events[type]) {
-          eventFunc.apply(this, args);
+      if (this.vals.events !== false) {
+        if (type in this.vals.events) {
+          for (const eventFunc of this.vals.events[type]) {
+            eventFunc.apply(this as unknown as Slider89, args);
+          }
         }
       }
     }
