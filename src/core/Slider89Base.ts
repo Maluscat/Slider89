@@ -15,6 +15,10 @@ export type PropertyNode = PropertyNodeBaseElements & {
   [ Key: string ]: Element | Element[];
 };
 
+type EventList = {
+  [ Type in EventType.Base ]: EventData.Fn[]
+}
+
 // ---- Property types ----
 export namespace Properties {
   export interface Base {
@@ -27,7 +31,7 @@ export namespace Properties {
     node: PropertyNode;
     orientation: 'vertical' | 'horizontal';
     classList: Record<string, string[]> | false;
-    events: Partial<Record<EventType.Base, EventData.Fn>> | false;
+    events: Partial<EventList> | false;
   }
   export interface Vals extends Base {
     readonly $: Base;
