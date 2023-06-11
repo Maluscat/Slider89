@@ -51,11 +51,11 @@ export default class Slider89StructureParser {
     },
     thumb_index: {
       thumbOnly: true,
-      getter: (node, slider, baseName) => slider.node[baseName].indexOf(node)
+      getter: (node, slider, baseName) => (slider.node[baseName] as Element[]).indexOf(node)
     },
     thumb_value: {
       thumbOnly: true,
-      getter: (node, slider, baseName) => slider.values[slider.node[baseName].indexOf(node)]
+      getter: (node, slider, baseName) => slider.values[(slider.node[baseName] as Element[]).indexOf(node)]
     },
   });
   /**
