@@ -131,8 +131,8 @@ export default class Slider89DOM extends Slider89Properties {
       newVals = this.vals;
       value = this.vals.values[thumbIndex];
     } else {
-      const props = ['range', 'step'] as const;
-      for (let prop of props) {
+      for (let prop of [ 'range', 'step' ] as const) {
+        // @ts-ignore ???
         if (newVals[prop] == null) newVals[prop] = this.vals[prop];
       }
       if (newVals.value != null) {

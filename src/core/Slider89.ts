@@ -150,6 +150,7 @@ export default class Slider89 extends Slider89DOM {
       default: false,
     },
     node: {
+      // @ts-ignore (only Setup)
       default: {},
     },
     orientation: {
