@@ -169,6 +169,21 @@ export default class Slider89DOM extends Slider89Properties {
     this.applyOneRatioDistance(thumbIndex);
   }
 
+  changeOrientationDOM(newOrientation: Properties.Base['orientation']) {
+    if (newOrientation === 'vertical') {
+      this.#removeThumbsDOMProperty('left');
+      this.vals.node.slider.classList.add('vertical');
+    } else {
+      this.#removeThumbsDOMProperty('top');
+      this.vals.node.slider.classList.remove('vertical');
+    }
+  }
+  #removeThumbsDOMProperty(property: string) {
+    for (const thumb of this.vals.node.thumb) {
+      thumb.style.removeProperty(property);
+    }
+  }
+
   setValuesWithValueChange(thumbIndex: number, value: Properties.Base['value']): boolean {
     const prevVal = this.vals.values[thumbIndex];
     if (!Slider89.floatIsEqual(value, prevVal)) {

@@ -157,13 +157,7 @@ export default class Slider89 extends Slider89DOM {
       default: 'horizontal',
       setter: (val) => {
         if (!this.initial) {
-          if (val === 'vertical') {
-            this.vals.node.thumb.style.removeProperty('left');
-            this.vals.node.slider.classList.add('vertical');
-          } else {
-            this.vals.node.thumb.style.removeProperty('top');
-            this.vals.node.slider.classList.remove('vertical');
-          }
+          this.changeOrientationDOM(val);
           this.vals.orientation = val;
           this.applyAllRatioDistances();
           return true;
