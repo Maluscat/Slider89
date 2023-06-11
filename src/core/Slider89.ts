@@ -130,7 +130,7 @@ export default class Slider89 extends Slider89DOM {
       default: false,
       setter: (val) => {
         if (!this.initial) {
-          this.applyAllRatioDistances({ precision: val });
+          this.applyAllRatioDistances();
         }
       }
     },
