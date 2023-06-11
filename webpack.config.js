@@ -25,12 +25,12 @@ const common = {
       {
         test: /\.tsx?$/i,
         use: 'ts-loader',
-        exclude: /node_modules/
+        include: path.resolve('./src')
       },
       {
         test: /\.css$/i,
         use: 'css-rule-loader',
-        exclude: /node_modules/
+        include: path.resolve('./src/css')
       }
     ]
   }
