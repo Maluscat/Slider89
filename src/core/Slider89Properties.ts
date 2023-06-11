@@ -18,6 +18,9 @@ namespace DeepKey {
 }
 
 
+type VariableNodeIteratorResult = [ Element, Node, string ];
+
+
 export default class Slider89Properties extends Slider89Events {
   // ------ Object definition ------
   defineDeepProperty(
@@ -176,16 +179,18 @@ export default class Slider89Properties extends Slider89Events {
     }
   }
 
-  *iterateStructureVarNodeList(nodeList: Node[]) {
+  // TODO Check whether this signature is correct (no internet rn lol)
+  *iterateStructureVarNodeList(nodeList: Node[]): Generator<VariableNodeIteratorResult, void, Node> {
     for (const node of nodeList) {
       // Special case: Iterate over every thumb
+      // @ts-ignore TODO
       const baseName: string = this.domBuilder.nodeHasBaseElementOwner(node);
       if (baseName) {
         const elements = this.vals.node[baseName];
 
         if (node.nodeType === Node.ATTRIBUTE_NODE) {
           for (const element of elements as Element[]) {
-            yield [ element, element.getAttributeNode(node.name), baseName ];
+            yield [ element, element.getAttributeNode((node as Attr).name), baseName ];
           };
         } else {
           for (const element of elements as Element[]) {
