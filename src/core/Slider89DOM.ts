@@ -9,7 +9,7 @@ interface ClientXY {
   clientY: number;
 }
 
-type StyleDirection = 'Top' | 'Right' | 'Bottom' | 'Left';
+type StyleDirection = 'top' | 'right' | 'bottom' | 'left';
 
 type RecomputationNewVals = Partial<{
   [ Prop in 'value' | 'range' | 'step' ]: Properties.Base[Prop]
@@ -47,10 +47,10 @@ export default class Slider89DOM extends Slider89Properties {
 
   // ---- DOM getters ----
   getTrackPadding(direction: StyleDirection): number {
-    return parseFloat(this.trackStyle.getPropertyValue('padding' + direction));
+    return parseFloat(this.trackStyle.getPropertyValue('padding-' + direction));
   }
   getTrackOffset(direction: StyleDirection): number {
-    return parseFloat(this.trackStyle.getPropertyValue('border' + direction + 'Width'))
+    return parseFloat(this.trackStyle.getPropertyValue('border-' + direction + '-width'))
       + this.getTrackPadding(direction);
   }
 
@@ -58,23 +58,23 @@ export default class Slider89DOM extends Slider89Properties {
     if (this.vals.orientation === 'vertical') {
       return thumb.getBoundingClientRect().top
         - this.vals.node.track.getBoundingClientRect().top
-        - this.getTrackOffset('Top');
+        - this.getTrackOffset('top');
     } else {
       return thumb.getBoundingClientRect().left
         - this.vals.node.track.getBoundingClientRect().left
-        - this.getTrackOffset('Left');
+        - this.getTrackOffset('left');
     }
   }
   getAbsoluteTrackSize(thumb: HTMLDivElement): number {
     if (this.vals.orientation === 'vertical') {
       return this.vals.node.track.getBoundingClientRect().height
-        - this.getTrackOffset('Top')
-        - this.getTrackOffset('Bottom')
+        - this.getTrackOffset('top')
+        - this.getTrackOffset('bottom')
         - thumb.getBoundingClientRect().height;
     } else {
       return this.vals.node.track.getBoundingClientRect().width
-        - this.getTrackOffset('Left')
-        - this.getTrackOffset('Right')
+        - this.getTrackOffset('left')
+        - this.getTrackOffset('right')
         - thumb.getBoundingClientRect().width;
     }
   }
@@ -87,15 +87,15 @@ export default class Slider89DOM extends Slider89Properties {
   moveThumbRelative(thumb: HTMLDivElement, distance: number) {
     // Relative positioning starts at the padding, so looking at the border is not needed
     if (this.vals.orientation === 'vertical') {
-      var offsetStart = this.getTrackPadding('Top');
-      var offsetEnd = this.getTrackPadding('Bottom');
-      var thumbDim = thumb.clientHeight;
       var posAnchor = 'top';
+      var offsetStart = this.getTrackPadding('top');
+      var offsetEnd = this.getTrackPadding('bottom');
+      var thumbDim = thumb.clientHeight;
     } else {
-      var offsetStart = this.getTrackPadding('Left');
-      var offsetEnd = this.getTrackPadding('Right');
-      var thumbDim = thumb.clientWidth;
       var posAnchor = 'left';
+      var offsetStart = this.getTrackPadding('left');
+      var offsetEnd = this.getTrackPadding('right');
+      var thumbDim = thumb.clientWidth;
     }
 
     let subtract = (thumbDim * distance) + 'px';
