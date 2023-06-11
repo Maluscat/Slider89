@@ -101,7 +101,7 @@ export default class LibraryTypeCheck {
     return msg || LibraryTypeCheck.getType(val);
   }
 
-  static buildConditionTypeMessage(conditions: Partial<Descriptor.Conditions>, val: any) {
+  static buildConditionTypeMessage(conditions: Partial<DeepReadonlyObject<Descriptor.Conditions>>, val: any) {
     if (!conditions) return;
 
     if (conditions.nonnegative && val < 0) {
