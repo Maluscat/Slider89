@@ -23,7 +23,7 @@ export default class Slider89Properties extends Slider89Events {
   defineDeepProperty(
     target: Object,
     item: keyof Properties.WithCustom,
-    endpoint: keyof Properties.Vals,
+    endpoint: Properties.Vals[keyof Properties.Vals],
     postSetter?: (val: Properties.WithCustom[typeof item], prevVal: typeof val) => void | boolean,
     isDeepDefinedArray?: boolean
   ) {
@@ -34,10 +34,11 @@ export default class Slider89Properties extends Slider89Events {
         }
         endpoint[item] = val;
         if (isDeepDefinedArray) {
+          const outline = this.properties[item];
           // The endpoints (see doc comment at the start of file) are defined from bottom to top
           // This ensures compatibility with getters/setters
-          this.defineDeepArrayIntermediateVals(item, val);
-          this.defineDeepArrayIntermediateThis(item, val, this.properties[item].keySetter, this.properties[item].keyGetter);
+          this.defineDeepArrayIntermediateVals(item as keyof Properties.Deep, val);
+          this.defineDeepArrayIntermediateThis(item as keyof Properties.Deep, val, outline.keySetter, outline.keyGetter);
           this.handleInternalDeepArrayChange(item, prevVal, val);
         } else {
           this.handleInternalPropertyChange(item, prevVal);
@@ -205,7 +206,7 @@ export default class Slider89Properties extends Slider89Events {
     baseName: string
   ): Properties.WithCustom[keyof Properties.WithCustom] {
     const recursiveVar = varName.split('.');
-    let value: Properties.WithCustom[keyof Properties.WithCustom;
+    let value: Properties.WithCustom[keyof Properties.WithCustom];
     if (recursiveVar[0] in Slider89StructureParser.specialVariables) {
       value = Slider89StructureParser.specialVariables[recursiveVar[0]].getter(element, this, baseName);
     } else {
