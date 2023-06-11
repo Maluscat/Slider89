@@ -20,7 +20,7 @@ export namespace EventType {
 }
 
 
-namespace EventData {
+export namespace EventData {
   export type Fn = (this: Slider89, ...args: any[]) => any;
   export type List = Record<EventListenerIdentifier, Base[] | Base>;
 
