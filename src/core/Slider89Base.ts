@@ -58,6 +58,19 @@ type PropertyData = DeepReadonlyObject<{
   [ Prop in keyof Properties.Base ]: PropertyInfo<Prop>
 }>
 
+// ---- Method types ----
+// TODO The current method system has a lot of overhead and is overprotective –
+//      Especially since most other methods are public as well.
+type MethodData = DeepReadonlyObject<{
+  [ Key: string ]: {
+    args: Array<{
+      name: string;
+      optional?: boolean;
+      descriptor: Descriptor.self
+    }>
+  }
+}>
+
 
 // ---- Types to keep track of ----
 // This information cannot be extracted from the readonly `propertyData` below.
@@ -81,7 +94,7 @@ export default class Slider89Base extends Slider89Error {
   classList: Properties.Base['classList']
   events: Properties.Base['events']
 
-  static methodData = <const> ({
+  static methodData = ({
     addEvent: {
       args: [
         {
@@ -132,7 +145,7 @@ export default class Slider89Base extends Slider89Error {
         }
       ]
     }
-  });
+  }) as const satisfies MethodData;
   static propertyData: PropertyData = <const> ({
     range: {
       isDeepDefinedArray: true,
