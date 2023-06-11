@@ -157,9 +157,12 @@ export default class Slider89Properties extends Slider89Events {
 
   // ---- Structure variables ----
   updatePotentialStructureVar(propName: VariableName) {
+    // @ts-ignore TODO
     if (!Object.prototype.hasOwnProperty.call(this.domBuilder.structureVars, propName)) return;
 
+    // @ts-ignore TODO
     for (const [ str, nodeList ] of Object.entries(this.domBuilder.structureVars[propName])) {
+      // @ts-ignore TODO
       this.replaceStructureVarStringInNodes(str, nodeList);
     }
 

@@ -191,6 +191,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
               node[nodeName][j].classList.add(classArr[i]);
             }
           } else {
+            // @ts-ignore TODO + test
             node[nodeName].classList.add(classArr[i]);
           }
         }
