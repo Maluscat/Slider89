@@ -1,6 +1,6 @@
 'use strict';
 import type { DeepReadonlyObject, Descriptor } from 'LibraryTypeCheck';
-import type { EventData } from 'Slider89Events';
+import type { EventType, EventData } from 'Slider89Events';
 import Slider89Error from './Slider89Error';
 
 // ---- Misc types ----
@@ -27,7 +27,7 @@ export namespace Properties {
     node: PropertyNode;
     orientation: 'vertical' | 'horizontal';
     classList: Record<string, string[]> | false;
-    events: Record<string, EventData.Fn> | false;
+    events: Partial<Record<EventType.Base, EventData.Fn>> | false;
   }
   export interface Vals extends Base {
     readonly $: Base;

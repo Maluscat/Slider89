@@ -1,5 +1,6 @@
 'use strict';
 import type { Properties } from 'Slider89Base';
+import type { EventType } from 'Slider89Events';
 import type { VariableName } from 'Slider89StructureParser';
 import LibraryTypeCheck from './LibraryTypeCheck.js';
 import Slider89DOM from './Slider89DOM.js';
@@ -170,14 +171,16 @@ export default class Slider89 extends Slider89DOM {
     events: {
       default: {},
       setter: (val) => {
-        const errTypes = new Array();
-        for (let eventType in val) {
-          if (!this.checkEventType(eventType)) errTypes.push(eventType);
-        }
-        if (errTypes.length > 0) {
-          throw new Slider89.PropertyError(this, 'events',
-            'The given object contains items which are no valid event types:' + Slider89.arrayToListString(errTypes)
-            + 'Available event types are:' + Slider89.arrayToListString(Slider89.availableEventTypes));
+        if (val !== false) {
+          const errTypes = [];
+          for (let eventType in val) {
+            if (!this.checkEventType(eventType as EventType.Base)) errTypes.push(eventType);
+          }
+          if (errTypes.length > 0) {
+            throw new Slider89.PropertyError(this, 'events',
+              'The given object contains items which are no valid event types:' + Slider89.arrayToListString(errTypes)
+              + 'Available event types are:' + Slider89.arrayToListString(Slider89.availableEventTypes));
+          }
         }
       }
     }
