@@ -36,10 +36,10 @@ namespace PropertyOutline {
 export default class Slider89 extends Slider89DOM {
   methods = <const> ({
     addEvent: {
-      function: this.addEvent,
+      funct: this.addEvent,
     },
     removeEvent: {
-      function: this.removeEvent,
+      funct: this.removeEvent,
     }
   });
 
@@ -287,8 +287,8 @@ export default class Slider89 extends Slider89DOM {
       const argCount = Slider89.methodData[item].args.length;
       this[item] = function() {
         const args = Array.prototype.slice.call(arguments, 0, argCount);
-        that.checkMethod(item as keyof typeof this.methods, args);
-        return method.function.apply(this, args);
+        that.checkMethod(item as keyof typeof that.methods, args);
+        return method.funct.apply(this, args);
       }
     }
   }
