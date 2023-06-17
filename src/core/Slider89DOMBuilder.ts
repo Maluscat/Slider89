@@ -27,7 +27,10 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
   thumbEvents: Record<string, EventListenerOrEventListenerObject> = {};
 
 
-  constructor(vals: Properties.Vals, thumbEvents: Record<string, EventListenerOrEventListenerObject>) {
+  constructor(
+    vals: Properties.Vals,
+    thumbEvents: Record<string, EventListenerOrEventListenerObject>
+  ) {
     super(vals);
     this.thumbEvents = thumbEvents;
   }

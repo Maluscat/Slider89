@@ -1,6 +1,7 @@
 'use strict';
 import type { DeepReadonlyObject, Descriptor } from './LibraryTypeCheck';
-import type { EventType, EventData } from './Slider89Events';
+import type { EventData, EventType } from './Slider89Events';
+import Slider89DOMVariables from './Slider89DOMVariables';
 import Slider89Error from './Slider89Error';
 
 // ---- Misc types ----
@@ -269,6 +270,8 @@ export default class Slider89Base extends Slider89Error {
 
   methods;
   properties;
+
+  domHandler: Slider89DOMVariables;
 
   // @ts-ignore
   vals: Properties.Vals = {}; // holding every class property

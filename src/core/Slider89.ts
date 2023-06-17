@@ -94,10 +94,10 @@ export default class Slider89 extends Slider89DOM {
 
           // TODO Perhaps move this into an own function
           // Expanding structure variables which are used in base element tags (thumb and descendants)
-          for (const [ propName, stringList ] of Object.entries(this.domBuilder.structureVarThumbStrings)) {
+          for (const [ propName, stringList ] of Object.entries(this.domHandler.structureVarThumbStrings)) {
             for (const varString of stringList) {
-              const nodeList = this.domBuilder.structureVars[propName][varString];
-              this.replaceStructureVarStringInNodes(varString, nodeList);
+              const nodeList = this.domHandler.structureVars[propName][varString];
+              this.domHandler.replaceStructureVarStringInNodes(varString, nodeList);
             }
           }
         }
@@ -208,8 +208,8 @@ export default class Slider89 extends Slider89DOM {
     // Expanding structure variables initially
     // This happens so late to ensure that $node can be accessed properly
     if (this.vals.structure !== false) {
-      for (let variable in this.domBuilder.structureVars) {
-        this.updatePotentialStructureVar(variable as VariableName);
+      for (let variable in this.domHandler.structureVars) {
+        this.domHandler.updatePotentialStructureVar(variable as VariableName);
       }
     }
 
@@ -309,12 +309,12 @@ export default class Slider89 extends Slider89DOM {
   }
 
   buildSlider(target: HTMLElement, replace: boolean) {
-    this.vals.node = this.domBuilder.createSliderNode(this.vals.values.length, this.vals.structure);
+    this.vals.node = this.domHandler.createSliderNode(this.vals.values.length, this.vals.structure);
 
     if (replace) {
-      this.domBuilder.addAttributesFromTarget(this.vals.node, target);
+      this.domHandler.addAttributesFromTarget(this.vals.node, target);
     }
-    this.domBuilder.addClasses(this.vals.node, this.vals.classList, this.vals.orientation === 'vertical');
+    this.domHandler.addClasses(this.vals.node, this.vals.classList, this.vals.orientation === 'vertical');
 
     Slider89DOMBuilder.injectStyleSheetIfNeeded();
 

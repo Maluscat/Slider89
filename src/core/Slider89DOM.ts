@@ -1,8 +1,8 @@
 'use strict';
 import type { Properties } from './Slider89Base';
 import Slider89 from './Slider89';
-import Slider89DOMBuilder from './Slider89DOMBuilder';
 import Slider89Properties from './Slider89Properties';
+import Slider89DOMVariables from './Slider89DOMVariables';
 
 interface ClientXY {
   clientX: number;
@@ -22,8 +22,6 @@ export default class Slider89DOM extends Slider89Properties {
 
   trackStyle: CSSStyleDeclaration;
 
-  domBuilder: Slider89DOMBuilder;
-
   constructor() {
     super();
 
@@ -37,7 +35,7 @@ export default class Slider89DOM extends Slider89Properties {
 
     this.keyDown = this.keyDown.bind(this);
 
-    this.domBuilder = new Slider89DOMBuilder(this.vals, {
+    this.domHandler = new Slider89DOMVariables(this as unknown as Slider89, this.vals, {
       touchstart: this.touchStart,
       mousedown: this.mouseStart,
       keydown: this.keyDown
@@ -161,11 +159,11 @@ export default class Slider89DOM extends Slider89Properties {
 
   // ---- Helper functions ----
   removeLastThumbNode() {
-    const thumb = this.domBuilder.removeThumbFromNode(this.vals.node);
-    this.domBuilder.thumbParent.removeChild(thumb);
+    const thumb = this.domHandler.removeThumbFromNode(this.vals.node);
+    this.domHandler.thumbParent.removeChild(thumb);
   }
   addNewThumbNode(thumbIndex: number) {
-    this.domBuilder.addThumbToNode(this.vals.node);
+    this.domHandler.addThumbToNode(this.vals.node);
     this.applyOneRatioDistance(thumbIndex);
   }
 
