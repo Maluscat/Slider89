@@ -117,7 +117,7 @@ export default class Slider89Properties extends Slider89Events {
     // Object types (arrays included) always invoke a variable update
     // due to inability to deeply compare them (efficiently)
     if (!this.initial && (typeof this[item] === 'object' || prevVal !== this[item])) {
-      this.domHandler.updatePotentialStructureVar(item);
+      this.domHandler.updatePotentialVariable(item);
       this.invokeEvent(['change:' + item] as EventType.Base[], prevVal);
     }
   }
@@ -128,7 +128,7 @@ export default class Slider89Properties extends Slider89Events {
     deepDefinedIndex?: number
   ) {
     if (!this.initial) {
-      this.domHandler.updatePotentialStructureVar(item);
+      this.domHandler.updatePotentialVariable(item);
       if (deepDefinedIndex != null) {
         this.invokeDeepArrayChangeEvent(item, prevVal, deepDefinedIndex);
       } else {

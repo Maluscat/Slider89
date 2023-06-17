@@ -97,7 +97,7 @@ export default class Slider89 extends Slider89DOM {
           for (const [ propName, stringList ] of Object.entries(this.domHandler.structureVarThumbStrings)) {
             for (const varString of stringList) {
               const nodeList = this.domHandler.structureVars[propName][varString];
-              this.domHandler.replaceStructureVarStringInNodes(varString, nodeList);
+              this.domHandler.replaceVariableStringInNodes(varString, nodeList);
             }
           }
         }
@@ -209,7 +209,7 @@ export default class Slider89 extends Slider89DOM {
     // This happens so late to ensure that $node can be accessed properly
     if (this.vals.structure !== false) {
       for (let variable in this.domHandler.structureVars) {
-        this.domHandler.updatePotentialStructureVar(variable as VariableName);
+        this.domHandler.updatePotentialVariable(variable as VariableName);
       }
     }
 
