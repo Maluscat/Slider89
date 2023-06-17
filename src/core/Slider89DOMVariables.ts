@@ -6,7 +6,7 @@ import Slider89DOMBuilder from './Slider89DOMBuilder';
 import Slider89StructureParser from './Slider89StructureParser';
 
 
-export default class Slider89Variables extends Slider89DOMBuilder {
+export default class Slider89DOMVariables extends Slider89DOMBuilder {
   slider: Slider89;
 
 
