@@ -91,7 +91,7 @@ export default class Slider89 extends Slider89DOM {
           // Manually invoke `value` property change
           this.handleInternalPropertyChange('value', prevVal[0]);
           this.handleInternalPropertyChange('node');
-          this.domHandler.updateAllBaseElementVariables();
+          this.domHandler.expandAllBaseElementVariables();
         }
       },
       keySetter: (val, key) => {
@@ -178,8 +178,6 @@ export default class Slider89 extends Slider89DOM {
     }
   };
 
-  // TODO Make separate typ `PropertiesConfig`, excluding readOnly properties
-  // (Like `node`)
   constructor(target: HTMLElement, config?: Partial<Properties.Config> | false, replace = false) {
     super();
     this.initial = true;
@@ -197,13 +195,8 @@ export default class Slider89 extends Slider89DOM {
 
     this.applyAllRatioDistances();
 
-    // Expanding structure variables initially
-    // This happens so late to ensure that $node can be accessed properly
-    if (this.vals.structure !== false) {
-      for (let variable in this.domHandler.structureVars) {
-        this.domHandler.updatePotentialVariable(variable as VariableName);
-      }
-    }
+    // This needs to happen as the last step in the initialization process.
+    this.domHandler.updateAllVariables();
 
     this.initial = false;
   }

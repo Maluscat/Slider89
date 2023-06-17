@@ -33,8 +33,15 @@ export default class Slider89Variables extends Slider89DOMBuilder {
       }
     }
   }
+  updateAllVariables() {
+    if (this.vals.structure !== false) {
+      for (const variable in this.structureVars) {
+        this.updatePotentialVariable(variable as VariableName);
+      }
+    }
+  }
 
-  updateAllBaseElementVariables() {
+  expandAllBaseElementVariables() {
     for (const [ propName, varStrings ] of Object.entries(this.structureVarThumbStrings)) {
       for (const varString of varStrings) {
         const nodeList = this.structureVars[propName][varString];
