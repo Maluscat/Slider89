@@ -34,6 +34,16 @@ export default class Slider89Variables extends Slider89DOMBuilder {
     }
   }
 
+  updateAllBaseElementVariables() {
+    for (const [ propName, varStrings ] of Object.entries(this.structureVarThumbStrings)) {
+      for (const varString of varStrings) {
+        const nodeList = this.structureVars[propName][varString];
+        this.replaceVariableStringInNodes(varString, nodeList);
+      }
+    }
+  }
+
+  // ---- Helper functions ----
   replaceVariableStringInNodes(str: string, nodeList: Node[]) {
     for (const [ element, node, baseName ] of this.#iterateVariableNodeList(nodeList)) {
       node.textContent =
@@ -69,7 +79,6 @@ export default class Slider89Variables extends Slider89DOMBuilder {
     return value;
   }
 
-  // ---- Helper functions ----
   *#iterateVariableNodeList(nodeList: Node[]): IterableIterator<[ Element, Node, string | false ]> {
     for (const node of nodeList) {
       // Special case: Iterate over every thumb

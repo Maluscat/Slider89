@@ -91,15 +91,7 @@ export default class Slider89 extends Slider89DOM {
           // Manually invoke `value` property change
           this.handleInternalPropertyChange('value', prevVal[0]);
           this.handleInternalPropertyChange('node');
-
-          // TODO Perhaps move this into an own function
-          // Expanding structure variables which are used in base element tags (thumb and descendants)
-          for (const [ propName, stringList ] of Object.entries(this.domHandler.structureVarThumbStrings)) {
-            for (const varString of stringList) {
-              const nodeList = this.domHandler.structureVars[propName][varString];
-              this.domHandler.replaceVariableStringInNodes(varString, nodeList);
-            }
-          }
+          this.domHandler.updateAllBaseElementVariables();
         }
       },
       keySetter: (val, key) => {
