@@ -224,12 +224,17 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
   nodeHasBaseElementOwner(node: Node) {
     for (const [ baseName, element ] of Object.entries(this.baseElements)) {
-      if (Slider89StructureParser.getNodeOwner(node) === element) return baseName;
+      if (Slider89DOMBuilder.getNodeOwner(node) === element) return baseName;
     }
     return false;
   }
 
   // ---- Static style sheet creation ----
+  static getNodeOwner(node: Node): HTMLElement {
+    // @ts-ignore
+    return node.ownerElement || node.parentElement;
+  }
+
   // NOTE: I think that a global Object (like Slider89) cannot be in multiple
   // documents at once. Thus, just setting a global flag to true should be
   // sufficient to mark the current document as already injected.

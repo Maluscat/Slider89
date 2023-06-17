@@ -4,6 +4,7 @@ import type { EventType } from './Slider89Events';
 import type { VariableName } from './Slider89StructureParser';
 import Slider89 from './Slider89';
 import Slider89Events from './Slider89Events';
+import Slider89DOMBuilder from './Slider89DOMBuilder';
 import Slider89StructureParser from './Slider89StructureParser';
 
 
@@ -202,7 +203,7 @@ export default class Slider89Properties extends Slider89Events {
           };
         }
       } else {
-        const element = Slider89StructureParser.getNodeOwner(node);
+        const element = Slider89DOMBuilder.getNodeOwner(node);
         yield [ element, node, baseName ];
       }
     }

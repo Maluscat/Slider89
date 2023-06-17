@@ -268,11 +268,6 @@ export default class Slider89StructureParser {
 
 
   // ---- Static helpers ----
-  static getNodeOwner(node: Node): HTMLElement {
-    // @ts-ignore
-    return node.ownerElement || node.parentElement;
-  }
-
   static stringHasVariable(str: string): boolean {
     // Need to use a RegExp without /g/ because the internal `lastIndex` mustn't be advanced by a mere test
     return Slider89StructureParser.regex.variableNoFlag.test(str);
