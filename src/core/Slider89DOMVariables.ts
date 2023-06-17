@@ -6,9 +6,6 @@ import Slider89DOMBuilder from './Slider89DOMBuilder';
 import Slider89StructureParser from './Slider89StructureParser';
 
 
-type VariableNodeIteratorResult = [ Element, Node, string ];
-
-
 export default class Slider89Variables extends Slider89DOMBuilder {
   slider: Slider89;
 
@@ -46,12 +43,10 @@ export default class Slider89Variables extends Slider89DOMBuilder {
     }
   }
 
-  // TODO Check whether this signature is correct (no internet rn lol)
-  *iterateStructureVarNodeList(nodeList: Node[]): Generator<VariableNodeIteratorResult, void, Node> {
+  *iterateStructureVarNodeList(nodeList: Node[]): IterableIterator<[ Element, Node, string | false ]> {
     for (const node of nodeList) {
       // Special case: Iterate over every thumb
-      // @ts-ignore TODO
-      const baseName: string = this.nodeHasBaseElementOwner(node);
+      const baseName = this.nodeHasBaseElementOwner(node);
       if (baseName) {
         const elements = this.vals.node[baseName];
 
@@ -75,7 +70,7 @@ export default class Slider89Variables extends Slider89DOMBuilder {
   getValueFromStructureVar(
     varName: VariableName,
     element: Element,
-    baseName: string
+    baseName: string | false
   ): Properties.WithCustom[keyof Properties.WithCustom] {
     const recursiveVar = varName.split('.');
     let value: Properties.WithCustom[keyof Properties.WithCustom];
