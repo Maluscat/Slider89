@@ -27,7 +27,7 @@ export namespace Properties {
     values: number[];
     value: number;
     precision: number | false;
-    step: number | false;
+    step: number | number[] | false;
     structure: string | false;
     node: PropertyNode;
     orientation: 'vertical' | 'horizontal';
@@ -162,9 +162,9 @@ export default class Slider89Base extends Slider89Error {
           conditions: {
             length: 2
           },
-          descriptor: [
-            { type: 'number' }
-          ]
+          descriptor: [{
+            type: 'number'
+          }]
         },
         { type: 'boolean' }
       ]
@@ -202,6 +202,12 @@ export default class Slider89Base extends Slider89Error {
           conditions: {
             positive: true
           }
+        },
+        {
+          type: 'array',
+          descriptor: [{
+            type: 'number'
+          }]
         },
         { type: 'false' }
       ]

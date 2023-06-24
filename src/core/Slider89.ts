@@ -130,7 +130,9 @@ export default class Slider89 extends Slider89DOM {
     step: {
       default: false,
       setter: (val) => {
-        if (this.vals.precision !== false && val !== false && Number(val.toFixed(this.vals.precision)) !== val) {
+        if (this.vals.precision !== false
+            && typeof val === 'number'
+            && Number(val.toFixed(this.vals.precision)) !== val) {
           throw new Slider89.PropertyError(this, 'step',
             'The given value of ' + val + ' exceeds the currently set precision of ' + this.vals.precision);
         }
@@ -355,5 +357,19 @@ export default class Slider89 extends Slider89DOM {
   // ---- Helper functions ----
   static floatIsEqual(val0: number, val1: number) {
     return Math.abs(val0 - val1) < 0.00000000001;
+  }
+
+  /**
+   * Get the number closest to a given number in a number array.
+   * number number number number. Now the word looks weird.
+   * @param val The number to check against.
+   * @param arr The non-empty array to perform the check on.
+   */
+  static getClosestNumber(val: number, arr: number[]) {
+    return arr.reduce((prev, current) => {
+      return Math.abs(prev - val) < Math.abs(current - val)
+        ? prev
+        : current
+    });
   }
 }

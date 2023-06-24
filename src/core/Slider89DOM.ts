@@ -142,10 +142,14 @@ export default class Slider89DOM extends Slider89Properties {
     }
     // Round value to a given step
     if (newVals.step !== false) {
-      if (Math.abs(newVals.range[1] - newVals.range[0]) < newVals.step) {
-        value = newVals.range[0];
+      if (typeof newVals.step === 'number') {
+        if (Math.abs(newVals.range[1] - newVals.range[0]) < newVals.step) {
+          value = newVals.range[0];
+        } else {
+          value = newVals.range[0] + Math.round((value - newVals.range[0]) / newVals.step) * newVals.step;
+        }
       } else {
-        value = newVals.range[0] + Math.round((value - newVals.range[0]) / newVals.step) * newVals.step;
+        value = Slider89.getClosestNumber(value, newVals.step);
       }
     }
     const newRatio = (value - newVals.range[0]) / (newVals.range[1] - newVals.range[0]);
