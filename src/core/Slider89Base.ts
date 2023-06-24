@@ -205,6 +205,9 @@ export default class Slider89Base extends Slider89Error {
         },
         {
           type: 'array',
+          conditions: {
+            nonempty: true
+          },
           descriptor: [{
             type: 'number'
           }]

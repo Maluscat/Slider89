@@ -14,7 +14,7 @@ export namespace Descriptor {
     false: never;
     object: never;
     function: never;
-    array: 'length';
+    array: 'length' | 'nonempty';
     number: 'nonnegative' | 'positive' | 'integer';
     string: 'filled' | 'wordChar' | 'keywords';
   }
@@ -22,6 +22,7 @@ export namespace Descriptor {
     nonnegative: boolean;
     positive: boolean;
     integer: boolean;
+    nonempty: boolean;
     length: number;
     keywords: string[];
     filled: boolean;
@@ -125,6 +126,9 @@ export default class LibraryTypeCheck {
     if (conditions.length && val.length !== conditions.length) {
       return 'an array of length ' + val.length;
     }
+    if (conditions.nonempty && val.length === 0) {
+      return 'an empty array';
+    }
   }
 
   // Compute an automated error message regarding the property's types and conditions
@@ -152,6 +156,9 @@ export default class LibraryTypeCheck {
 
       else if (type === 'array') {
         const innerType = LibraryTypeCheck.buildDescriptorTypeMessage(typeData.descriptor);
+        if (cond && cond.nonempty) {
+          msg += 'non-empty ';
+        }
         msg += 'Array<' + innerType + '>';
         if (cond && cond.length) {
           msg += ' of length ' + cond.length;
