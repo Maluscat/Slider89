@@ -263,7 +263,6 @@ export default class Slider89DOM extends Slider89Properties {
 
     window.removeEventListener('mousemove', this.mouseMove);
     window.removeEventListener('mouseup', this.mouseEnd);
-    this.mouseDownPos = null;
     this.activeThumb = null;
   }
 
@@ -315,6 +314,7 @@ export default class Slider89DOM extends Slider89Properties {
     this.invokeEvent(['end'], eventArg);
     thumbNode.classList.remove('active');
     document.body.classList.remove('sl89-noselect');
+    this.mouseDownPos = null;
   }
 
 
