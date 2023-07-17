@@ -205,7 +205,7 @@ export default class Slider89DOM extends Slider89Properties {
     // changedTouches should always be of length 1 because no two touches can trigger one event.
     const touch = e.changedTouches[0];
     if (!this.activeTouchIDs.has(touch.identifier)) {
-      const thumbNode = e.target as HTMLDivElement;
+      const thumbNode = e.currentTarget as HTMLDivElement;
       this.activeTouchIDs.set(touch.identifier, thumbNode);
 
       this.slideStart(thumbNode, touch, e);
