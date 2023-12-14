@@ -5,16 +5,22 @@ import Slider89DOMVariables from './Slider89DOMVariables';
 import Slider89Error from './Slider89Error';
 
 // ---- Misc types ----
-type CustomPropertyName = `_${string}`;
+export namespace PropertyNode {
+  type KnownElements = 'slider' | 'track';
+  type KnownElementsThumb = 'thumb';
 
-export interface PropertyNodeBaseElements {
-  slider: HTMLDivElement;
-  track: HTMLDivElement;
-  thumb: HTMLDivElement[];
+  export type KnownMult = Record<KnownElementsThumb, HTMLDivElement[]>;
+  export type Mult = KnownMult & Record<string, Element[]>;
+
+  // TODO: Reference every first entry in `nodes`, just like values :: value
+  export type KnownSingle = Record<KnownElements, HTMLDivElement>;
+  export type Single = KnownSingle & Record<string, Element>;
+  // export type KnownNormal = Record<KnownElements | KnownThumbElements, HTMLDivElement>;
+  // export type Normal = KnownNormal & Record<keyof KnownThumb, HTMLDivElement> & Record<string, Element>;
+
+  export type NormalWithThumbReferencesTODO =
+    KnownSingle & Record<KnownElementsThumb, HTMLDivElement> & Record<string, Element>;
 }
-export type PropertyNode = PropertyNodeBaseElements & {
-  [ Key: string ]: Element | Element[];
-};
 
 type EventList = {
   [ Type in EventType.Base ]: EventData.Fn[]
@@ -22,6 +28,8 @@ type EventList = {
 
 // ---- Property types ----
 export namespace Properties {
+  export type CustomPropertyName = `_${string}`;
+
   export interface Base {
     range: [ number, number ];
     values: number[];
@@ -29,7 +37,8 @@ export namespace Properties {
     precision: number | false;
     step: number | number[] | false;
     structure: string | false;
-    node: PropertyNode;
+    node: PropertyNode.Single;
+    nodes: PropertyNode.Mult;
     orientation: 'vertical' | 'horizontal';
     classList: Record<string, string[]> | false;
     events: Partial<EventList> | false;
@@ -80,9 +89,9 @@ type MethodData = DeepReadonlyObject<{
 
 // ---- Types to keep track of ----
 // This information cannot be extracted from the readonly `propertyData` below.
-// This, NOTE: Keep track of this when modifying properties.
+// Thus, NOTE: Keep track of this when modifying properties.
 type DeepPropertyNames = 'range' | 'values';
-type ReadonlyPropertyNames = 'node';
+type ReadonlyPropertyNames = 'node' | 'nodes';
 
 
 export default class Slider89Base extends Slider89Error {
@@ -96,6 +105,7 @@ export default class Slider89Base extends Slider89Error {
   step: Properties.Base['step']
   structure: Properties.Base['structure']
   node: Properties.Base['node']
+  nodes: Properties.Base['nodes']
   orientation: Properties.Base['orientation']
   classList: Properties.Base['classList']
   events: Properties.Base['events']
@@ -228,6 +238,9 @@ export default class Slider89Base extends Slider89Error {
       ]
     },
     node: {
+      readOnly: true
+    },
+    nodes: {
       readOnly: true
     },
     orientation: {

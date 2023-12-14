@@ -91,17 +91,17 @@ export default class Slider89DOMVariables extends Slider89DOMBuilder {
       // Special case: Iterate over every thumb
       const baseName = this.nodeHasBaseElementOwner(node);
       if (baseName) {
-        const elements = this.vals.node[baseName];
+        const elements = this.vals.nodes[baseName];
 
         if (node.nodeType === Node.ATTRIBUTE_NODE) {
-          for (const element of elements as Element[]) {
+          for (const element of elements) {
             yield [ element, element.getAttributeNode((node as Attr).name), baseName ];
-          };
+          }
         } else {
-          for (const element of elements as Element[]) {
+          for (const element of elements) {
             // The text node is always the first child
             yield [ element, element.childNodes[0], baseName ];
-          };
+          }
         }
       } else {
         const element = Slider89DOMBuilder.getNodeOwner(node);

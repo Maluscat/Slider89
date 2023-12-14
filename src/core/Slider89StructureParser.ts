@@ -1,15 +1,6 @@
 'use strict';
-import type { Properties } from './Slider89Base';
+import type { Properties, PropertyNode } from './Slider89Base';
 import Slider89 from './Slider89';
-
-// ---- Type: Misc ----
-export type PropertyNodeWithoutArray = {
-  [ key: string ]: Element;
-  slider: HTMLDivElement;
-  track?: HTMLDivElement;
-  thumb?: HTMLDivElement;
-}
-
 
 // ---- Type: Special variables ----
 namespace SpecialVariables {
@@ -51,11 +42,11 @@ export default class Slider89StructureParser {
     },
     thumb_index: {
       thumbOnly: true,
-      getter: (node, slider, baseName) => (slider.node[baseName] as Element[]).indexOf(node)
+      getter: (node, slider, baseName) => (slider.nodes[baseName]).indexOf(node)
     },
     thumb_value: {
       thumbOnly: true,
-      getter: (node, slider, baseName) => slider.values[(slider.node[baseName] as Element[]).indexOf(node)]
+      getter: (node, slider, baseName) => slider.values[(slider.nodes[baseName]).indexOf(node)]
     },
   });
   /**
@@ -113,7 +104,7 @@ export default class Slider89StructureParser {
 
   // ---- Structure parser ----
   parseStructure(structureStr: string) {
-    const node: Partial<PropertyNodeWithoutArray> = {
+    const node: Partial<PropertyNode.NormalWithThumbReferencesTODO> = {
       slider: document.createElement('div')
     };
 
@@ -176,11 +167,11 @@ export default class Slider89StructureParser {
       this.closingTagError(stack[0]);
     }
 
-    return node as PropertyNodeWithoutArray;
+    return node;
   }
 
   assembleElement<T extends string>(
-    node: Partial<Properties.Base['node'] | PropertyNodeWithoutArray>,
+    node: Partial<PropertyNode.NormalWithThumbReferencesTODO>,
     name: string,
     nameStack: string[],
     tag?: T,

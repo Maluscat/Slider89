@@ -112,7 +112,7 @@ export default class Slider89DOM extends Slider89Properties {
     const { value, prevRatio, ratio } = this.computeRatioDistance(thumbIndex, newVals);
 
     this.setValuesWithValueChange(thumbIndex, value);
-    if (!Slider89.floatIsEqual(ratio, prevRatio)) this.moveThumbRelative(this.vals.node.thumb[thumbIndex], ratio);
+    if (!Slider89.floatIsEqual(ratio, prevRatio)) this.moveThumbRelative(this.vals.nodes.thumb[thumbIndex], ratio);
   }
 
   // ---- Distance computation ----
@@ -163,11 +163,11 @@ export default class Slider89DOM extends Slider89Properties {
 
   // ---- Helper functions ----
   removeLastThumbNode() {
-    const thumb = this.domHandler.removeThumbFromNode(this.vals.node);
+    const thumb = this.domHandler.removeThumbFromNode(this.vals.nodes);
     this.domHandler.thumbParent.removeChild(thumb);
   }
   addNewThumbNode(thumbIndex: number) {
-    this.domHandler.addThumbToNode(this.vals.node);
+    this.domHandler.addThumbToNode(this.vals.nodes);
     this.applyOneRatioDistance(thumbIndex);
   }
 
@@ -181,7 +181,7 @@ export default class Slider89DOM extends Slider89Properties {
     }
   }
   #removeThumbsDOMProperty(property: string) {
-    for (const thumb of this.vals.node.thumb) {
+    for (const thumb of this.vals.nodes.thumb) {
       thumb.style.removeProperty(property);
     }
   }
@@ -284,7 +284,7 @@ export default class Slider89DOM extends Slider89Properties {
     thumbNode.style.removeProperty(posAnchor);
   }
   slideMove(thumbNode: HTMLDivElement, e: ClientXY, eventArg: UIEvent) {
-    const thumbIndex = this.vals.node.thumb.indexOf(thumbNode);
+    const thumbIndex = this.vals.nodes.thumb.indexOf(thumbNode);
     const absSize = this.getAbsoluteTrackSize(thumbNode);
     let distance = (this.vals.orientation === 'vertical' ? e.clientY : e.clientX) - this.mouseDownPos;
 
@@ -306,7 +306,7 @@ export default class Slider89DOM extends Slider89Properties {
     }
   }
   slideEnd(thumbNode: HTMLDivElement, e: ClientXY, eventArg: UIEvent) {
-    const thumbIndex = this.vals.node.thumb.indexOf(thumbNode);
+    const thumbIndex = this.vals.nodes.thumb.indexOf(thumbNode);
 
     this.applyOneRatioDistance(thumbIndex);
     thumbNode.style.removeProperty('transform');
@@ -322,7 +322,7 @@ export default class Slider89DOM extends Slider89Properties {
   keyDown(e: KeyboardEvent) {
     if (!e.key.startsWith('Arrow')) return;
 
-    const thumbIndex = this.vals.node.thumb.indexOf(e.currentTarget as HTMLDivElement);
+    const thumbIndex = this.vals.nodes.thumb.indexOf(e.currentTarget as HTMLDivElement);
 
     let modifier = Math.round((this.vals.range[1] - this.vals.range[0]) / 100);
     if (e.shiftKey && e.ctrlKey) {

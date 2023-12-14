@@ -145,7 +145,11 @@ export default class Slider89 extends Slider89DOM {
       default: false,
     },
     node: {
-      // @ts-ignore (only Setup)
+      // @ts-ignore (only setup)
+      default: {},
+    },
+    nodes: {
+      // @ts-ignore (only setup)
       default: {},
     },
     orientation: {
@@ -296,12 +300,18 @@ export default class Slider89 extends Slider89DOM {
   }
 
   buildSlider(target: HTMLElement, replace: boolean) {
-    this.vals.node = this.domHandler.createSliderNode(this.vals.values.length, this.vals.structure);
+    const nodeBundle = this.domHandler.createSliderNode(this.vals.values.length, this.vals.structure);
+    this.vals.node = nodeBundle.node;
+    this.vals.nodes = nodeBundle.nodes;
 
     if (replace) {
-      this.domHandler.addAttributesFromTarget(this.vals.node, target);
+      this.domHandler.addAttributesFromTarget(this.vals.node.slider, target);
     }
-    this.domHandler.addClasses(this.vals.node, this.vals.classList, this.vals.orientation === 'vertical');
+    this.domHandler.addClasses(
+      this.vals.node.slider,
+      this.vals.nodes,
+      this.vals.classList,
+      this.vals.orientation === 'vertical');
 
     Slider89DOMBuilder.injectStyleSheetIfNeeded();
 

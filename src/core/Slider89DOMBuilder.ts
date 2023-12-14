@@ -2,12 +2,16 @@
 // @ts-ignore (Webpack import)
 import defaultStylesString from '../css/default-styles.css';
 
-import type { Properties, PropertyNode, PropertyNodeBaseElements } from './Slider89Base';
-import type { PropertyNodeWithoutArray, VariableName } from './Slider89StructureParser';
+import type { Properties, PropertyNode } from './Slider89Base';
+import type { VariableName } from './Slider89StructureParser';
 import Slider89 from './Slider89';
 import Slider89StructureParser from './Slider89StructureParser';
 
-type VariableThumbStrings = Partial<Record<VariableName, string[]>>
+type VariableThumbStrings = Partial<Record<VariableName, string[]>>;
+interface PropertyNodeBundle {
+  node: PropertyNode.Single,
+  nodes: PropertyNode.Mult
+};
 
 export default class Slider89DOMBuilder extends Slider89StructureParser {
   static hasInjectedStylesheet = false;
@@ -37,7 +41,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
 
   // ---- Element builder ----
-  createSliderNode(thumbCount: number, structureStr: Properties.Base['structure']): PropertyNode {
+  createSliderNode(thumbCount: number, structureStr: Properties.Base['structure']): PropertyNodeBundle {
     return structureStr === false
       ? this.createSliderManually(thumbCount)
       : this.createSliderFromStructure(thumbCount, structureStr);
@@ -46,37 +50,59 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
   // In case no custom structure is defined, manually build the node to ensure best performance (parseStructure takes a while)
   createSliderManually(thumbCount: number) {
-    // @ts-ignore
-    const node: PropertyNodeBaseElements = {
+    // -- Thumb node --
+    const nodes: PropertyNode.KnownMult = {
+      thumb: new Array(thumbCount)
+    };
+    for (let i = 0; i < thumbCount; i++) {
+      nodes.thumb[i] = this.createNewThumb();
+    }
+
+    // -- Normal node --
+    const node: PropertyNode.KnownSingle = {
       slider: document.createElement('div'),
       track: document.createElement('div'),
-      thumb: new Array<HTMLDivElement>(thumbCount)
     };
+    node.slider.appendChild(node.track);
 
     this.thumbBase = document.createElement('div');
     this.thumbParent = node.track;
 
-    for (let i = 0; i < thumbCount; i++) {
-      node.thumb[i] = this.createNewThumb();
-    }
-    node.slider.appendChild(node.track);
-
+    // This does not handle thumbs; thumb classes are applied in `createNewThumb`
     for (let element in node) {
-      // Thumb classes are applied in `createNewThumb`
-      if (element !== 'slider' && element !== 'thumb') {
+      if (element !== 'slider') {
         node[element].classList.add('sl89-' + element);
       }
     }
-    return node as PropertyNode;
+    return { node, nodes };
   }
 
   createSliderFromStructure(thumbCount: number, structureStr: string) {
     const node = this.parseStructure(structureStr);
-    this.parsePostProcess(node, thumbCount);
-    return node as unknown as PropertyNode;
+    this.parsePostProcess(node);
+    const nodes = this.expandThumbs(node as PropertyNode.Single, thumbCount);
+    return { node: node as PropertyNode.Single, nodes };
   }
 
-  parsePostProcess(node: PropertyNodeWithoutArray, thumbCount: number) {
+  expandThumbs(node: PropertyNode.Single, thumbCount: number) {
+    const nodes: PropertyNode.Mult = {
+      thumb: []
+    };
+
+    // Push thumb & descendants into node arrays
+    // TODO add a reference to element[0] to `node`
+    for (const nodeName of this.thumbChildren) {
+      this.baseElements[nodeName] = node[nodeName];
+      nodes[nodeName] = [];
+    }
+    for (let i = 0; i < thumbCount; i++) {
+      this.addThumbToNode(nodes);
+    }
+
+    return nodes;
+  }
+
+  parsePostProcess(node: Partial<PropertyNode.NormalWithThumbReferencesTODO>) {
     // NOTE: thumb and track can be defined independently
     // I.e. track gets the class `sl89-track`, but this.thumbParent can be a different node
     if (!node.thumb) {
@@ -108,20 +134,8 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
     node.track.classList.add('sl89-track');
 
-    // NOTE: From here on, `node` is of type `PropertyNode`
-
-    // Push thumb & descendants into node arrays
-    (node as unknown as PropertyNode).thumb = [];
-    for (const nodeName of this.thumbChildren) {
-      this.baseElements[nodeName] = node[nodeName];
-      (node as unknown as PropertyNode)[nodeName] = [];
-    }
-
     this.findStructureVarStringsInThumb(this.thumbBase);
-
-    for (let i = 0; i < thumbCount; i++) {
-      this.addThumbToNode((node as unknown as PropertyNode));
-    }
+    // NOTE: From here on, `node` is of type `PropertyNode`
   }
 
   findStructureVarStringsInThumb(thumbBase: typeof this.thumbBase) {
@@ -143,59 +157,55 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
 
   // ---- Thumb helpers ----
-  addThumbToNode(node: PropertyNode) {
+  addThumbToNode(nodes: PropertyNode.Mult) {
     const newThumb = this.createNewThumb();
-    node.thumb.push(newThumb);
+    nodes.thumb.push(newThumb);
 
     Slider89DOMBuilder.findNodeChildren(newThumb)
-      .forEach((childNode, j) => {
-        const childName = this.thumbChildren[j];
-        (node[childName] as Element[]).push(childNode);
+      .forEach((childNode, i) => {
+        const childName = this.thumbChildren[i];
+        nodes[childName].push(childNode);
       });
   }
-  removeThumbFromNode(node: PropertyNode) {
+  removeThumbFromNode(nodes: PropertyNode.Mult) {
     for (const nodeName of this.thumbChildren) {
-      (node[nodeName] as Element[]).pop();
+      nodes[nodeName].pop();
     }
-    return node.thumb.pop();
+    return nodes.thumb.pop();
   }
 
 
   // ---- Misc functions ----
-  addAttributesFromTarget(node: PropertyNode, targetNode: HTMLElement) {
+  addAttributesFromTarget(slider: HTMLDivElement, targetNode: HTMLElement) {
     const attributes = targetNode.attributes;
     for (let i = 0; i < attributes.length; i++) {
-      node.slider.setAttribute(attributes[i].name, attributes[i].value);
+      slider.setAttribute(attributes[i].name, attributes[i].value);
     }
   }
 
-  addClasses(node: PropertyNode, classList: Properties.Base['classList'], isVertical: boolean) {
-    node.slider.classList.add('slider89');
+  addClasses(slider: Element, nodes: PropertyNode.Mult, classList: Properties.Base['classList'], isVertical: boolean) {
+    slider.classList.add('slider89');
     if (isVertical) {
-      node.slider.classList.add('vertical');
+      slider.classList.add('vertical');
     }
     if (classList) {
-      this.addClassesFromClassList(node, classList);
+      this.addClassesFromClassList(nodes, classList);
     }
   }
 
   // Add the specified classes and collecting all nonexistent nodes in `errNodes`
-  addClassesFromClassList(node: PropertyNode, classList: Exclude<Properties.Base['classList'], false>) {
+  addClassesFromClassList(nodes: PropertyNode.Mult, classList: Exclude<Properties.Base['classList'], false>) {
     const errNodes: string[] = [];
 
-    for (let nodeName in classList) {
-      const classArr = classList[nodeName];
-      if (!Object.prototype.hasOwnProperty.call(node, nodeName)) {
+    for (const [ nodeName, classes ] of Object.entries(classList)) {
+      if (!Object.prototype.hasOwnProperty.call(nodes, nodeName)) {
         errNodes.push(nodeName);
       } else if (errNodes.length === 0) {
-        for (let i = 0; i < classArr.length; i++) {
-          if (nodeName === 'thumb') {
-            for (let j = 0; j < node[nodeName].length; j++) {
-              node[nodeName][j].classList.add(classArr[i]);
-            }
-          } else {
-            // @ts-ignore TODO + test
-            node[nodeName].classList.add(classArr[i]);
+        const elements = nodes[nodeName];
+
+        for (const className of classes) {
+          for (const element of Object.values(elements)) {
+            element.classList.add(className);
           }
         }
       }
@@ -204,7 +214,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     if (errNodes.length > 0) {
       const msg =
         "The given object contains items which aren't nodes of this slider:" + Slider89.arrayToListString(errNodes) +
-        "Following nodes are part of this slider's node pool:" + Slider89.arrayToListString(Object.keys(node))
+        "Following nodes are part of this slider's node pool:" + Slider89.arrayToListString(Object.keys(nodes))
       throw new Slider89.Error(msg, 'classList', true);
     }
   }
