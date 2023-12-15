@@ -219,7 +219,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
   createNewThumb() {
     const newThumb = this.thumbBase.cloneNode(true) as typeof this.thumbBase;
     newThumb.classList.add('sl89-thumb');
-    if (newThumb.tabIndex == null) {
+    if (newThumb.tabIndex === -1) {
       newThumb.tabIndex = 0;
     }
     for (const [ eventName, callback ] of Object.entries(this.thumbEvents)) {
