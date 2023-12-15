@@ -269,7 +269,6 @@ export default class Slider89DOM extends Slider89Properties {
   // ---- General event handlers ----
   slideStart(thumbNode: HTMLDivElement, e: ClientXY, eventArg: UIEvent) {
     thumbNode.classList.add('active');
-    // invokeEvent(['start'], eventArg);
 
     if (this.vals.orientation === 'vertical') {
       var posAnchor = 'top';
@@ -281,6 +280,8 @@ export default class Slider89DOM extends Slider89Properties {
     const distance = this.getDistance(thumbNode);
     this.mouseDownPos = clientDim - distance;
     this.moveThumbTranslate(thumbNode, distance);
+
+    this.invokeEvent(['start'], eventArg);
     thumbNode.style.removeProperty(posAnchor);
   }
   slideMove(thumbNode: HTMLDivElement, e: ClientXY, eventArg: UIEvent) {
