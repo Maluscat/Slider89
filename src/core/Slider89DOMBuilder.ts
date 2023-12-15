@@ -91,6 +91,8 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
       }
     }
 
+    // NOTE: This needs to be called after `baseElements` is fully populated (i.e. above).
+    this.findStructureVarStringsInThumb(this.thumbBase);
     for (let i = 0; i < thumbCount; i++) {
       this.addThumbToNode(nodes);
     }
@@ -129,8 +131,6 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     }
 
     node.track.classList.add('sl89-track');
-
-    this.findStructureVarStringsInThumb(this.thumbBase);
     // NOTE: From here on, `node` is of type `PropertyNode.Single`
   }
 
