@@ -268,8 +268,10 @@ export default class Slider89DOM extends Slider89Properties {
 
   // ---- General event handlers ----
   slideStart(thumbNode: HTMLDivElement, e: ClientXY, eventArg: UIEvent) {
-    thumbNode.classList.add('active');
+    const thumbIndex = this.vals.nodes.thumb.indexOf(thumbNode);
+    const distance = this.getDistance(thumbNode);
 
+    thumbNode.classList.add('active');
     if (this.vals.orientation === 'vertical') {
       var posAnchor = 'top';
       var clientDim = e.clientY;
@@ -277,11 +279,10 @@ export default class Slider89DOM extends Slider89Properties {
       var posAnchor = 'left';
       var clientDim = e.clientX;
     }
-    const distance = this.getDistance(thumbNode);
     this.mouseDownPos = clientDim - distance;
     this.moveThumbTranslate(thumbNode, distance);
 
-    this.invokeEvent(['start'], eventArg);
+    this.invokeEvent(['start'], thumbIndex, eventArg);
     thumbNode.style.removeProperty(posAnchor);
   }
   slideMove(thumbNode: HTMLDivElement, e: ClientXY, eventArg: UIEvent) {
@@ -303,7 +304,7 @@ export default class Slider89DOM extends Slider89Properties {
 
     if (this.setValuesWithValueChange(thumbIndex, value)) {
       this.moveThumbTranslate(thumbNode, distance);
-      this.invokeEvent(['move'], eventArg);
+      this.invokeEvent(['move'], thumbIndex, eventArg);
     }
   }
   slideEnd(thumbNode: HTMLDivElement, e: ClientXY, eventArg: UIEvent) {
@@ -312,7 +313,7 @@ export default class Slider89DOM extends Slider89Properties {
     this.applyOneRatioDistance(thumbIndex);
     thumbNode.style.removeProperty('transform');
 
-    this.invokeEvent(['end'], eventArg);
+    this.invokeEvent(['end'], thumbIndex, eventArg);
     thumbNode.classList.remove('active');
     document.body.classList.remove('sl89-noselect');
     this.mouseDownPos = null;
