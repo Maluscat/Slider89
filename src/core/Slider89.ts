@@ -300,9 +300,8 @@ export default class Slider89 extends Slider89DOM {
   }
 
   buildSlider(target: HTMLElement, replace: boolean) {
-    const nodeBundle = this.domHandler.createSliderNode(this.vals.values.length, this.vals.structure);
-    this.vals.node = nodeBundle.node;
-    this.vals.nodes = nodeBundle.nodes;
+    this.vals.nodes = this.domHandler.createSliderNode(this.vals.values.length, this.vals.structure);
+    this.defineNodeGetters(this.vals.nodes);
 
     if (replace) {
       this.domHandler.addAttributesFromTarget(this.vals.node.slider, target);
@@ -325,6 +324,17 @@ export default class Slider89 extends Slider89DOM {
   }
 
   // ---- Helper functions ----
+  defineNodeGetters(nodes) {
+    for (const nodeName in nodes) {
+      Object.defineProperty(this.vals.node, nodeName, {
+        get: () => {
+          return nodes[nodeName][0];
+        },
+        enumerable: true
+      });
+    }
+  }
+
   // Check properties & methods for the correct type & format
   checkMethod(method: keyof typeof this.methods, argList: any[]) {
     const obj = Slider89.methodData[method];

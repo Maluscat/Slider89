@@ -8,10 +8,6 @@ import Slider89 from './Slider89';
 import Slider89StructureParser from './Slider89StructureParser';
 
 type VariableThumbStrings = Partial<Record<VariableName, string[]>>;
-interface PropertyNodeBundle {
-  node: PropertyNode.Single,
-  nodes: PropertyNode.Mult
-};
 
 export default class Slider89DOMBuilder extends Slider89StructureParser {
   static hasInjectedStylesheet = false;
@@ -41,7 +37,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
 
   // ---- Element builder ----
-  createSliderNode(thumbCount: number, structureStr: Properties.Base['structure']): PropertyNodeBundle {
+  createSliderNode(thumbCount: number, structureStr: Properties.Base['structure']): PropertyNode.Mult {
     return structureStr === false
       ? this.createSliderManually(thumbCount)
       : this.createSliderFromStructure(thumbCount, structureStr);
@@ -50,51 +46,51 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
   // In case no custom structure is defined, manually build the node to ensure best performance (parseStructure takes a while)
   createSliderManually(thumbCount: number) {
-    // -- Thumb node --
+    const slider = document.createElement('div');
+    const track = document.createElement('div');
     const nodes: PropertyNode.KnownMult = {
-      thumb: new Array(thumbCount)
+      slider: [ slider ],
+      track: [ track ],
+      thumb: new Array(thumbCount),
     };
+
+    this.thumbBase = document.createElement('div');
+    this.thumbParent = track;
+
     for (let i = 0; i < thumbCount; i++) {
       nodes.thumb[i] = this.createNewThumb();
     }
+    // Thumb classes are applied in `createNewThumb`;
+    // Slider classes are applied in `addClasses`.
+    track.classList.add('sl89-track');
+    slider.appendChild(track);
 
-    // -- Normal node --
-    const node: PropertyNode.KnownSingle = {
-      slider: document.createElement('div'),
-      track: document.createElement('div'),
-    };
-    node.slider.appendChild(node.track);
-
-    this.thumbBase = document.createElement('div');
-    this.thumbParent = node.track;
-
-    // This does not handle thumbs; thumb classes are applied in `createNewThumb`
-    for (let element in node) {
-      if (element !== 'slider') {
-        node[element].classList.add('sl89-' + element);
-      }
-    }
-    return { node, nodes };
+    return nodes;
   }
 
   createSliderFromStructure(thumbCount: number, structureStr: string) {
     const node = this.parseStructure(structureStr);
     this.parsePostProcess(node);
     const nodes = this.expandThumbs(node as PropertyNode.Single, thumbCount);
-    return { node: node as PropertyNode.Single, nodes };
+    return nodes;
   }
 
-  expandThumbs(node: PropertyNode.Single, thumbCount: number) {
-    const nodes: PropertyNode.Mult = {
+  expandThumbs(node: PropertyNode.Single, thumbCount: number): PropertyNode.Mult {
+    const nodes = {
       thumb: []
-    };
+    } as PropertyNode.Mult;
 
-    // Push thumb & descendants into node arrays
-    // TODO add a reference to element[0] to `node`
-    for (const nodeName of this.thumbChildren) {
-      this.baseElements[nodeName] = node[nodeName];
-      nodes[nodeName] = [];
+    // Convert `node` into `nodes`, differentiating between thumb children & other nodes
+    // The thumb itself gets expanded below.
+    for (const [ nodeName, element ] of Object.entries(node)) {
+      if (this.thumbChildren.includes(nodeName)) {
+        this.baseElements[nodeName] = node[nodeName];
+        nodes[nodeName] = [];
+      } else if (nodeName !== 'thumb') {
+        nodes[nodeName] = [ element ];
+      }
     }
+
     for (let i = 0; i < thumbCount; i++) {
       this.addThumbToNode(nodes);
     }
@@ -102,7 +98,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     return nodes;
   }
 
-  parsePostProcess(node: Partial<PropertyNode.NormalWithThumbReferencesTODO>) {
+  parsePostProcess(node: Partial<PropertyNode.Single>) {
     // NOTE: thumb and track can be defined independently
     // I.e. track gets the class `sl89-track`, but this.thumbParent can be a different node
     if (!node.thumb) {
@@ -110,7 +106,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     } else {
       this.thumbBase = node.thumb;
       if (node.track) {
-        this.thumbParent = node.thumb.parentNode as HTMLElement;
+        this.thumbParent = node.thumb.parentElement;
       }
       // baseElements is only effective if a structure thumb has been defined
       this.baseElements.thumb = this.thumbBase;
@@ -135,7 +131,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     node.track.classList.add('sl89-track');
 
     this.findStructureVarStringsInThumb(this.thumbBase);
-    // NOTE: From here on, `node` is of type `PropertyNode`
+    // NOTE: From here on, `node` is of type `PropertyNode.Single`
   }
 
   findStructureVarStringsInThumb(thumbBase: typeof this.thumbBase) {

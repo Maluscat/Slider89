@@ -104,7 +104,7 @@ export default class Slider89StructureParser {
 
   // ---- Structure parser ----
   parseStructure(structureStr: string) {
-    const node: Partial<PropertyNode.NormalWithThumbReferencesTODO> = {
+    const node: Partial<PropertyNode.Single> = {
       slider: document.createElement('div')
     };
 
@@ -171,7 +171,7 @@ export default class Slider89StructureParser {
   }
 
   assembleElement<T extends string>(
-    node: Partial<PropertyNode.NormalWithThumbReferencesTODO>,
+    node: Partial<PropertyNode.Single>,
     name: string,
     nameStack: string[],
     tag?: T,

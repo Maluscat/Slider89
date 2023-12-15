@@ -6,20 +6,15 @@ import Slider89Error from './Slider89Error';
 
 // ---- Misc types ----
 export namespace PropertyNode {
-  type KnownElements = 'slider' | 'track';
-  type KnownElementsThumb = 'thumb';
+  type KnownElements = 'slider' | 'track' | 'thumb';
 
-  export type KnownMult = Record<KnownElementsThumb, HTMLDivElement[]>;
-  export type Mult = KnownMult & Record<string, Element[]>;
+  type Node<SelfNodeType, GeneralNodeType> =
+    Record<KnownElements, SelfNodeType> & Record<string, GeneralNodeType>;
 
-  // TODO: Reference every first entry in `nodes`, just like values :: value
-  export type KnownSingle = Record<KnownElements, HTMLDivElement>;
-  export type Single = KnownSingle & Record<string, Element>;
-  // export type KnownNormal = Record<KnownElements | KnownThumbElements, HTMLDivElement>;
-  // export type Normal = KnownNormal & Record<keyof KnownThumb, HTMLDivElement> & Record<string, Element>;
+  export type KnownMult = Record<KnownElements, HTMLDivElement[]>;
 
-  export type NormalWithThumbReferencesTODO =
-    KnownSingle & Record<KnownElementsThumb, HTMLDivElement> & Record<string, Element>;
+  export type Single = Node<HTMLDivElement, Element>;
+  export type Mult = Node<HTMLDivElement[], Element[]>;
 }
 
 type EventList = {
