@@ -224,7 +224,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     }
     for (const [ eventName, callback ] of Object.entries(this.thumbEvents)) {
       newThumb.addEventListener(eventName, callback, {
-        passive: !eventName.startsWith('touch')
+        passive: !(eventName.startsWith('touch') || eventName.startsWith('key'))
       });
     }
     this.thumbParent.appendChild(newThumb);
