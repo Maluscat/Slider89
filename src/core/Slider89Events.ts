@@ -36,6 +36,7 @@ type EventListenerIdentifier = number | string;
 export default class Slider89Events extends Slider89Base {
   // ---- Constant statics ----
   static eventTypes = [
+    'update',
     'start',
     'move',
     'end',
