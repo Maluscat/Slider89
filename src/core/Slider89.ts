@@ -1,7 +1,6 @@
 'use strict';
 import type { Properties } from './Slider89Base';
 import type { EventType } from './Slider89Events';
-import type { VariableName } from './Slider89StructureParser';
 import LibraryTypeCheck from './LibraryTypeCheck';
 import Slider89DOM from './Slider89DOM';
 import Slider89DOMBuilder from './Slider89DOMBuilder';

@@ -1,6 +1,6 @@
 'use strict';
-import type { Descriptor } from './LibraryTypeCheck';
 import type { Properties, PropertyInfo } from './Slider89Base';
+import type { Descriptor } from './LibraryTypeCheck';
 import LibraryTypeCheck from './LibraryTypeCheck';
 import Slider89 from './Slider89';
 

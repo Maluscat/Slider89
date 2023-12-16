@@ -1,7 +1,6 @@
 import type { Properties } from './Slider89Base';
 import type { VariableName } from './Slider89StructureParser';
 import Slider89 from './Slider89';
-import Slider89Events from './Slider89Events';
 import Slider89DOMBuilder from './Slider89DOMBuilder';
 import Slider89StructureParser from './Slider89StructureParser';
 
