@@ -21,7 +21,7 @@ export namespace EventType {
 
 
 export namespace EventData {
-  export type Fn = (this: Slider89, ...args: any[]) => any;
+  export type Fn = (...args: any[]) => any;
   export type List = Record<EventListenerIdentifier, Base[] | Base>;
 
   export interface Base {
@@ -126,14 +126,12 @@ export default class Slider89Events extends Slider89Base {
     return deleteCollection;
   }
 
-  invokeEvent(types: EventType.Base[], ...args: any[]) {
+  invokeEvent(type: EventType.Base, ...args: any[]) {
     args.unshift(this);
-    for (const type of types) {
-      if (this.vals.events !== false) {
-        if (type in this.vals.events) {
-          for (const eventFunc of this.vals.events[type]) {
-            eventFunc.apply(this as unknown as Slider89, args);
-          }
+    if (this.vals.events !== false) {
+      if (type in this.vals.events) {
+        for (const eventFunc of this.vals.events[type]) {
+          eventFunc(...args);
         }
       }
     }

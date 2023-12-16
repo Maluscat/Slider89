@@ -121,7 +121,7 @@ export default class Slider89Properties extends Slider89Events {
       this.domHandler.updatePotentialVariable(item);
       if (!skipEvent) {
         prevVal ??= this[item];
-        this.invokeEvent(['change:' + item] as EventType.Base[], this[item], prevVal);
+        this.invokeEvent(('change:' + item) as EventType.Base, this[item], prevVal);
       }
     }
   }
@@ -149,7 +149,7 @@ export default class Slider89Properties extends Slider89Events {
     deepDefinedIndex: number
   ) {
     if (prevVal[deepDefinedIndex] !== this[item][deepDefinedIndex]) {
-      this.invokeEvent(['change:' + item] as EventType.Base[], this[item], prevVal, deepDefinedIndex);
+      this.invokeEvent(('change:' + item) as EventType.Base, this[item], prevVal, deepDefinedIndex);
     }
   }
 }
