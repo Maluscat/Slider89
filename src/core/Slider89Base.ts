@@ -38,7 +38,7 @@ export namespace Properties {
     classList: Record<string, string[]> | false;
     events: Partial<EventList> | false;
   }
-  export interface Vals extends Base {
+  export interface Vals extends WithCustom {
     readonly $: Base;
     readonly $intermediateThis: Deep;
     readonly $intermediateVals: Deep;
@@ -89,10 +89,12 @@ type DeepPropertyNames = 'range' | 'values';
 type ReadonlyPropertyNames = 'node' | 'nodes';
 
 
-export default class Slider89Base extends Slider89Error {
+export default class Slider89Base extends Slider89Error implements Properties.WithCustom {
   // TypeScript does not allow custom properties in classes
   // because they are busy ignoring all open issues with good suggestions
-  // Thus, NOTE: Expand this (copy-paste) whenever the properties change.
+  // Thus, NOTE: Update this (copy-paste) whenever the properties expand.
+  [ key: string ]: any;
+
   range: Properties.Base['range']
   values: Properties.Base['values']
   value: Properties.Base['value']
