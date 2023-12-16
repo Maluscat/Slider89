@@ -209,6 +209,7 @@ export default class Slider89 extends Slider89DOM {
   }
 
 
+  // ---- Tests ----
   testInitialTarget(target: HTMLElement) {
     if (!target) {
       throw new Slider89.InitializationError('No first argument has been supplied. It needs to be the DOM target node for the slider');
@@ -225,41 +226,10 @@ export default class Slider89 extends Slider89DOM {
   }
 
 
-  // Initialize properties and methods
+  // ---- Initialization ----
   initializeClassProperties(config: Partial<Properties.Config>) {
-    // NOTE: This section has no strong type checking because propData is of type any
-    // Don't even bother trying to fix this, for your own sake
-    for (let _ in this.properties) {
-      // IE-support: item needs to be a scoped variable because defineProperty is async
-      const item = _;
-      const prop = this.properties[item];
-      const propData = Slider89.propertyData[item];
-
-      Object.defineProperty(this, item, {
-        set: (val: Properties.Base[keyof Properties.Base]) => {
-          if (propData.readOnly) {
-            throw new Slider89.Error('Property ‘' + item + '’ is read-only (It was just set with the value ‘' + val + '’)');
-          }
-          if (propData.constructorOnly && !this.initial) {
-            throw new Slider89.Error('Property ‘' + item + '’ may only be defined in the constructor (It was just set with the value ‘' + val + '’)');
-          }
-
-          this.checkProp(item as keyof Properties.Writable, val);
-
-          if (!prop.setter || !prop.setter(val)) {
-            this.vals[item] = val;
-          }
-        },
-        get: () => {
-          const getterEndpoint = (propData.isDeepDefinedArray)
-            ? this.vals.$intermediateThis
-            : this.vals;
-          return (prop.getter ? prop.getter(getterEndpoint[item]) : getterEndpoint[item]);
-        },
-        enumerable: true
-      });
-
-      this.defineDeepProperty(this.vals, item as keyof Properties.Base, this.vals.$, prop.postSetter, propData.isDeepDefinedArray);
+    for (const [ item, prop ] of Object.entries(this.properties)) {
+      this.initializeProperty(item as keyof PropertiesOutline, prop);
 
       if (item in config) {
         this[item] = config[item];
@@ -272,9 +242,7 @@ export default class Slider89 extends Slider89DOM {
   }
 
   initializeCustomProperties(config: Partial<Properties.Custom>) {
-    for (let _ in config) {
-      const item = _;
-
+    for (const item in config) {
       if (item[0] === '_') {
         this.defineDeepProperty(this, item as keyof Properties.Custom, this.vals);
         this.vals[item] = config[item];
@@ -288,13 +256,12 @@ export default class Slider89 extends Slider89DOM {
   initializeMethods() {
     const that = this;
 
-    for (let _ in this.methods) {
-      const item = _;
-      const method = this.methods[item];
+    for (const [ item, method ] of Object.entries(this.methods)) {
       const argCount = Slider89.methodData[item].args.length;
       this[item] = function() {
         const args = Array.prototype.slice.call(arguments, 0, argCount);
         that.checkMethod(item as keyof typeof that.methods, args);
+        // @ts-ignore ???
         return method.funct.apply(this, args);
       }
     }
@@ -322,6 +289,39 @@ export default class Slider89 extends Slider89DOM {
     }
 
     this.trackStyle = getComputedStyle(this.vals.node.track);
+  }
+
+  // ---- Initialization helpers ----
+  initializeProperty<Item extends keyof PropertiesOutline>(item: Item, prop: PropertiesOutline[Item]) {
+    const propData = Slider89.propertyData[item];
+    const isDeep = 'isDeepDefinedArray' in propData;
+
+    Object.defineProperty(this, item, {
+      set: (val: Properties.Base[Item]) => {
+        if ('readonly' in propData) {
+          throw new Slider89.Error('Property ‘' + item + '’ is read-only (It was just set with the value ‘' + val + '’)');
+        }
+        if (('constructorOnly' in propData) && !this.initial) {
+          throw new Slider89.Error('Property ‘' + item + '’ may only be defined in the constructor (It was just set with the value ‘' + val + '’)');
+        }
+
+        this.checkProp(item as keyof Properties.Writable, val);
+
+        if (!prop.setter || !prop.setter(val)) {
+          // @ts-ignore ???
+          this.vals[item] = val;
+        }
+      },
+      get: () => {
+        const getterEndpoint = (isDeep)
+          ? this.vals.$intermediateThis
+          : this.vals;
+        return (prop.getter ? prop.getter((getterEndpoint as Properties.Vals)[item]) : getterEndpoint[item]);
+      },
+      enumerable: true
+    });
+
+    this.defineDeepProperty(this.vals, item as keyof Properties.Base, this.vals.$, prop.postSetter, isDeep);
   }
 
   // ---- Helper functions ----
