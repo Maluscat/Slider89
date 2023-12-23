@@ -14,9 +14,9 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
   /** A basic thumb node used for cloning. */
   thumbBase: HTMLDivElement;
-  thumbParent: Element;
+  thumbParent: HTMLElement;
 
-  baseElements: Record<string, Element> = {};
+  baseElements: Record<string, HTMLElement> = {};
 
   /**
    * Keeps track of structure variables and their respective variable strings
@@ -37,19 +37,20 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
 
   // ---- Element builder ----
-  createSliderNode(thumbCount: number, structureStr: Properties.Base['structure']): PropertyNode.Mult {
+  createSliderNode(
+    thumbCount: number, structureStr: Properties.Base['structure'], wrapper: HTMLElement
+  ): PropertyNode.Mult {
     return structureStr === false
-      ? this.createSliderManually(thumbCount)
-      : this.createSliderFromStructure(thumbCount, structureStr);
+      ? this.createSliderManually(thumbCount, wrapper)
+      : this.createSliderFromStructure(thumbCount, structureStr, wrapper);
   }
 
 
   // In case no custom structure is defined, manually build the node to ensure best performance (parseStructure takes a while)
-  createSliderManually(thumbCount: number) {
-    const slider = document.createElement('div');
+  createSliderManually(thumbCount: number, wrapper: HTMLElement) {
     const track = document.createElement('div');
     const nodes: PropertyNode.KnownMult = {
-      slider: [ slider ],
+      slider: [ wrapper ],
       track: [ track ],
       thumb: new Array(thumbCount),
     };
@@ -63,13 +64,13 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     // Thumb classes are applied in `createNewThumb`;
     // Slider classes are applied in `addClasses`.
     track.classList.add('sl89-track');
-    slider.appendChild(track);
+    wrapper.appendChild(track);
 
     return nodes;
   }
 
-  createSliderFromStructure(thumbCount: number, structureStr: string) {
-    const node = this.parseStructure(structureStr);
+  createSliderFromStructure(thumbCount: number, structureStr: string, wrapper: HTMLElement) {
+    const node = this.parseStructure(structureStr, wrapper);
     this.parsePostProcess(node);
     const nodes = this.expandThumbs(node as PropertyNode.Single, thumbCount);
     return nodes;
@@ -157,7 +158,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     const newThumb = this.createNewThumb();
     nodes.thumb.push(newThumb);
 
-    Slider89DOMBuilder.findNodeChildren(newThumb)
+    (Slider89DOMBuilder.findNodeChildren(newThumb) as HTMLElement[])
       .forEach((childNode, i) => {
         const childName = this.thumbChildren[i];
         nodes[childName].push(childNode);
@@ -172,14 +173,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
 
   // ---- Misc functions ----
-  addAttributesFromTarget(slider: HTMLDivElement, targetNode: HTMLElement) {
-    const attributes = targetNode.attributes;
-    for (let i = 0; i < attributes.length; i++) {
-      slider.setAttribute(attributes[i].name, attributes[i].value);
-    }
-  }
-
-  addClasses(slider: Element, nodes: PropertyNode.Mult, classList: Properties.Base['classList'], isVertical: boolean) {
+  addClasses(slider: HTMLElement, nodes: PropertyNode.Mult, classList: Properties.Base['classList'], isVertical: boolean) {
     slider.classList.add('slider89');
     if (isVertical) {
       slider.classList.add('vertical');

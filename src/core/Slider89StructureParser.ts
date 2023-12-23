@@ -103,10 +103,10 @@ export default class Slider89StructureParser {
 
 
   // ---- Structure parser ----
-  parseStructure(structureStr: string) {
-    const node: Partial<PropertyNode.Single> = {
-      slider: document.createElement('div')
-    };
+  parseStructure(structureStr: string, slider: HTMLElement) {
+    const node = {
+      slider: slider
+    } as Partial<PropertyNode.Single>;
 
     structureStr = structureStr.trim();
 

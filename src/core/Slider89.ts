@@ -267,12 +267,14 @@ export default class Slider89 extends Slider89DOM {
   }
 
   buildSlider(target: HTMLElement, replace: boolean) {
-    this.vals.nodes = this.domHandler.createSliderNode(this.vals.values.length, this.vals.structure);
+    const wrapper = (replace ? target : document.createElement('div'));
+    this.vals.nodes = this.domHandler.createSliderNode(this.vals.values.length, this.vals.structure, wrapper);
     this.defineNodeGetters(this.vals.nodes);
 
-    if (replace) {
-      this.domHandler.addAttributesFromTarget(this.vals.node.slider, target);
+    if (!replace) {
+      target.appendChild(this.vals.node.slider);
     }
+
     this.domHandler.addClasses(
       this.vals.node.slider,
       this.vals.nodes,
@@ -280,12 +282,6 @@ export default class Slider89 extends Slider89DOM {
       this.vals.orientation === 'vertical');
 
     Slider89DOMBuilder.injectStyleSheetIfNeeded();
-
-    if (replace) {
-      target.parentNode.replaceChild(this.vals.node.slider, target);
-    } else {
-      target.appendChild(this.vals.node.slider);
-    }
 
     this.trackStyle = getComputedStyle(this.vals.node.track);
   }
