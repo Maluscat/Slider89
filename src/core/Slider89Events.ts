@@ -71,6 +71,8 @@ export default class Slider89Events extends Slider89Base {
 
   // ---- Methods ----
   addEvent(type: EventType.Base, fn: EventData.Fn, customID?: string): EventListenerIdentifier {
+    Slider89Base.selfCheckMethod('addEvent', arguments);
+
     if (!this.checkEventType(type)) {
       const msg =
         'The specified event type ‘' + type + '’ is not valid. Available types are:'
@@ -100,6 +102,8 @@ export default class Slider89Events extends Slider89Base {
     return customID || this.eventID++;
   }
   removeEvent(key: EventListenerIdentifier): false | EventData.Fn[] {
+    Slider89Base.selfCheckMethod('removeEvent', arguments);
+
     if (!(key in this.eventList)) {
       return false;
     }

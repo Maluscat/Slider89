@@ -3,6 +3,7 @@ import type { DeepReadonlyObject, Descriptor } from './LibraryTypeCheck';
 import type { EventData, EventType } from './Slider89Events';
 import Slider89DOMVariables from './Slider89DOMVariables';
 import Slider89Error from './Slider89Error';
+import LibraryTypeCheck from './LibraryTypeCheck';
 
 // ---- Misc types ----
 export namespace PropertyNode {
@@ -83,6 +84,8 @@ type MethodData = DeepReadonlyObject<{
   }
 }>
 
+export type TypedMethods = keyof typeof Slider89Base.methodData;
+
 
 // ---- Types to keep track of ----
 // This information cannot be extracted from the readonly `propertyData` below.
@@ -109,6 +112,11 @@ export default class Slider89Base extends Slider89Error implements Properties.Wi
   classList: Properties.Base['classList']
   events: Properties.Base['events']
 
+  /**
+   * @remarks
+   * When adding a method here, remember that it must call
+   * the {@link Slider89Base.selfCheckMethod} itself!
+   */
   static methodData = ({
     addEvent: {
       args: [
@@ -117,14 +125,12 @@ export default class Slider89Base extends Slider89Error implements Properties.Wi
           descriptor: [{
             type: 'string'
           }]
-        },
-        {
+        }, {
           name: 'event function',
           descriptor: [{
             type: 'function'
           }]
-        },
-        {
+        }, {
           name: 'event namespace',
           optional: true,
           descriptor: [{
@@ -138,27 +144,24 @@ export default class Slider89Base extends Slider89Error implements Properties.Wi
       ]
     },
     removeEvent: {
-      args: [
-        {
-          name: 'event identifier/namespace',
-          descriptor: [
-            {
-              type: 'number',
-              conditions: {
-                nonnegative: true,
-                integer: true
-              }
-            },
-            {
-              type: 'string',
-              conditions: {
-                filled: true,
-                wordChar: true
-              }
+      args: [{
+        name: 'event identifier/namespace',
+        descriptor: [
+          {
+            type: 'number',
+            conditions: {
+              nonnegative: true,
+              integer: true
             }
-          ]
-        }
-      ]
+          }, {
+            type: 'string',
+            conditions: {
+              filled: true,
+              wordChar: true
+            }
+          }
+        ]
+      }]
     }
   }) as const satisfies MethodData;
   static propertyData: PropertyData = <const> ({
@@ -211,8 +214,7 @@ export default class Slider89Base extends Slider89Error implements Properties.Wi
           conditions: {
             positive: true
           }
-        },
-        {
+        }, {
           type: 'array',
           conditions: {
             nonempty: true
@@ -326,5 +328,33 @@ export default class Slider89Base extends Slider89Error implements Properties.Wi
         value: {}
       },
     });
+  }
+
+
+  /**
+   * Check whether the supplied arguments match with the type of the
+   * supplied method name.
+   *
+   * In this context, "type checking" means the custom runtime type check
+   * provided by {@link LibraryTypeCheck}.
+   *
+   * This method needs to be called manually with its own `arguments` object.
+   * Thus, it is loosely assumed that every type checkable method calls it.
+   */
+  static selfCheckMethod(methodName: TypedMethods, fullArgs: IArguments) {
+    const methodInfo = this.methodData[methodName];
+    const args = Array.prototype.slice.call(fullArgs, 0, methodInfo.args.length);
+
+    args.forEach((arg, i) => {
+      const argDescriptor = methodInfo.args[i].descriptor;
+      const typeMsg = LibraryTypeCheck.checkTypes(arg, argDescriptor);
+      if (typeMsg) {
+        throw new this.MethodArgTypeError(methodName, i, typeMsg);
+      }
+    });
+    // If the next argument (length - 1 + 1), which is missing, is not optional
+    if (methodInfo.args[args.length] && !('optional' in methodInfo.args[args.length])) {
+      throw new this.MethodArgOmitError(methodName, args.length);
+    }
   }
 }

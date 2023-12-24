@@ -1,5 +1,5 @@
 'use strict';
-import type { Properties } from './Slider89Base';
+import type { Properties, TypedMethods } from './Slider89Base';
 import type { EventType } from './Slider89Events';
 import LibraryTypeCheck from './LibraryTypeCheck';
 import Slider89DOM from './Slider89DOM';
@@ -195,7 +195,6 @@ export default class Slider89 extends Slider89DOM {
 
     this.initializeClassProperties(config);
     this.initializeCustomProperties(config);
-    this.initializeMethods();
 
     this.buildSlider(target, replace);
 
@@ -248,20 +247,6 @@ export default class Slider89 extends Slider89DOM {
       } else {
         throw new Slider89.InitializationError(
           '‘' + item + '’ is not a valid property name. Check its spelling or prefix it with an underscore to use it as custom property (‘_' + item + '’)');
-      }
-    }
-  }
-
-  initializeMethods() {
-    const that = this;
-
-    for (const [ item, method ] of Object.entries(this.methods)) {
-      const argCount = Slider89.methodData[item].args.length;
-      this[item] = function() {
-        const args = Array.prototype.slice.call(arguments, 0, argCount);
-        that.checkMethod(item as keyof typeof that.methods, args);
-        // @ts-ignore ???
-        return method.funct.apply(this, args);
       }
     }
   }
@@ -331,20 +316,6 @@ export default class Slider89 extends Slider89DOM {
     }
   }
 
-  // Check properties & methods for the correct type & format
-  checkMethod(method: keyof typeof this.methods, argList: any[]) {
-    const obj = Slider89.methodData[method];
-    // If the next argument (argList.length - 1 + 1) is not optional, a required arg is missing
-    for (let i = 0; i < argList.length; i++) {
-      const arg = argList[i];
-      const typeMsg = LibraryTypeCheck.checkTypes(arg, obj.args[i].descriptor);
-      if (typeMsg) throw new Slider89.MethodArgTypeError(method, i, typeMsg);
-    }
-    // @ts-ignore
-    if (obj.args[argList.length] && !obj.args[argList.length].optional) {
-      throw new Slider89.MethodArgOmitError(method, argList.length);
-    }
-  }
   checkProp(prop: keyof Properties.Writable, val: any) {
     const propertyInfo = Slider89.propertyData[prop];
     const typeMsg = LibraryTypeCheck.checkTypes(val, propertyInfo.descriptor);
