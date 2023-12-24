@@ -168,9 +168,9 @@ export default class Slider89DOM extends Slider89Properties {
     const thumb = this.domHandler.removeThumbFromNode(this.vals.nodes);
     this.domHandler.thumbParent.removeChild(thumb);
   }
-  addNewThumbNode(thumbIndex: number) {
+  appendNewThumbNode() {
     this.domHandler.addThumbToNode(this.vals.nodes);
-    this.applyOneRatioDistance(thumbIndex);
+    this.applyOneRatioDistance(this.vals.nodes.thumb.length - 1);
   }
 
   changeOrientationDOM(newOrientation: Properties.Base['orientation']) {
