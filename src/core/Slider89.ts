@@ -1,5 +1,5 @@
 'use strict';
-import type { Properties, TypedMethods } from './Slider89Base';
+import type { Properties } from './Slider89Base';
 import type { EventType } from './Slider89Events';
 import LibraryTypeCheck from './LibraryTypeCheck';
 import Slider89DOM from './Slider89DOM';
