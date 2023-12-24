@@ -40,7 +40,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
   createSliderNode(
     thumbCount: number, structureStr: Properties.Base['structure'], wrapper: HTMLElement
   ): PropertyNode.Mult {
-    return structureStr === false
+    return !structureStr
       ? this.createSliderManually(thumbCount, wrapper)
       : this.createSliderFromStructure(thumbCount, structureStr, wrapper);
   }

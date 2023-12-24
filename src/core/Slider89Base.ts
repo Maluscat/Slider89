@@ -227,12 +227,7 @@ export default class Slider89Base extends Slider89Error implements Properties.Wi
     structure: {
       constructorOnly: true,
       descriptor: [
-        {
-          type: 'string',
-          conditions: {
-            filled: true
-          }
-        },
+        { type: 'string' },
         { type: 'false' }
       ]
     },
