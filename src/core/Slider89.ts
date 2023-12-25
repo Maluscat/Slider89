@@ -181,6 +181,9 @@ export default class Slider89 extends Slider89DOM {
           }
         }
       }
+    },
+    plugins: {
+      default: false
     }
   };
 
@@ -197,13 +200,13 @@ export default class Slider89 extends Slider89DOM {
     this.initializeCustomProperties(config);
 
     this.buildSlider(target, replace);
-
     this.applyAllRatioDistances();
-
     // This needs to happen as the last step in the initialization process.
     this.domHandler.updateAllVariables();
 
     this.initial = false;
+
+    this.callPlugins(this.vals.plugins);
   }
 
 
@@ -269,6 +272,15 @@ export default class Slider89 extends Slider89DOM {
     Slider89DOMBuilder.injectStyleSheetIfNeeded();
 
     this.trackStyle = getComputedStyle(this.vals.node.track);
+  }
+
+  // ---- Plugins ----
+  callPlugins(plugins: Properties.Base['plugins']) {
+    if (plugins === false) return;
+
+    for (const callback of plugins) {
+      callback(this);
+    }
   }
 
   // ---- Initialization helpers ----

@@ -4,6 +4,7 @@ import type { EventData, EventType } from './Slider89Events';
 import Slider89DOMVariables from './Slider89DOMVariables';
 import Slider89Error from './Slider89Error';
 import LibraryTypeCheck from './LibraryTypeCheck';
+import Slider89 from './Slider89';
 
 // ---- Misc types ----
 export namespace PropertyNode {
@@ -24,6 +25,8 @@ type EventList = {
   [ Type in EventType.Base ]: EventData.Fn[]
 }
 
+export type PluginCallback = (slider: Slider89) => void;
+
 // ---- Property types ----
 export namespace Properties {
   export type CustomPropertyName = `_${string}`;
@@ -40,6 +43,7 @@ export namespace Properties {
     orientation: 'vertical' | 'horizontal';
     classList: Record<string, string[]> | false;
     events: Partial<EventList> | false;
+    plugins: PluginCallback[] | false;
   }
   export interface Vals extends WithCustom {
     readonly $: Base;
@@ -111,6 +115,7 @@ export default class Slider89Base extends Slider89Error implements Properties.Wi
   orientation: Properties.Base['orientation']
   classList: Properties.Base['classList']
   events: Properties.Base['events']
+  plugins: Properties.Base['plugins']
 
   /**
    * @remarks
@@ -279,6 +284,18 @@ export default class Slider89Base extends Slider89Error implements Properties.Wi
             descriptor: [{
               type: 'function'
             }]
+          }]
+        },
+        { type: 'false' }
+      ]
+    },
+    plugins: {
+      constructorOnly: true,
+      descriptor: [
+        {
+          type: 'array',
+          descriptor: [{
+            type: 'function'
           }]
         },
         { type: 'false' }
