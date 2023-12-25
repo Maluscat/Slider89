@@ -308,7 +308,8 @@ export default class Slider89 extends Slider89DOM {
         const getterEndpoint = (isDeep)
           ? this.vals.$intermediateThis
           : this.vals;
-        return (prop.getter ? prop.getter((getterEndpoint as Properties.Vals)[item]) : getterEndpoint[item]);
+        // @ts-ignore `getterEndpoint` is safe here
+        return (prop.getter ? prop.getter(getterEndpoint[item]) : getterEndpoint[item]);
       },
       enumerable: true
     });

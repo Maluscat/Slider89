@@ -31,15 +31,20 @@ export type PluginCallback = (slider: Slider89) => void;
 export namespace Properties {
   export type CustomPropertyName = `_${string}`;
 
-  export interface Base {
+  export interface Deep {
     range: [ number, number ];
     values: number[];
+  }
+  export interface Readonly {
+    node: PropertyNode.Single;
+    nodes: PropertyNode.Mult;
+  }
+
+  export type Base = Deep & Readonly & {
     value: number;
     precision: number | false;
     step: number | number[] | false;
     structure: string | false;
-    node: PropertyNode.Single;
-    nodes: PropertyNode.Mult;
     orientation: 'vertical' | 'horizontal';
     classList: Record<string, string[]> | false;
     events: Partial<EventList> | false;
@@ -53,17 +58,13 @@ export namespace Properties {
 
   export type Custom = Record<CustomPropertyName, any>;
   export type WithCustom = Base & Custom;
-  export type Config = Omit<WithCustom, ReadonlyPropertyNames>;
 
-  export type Writable = Omit<Base, ReadonlyPropertyNames>;
-
-  export type Deep = {
-    [ Prop in DeepPropertyNames ]: Base[Prop]
-  }
+  export type Config = Omit<WithCustom, keyof Readonly>;
+  export type Writable = Omit<Base, keyof Readonly>;
 }
 
 
-export type PropertyInfo<Prop> = Prop extends ReadonlyPropertyNames
+export type PropertyInfo<Prop> = Prop extends keyof Properties.Readonly
   ? { readOnly: true; }
   : {
       constructorOnly?: boolean;
@@ -89,13 +90,6 @@ type MethodData = DeepReadonlyObject<{
 }>
 
 export type TypedMethods = keyof typeof Slider89Base.methodData;
-
-
-// ---- Types to keep track of ----
-// This information cannot be extracted from the readonly `propertyData` below.
-// Thus, NOTE: Keep track of this when modifying properties.
-type DeepPropertyNames = 'range' | 'values';
-type ReadonlyPropertyNames = 'node' | 'nodes';
 
 
 export default class Slider89Base extends Slider89Error implements Properties.WithCustom {
