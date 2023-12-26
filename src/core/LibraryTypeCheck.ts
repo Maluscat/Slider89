@@ -70,9 +70,8 @@ export default class LibraryTypeCheck {
   static checkTypes(val: any, descriptor: Descriptor.self): string | false {
     let msg: string | false;
 
-    for (let i = 0; i < descriptor.length; i++) {
-      const typeData = descriptor[i];
-      const type = typeData.type;
+    for (const data of descriptor) {
+      const type = data.type;
       if (
         type === 'boolean' && typeof val === 'boolean' ||
         type === 'true' && val === true ||
@@ -84,19 +83,19 @@ export default class LibraryTypeCheck {
         type === 'string' && typeof val === 'string'
       ) {
         if (type === 'array') {
-          for (let j = 0; j < val.length; j++) {
-            if (msg = LibraryTypeCheck.checkTypes(val[j], typeData.descriptor)) break;
+          for (const value of val) {
+            if (msg = LibraryTypeCheck.checkTypes(value, data.descriptor)) break;
           }
         } else if (type === 'object') {
-          for (let key in val) {
-            if (msg = LibraryTypeCheck.checkTypes(val[key], typeData.descriptor)) break;
+          for (const value of Object.values(val)) {
+            if (msg = LibraryTypeCheck.checkTypes(value, data.descriptor)) break;
           }
         }
 
         if (msg) {
           return LibraryTypeCheck.toTitleCase(type) + '<' + msg + '>';
         }
-        if (msg = LibraryTypeCheck.buildConditionTypeMessage(typeData.conditions, val)) break;
+        if (msg = LibraryTypeCheck.buildConditionTypeMessage(data.conditions, val)) break;
         else return false;
       }
     }
@@ -136,8 +135,7 @@ export default class LibraryTypeCheck {
   // Compute an automated error message regarding the property's types and conditions
   static buildDescriptorTypeMessage(descriptor: Descriptor.self) {
     let msg = '';
-    for (let i = 0; i < descriptor.length; i++) {
-      const data = descriptor[i];
+    for (const data of descriptor) {
       const type = data.type;
 
       if (msg) msg += ' OR ';
