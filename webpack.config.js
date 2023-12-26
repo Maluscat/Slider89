@@ -5,12 +5,13 @@ const { EsbuildPlugin } = require('esbuild-loader');
 
 const esbuildConfig = {
   implementation: ESBuild,
-  charset: 'utf8'
+  charset: 'utf8',
+  target: 'esnext'
 };
 
 const common = {
   entry: './src/core/Slider89.ts',
-  target: ['web', 'es5'],
+  target: [ 'web', 'es2023' ],
   output: {
     filename: 'slider89.js',
     path: path.resolve('./dist'),
