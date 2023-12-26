@@ -1,12 +1,18 @@
 const path = require('path');
-const pnpPlugin = require('pnp-webpack-plugin');
 const ESBuild = require('esbuild');
+const pnpPlugin = require('pnp-webpack-plugin');
 const { EsbuildPlugin } = require('esbuild-loader');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 const esbuildConfig = {
   implementation: ESBuild,
   charset: 'utf8',
   target: 'esnext'
+};
+const tsCheckerConfig = {
+  typescript: {
+    configFile: './src/tsconfig.json'
+  }
 };
 
 const common = {
@@ -28,6 +34,7 @@ const common = {
     modules: [ 'node_modules', path.resolve('./src/loaders') ],
     plugins: [ pnpPlugin.moduleLoader(module) ]
   },
+  plugins: [ new ForkTsCheckerWebpackPlugin(tsCheckerConfig) ],
   module: {
     rules: [
       {
