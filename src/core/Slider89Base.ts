@@ -295,7 +295,6 @@ export default class Slider89Base extends Slider89Error implements Properties.Wi
     }
   });
 
-  methods;
   properties;
 
   domHandler: Slider89DOMVariables;

@@ -33,15 +33,6 @@ namespace PropertyOutline {
 }
 
 export default class Slider89 extends Slider89DOM {
-  methods = <const> ({
-    addEvent: {
-      funct: this.addEvent,
-    },
-    removeEvent: {
-      funct: this.removeEvent,
-    }
-  });
-
   properties: PropertiesOutline = {
     range: {
       default: [0, 100],
