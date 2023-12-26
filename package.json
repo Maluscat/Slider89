@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "./dist/slider89.js",
   "private": true,
+  "sideEffects": false,
   "repository": "https://github.com/Hallo89/Slider89",
   "author": "Hallo89 <hallo89@protonmail.com>",
   "license": "MIT",
@@ -12,6 +13,8 @@
     "build": "webpack --config-name prod"
   },
   "devDependencies": {
+    "esbuild": "^0.19.10",
+    "esbuild-loader": "^4.0.2",
     "pnp-webpack-plugin": "^1.7.0",
     "ts-loader": "^9.5.1",
     "typescript": "^5.3.3",

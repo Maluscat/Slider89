@@ -1,5 +1,12 @@
 const path = require('path');
 const pnpPlugin = require('pnp-webpack-plugin');
+const ESBuild = require('esbuild');
+const { EsbuildPlugin } = require('esbuild-loader');
+
+const esbuildConfig = {
+  implementation: ESBuild,
+  charset: 'utf8'
+};
 
 const common = {
   entry: './src/core/Slider89.ts',
@@ -24,8 +31,9 @@ const common = {
     rules: [
       {
         test: /\.tsx?$/i,
-        use: 'ts-loader',
-        include: path.resolve('./src')
+        loader: 'esbuild-loader',
+        include: path.resolve('./src'),
+        options: esbuildConfig
       },
       {
         test: /\.css$/i,
@@ -42,7 +50,10 @@ const config = {
     mode: 'development',
   },
   prod: {
-    mode: 'production'
+    mode: 'production',
+    optimization: {
+      minimizer: [ new EsbuildPlugin(esbuildConfig) ]
+    }
   }
 }
 
