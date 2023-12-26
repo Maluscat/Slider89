@@ -8,7 +8,7 @@ export type DeepReadonlyObject<T> = T extends object ? {
 
 // ---- Type: Descriptor ----
 export namespace Descriptor {
-  interface TypesWithConditions {
+  interface TypeConditions {
     boolean: never;
     true: never;
     false: never;
@@ -18,7 +18,7 @@ export namespace Descriptor {
     number: 'nonnegative' | 'positive' | 'integer';
     string: 'filled' | 'wordChar' | 'keywords';
   }
-  export interface Conditions {
+  interface ConditionsFull {
     nonnegative: boolean;
     positive: boolean;
     integer: boolean;
@@ -28,28 +28,30 @@ export namespace Descriptor {
     filled: boolean;
     wordChar: boolean
   }
+  export type Conditions = Partial<ConditionsFull>;
 
-  export type ArrayType = {
-    type: 'array';
+  export type self = DeepReadonlyObject<Array<Type>>;
+
+
+  // --- Type (namespace doesn't work) ---
+  type Type = ObjectType | ArrayType | DefaultType;
+
+  type ArrayType = TypeCreate<'array'> & {
     descriptor: self;
   }
-  export type ObjectType = {
-    type: 'object';
+  type ObjectType = TypeCreate<'object'> & {
     descriptor: self;
     keyName?: string;
   }
-  type DefaultType = {
-    type: keyof Omit<TypesWithConditions, (ArrayType | ObjectType)['type']>;
-  }
+  type DefaultType = TypeCreate<keyof Omit<TypeConditions, 'array' | 'object'>>;
 
-  type Base = (ObjectType | ArrayType | DefaultType) & {
+  type TypeCreate<Type extends keyof TypeConditions> = {
+    type: Type;
     shape?: string;
     conditions?: Partial<{
-      [ Cond in TypesWithConditions[Base['type']] ]: Conditions[Cond];
+      [ Cond in TypeConditions[Type] ]: Conditions[Cond]
     }>;
   }
-
-  export type self = DeepReadonlyObject<Array<Base>>;
 }
 
 
@@ -102,7 +104,7 @@ export default class LibraryTypeCheck {
     return msg || LibraryTypeCheck.getType(val);
   }
 
-  static buildConditionTypeMessage(conditions: Partial<DeepReadonlyObject<Descriptor.Conditions>>, val: any) {
+  static buildConditionTypeMessage(conditions: DeepReadonlyObject<Descriptor.Conditions>, val: any) {
     if (!conditions) return;
 
     if (conditions.nonnegative && val < 0) {
@@ -135,16 +137,15 @@ export default class LibraryTypeCheck {
   static buildDescriptorTypeMessage(descriptor: Descriptor.self) {
     let msg = '';
     for (let i = 0; i < descriptor.length; i++) {
-      const typeData = descriptor[i];
-      const type = typeData.type;
-      const cond = typeData.conditions;
+      const data = descriptor[i];
+      const type = data.type;
 
       if (msg) msg += ' OR ';
 
       if (type === 'number') {
-        const nonnegative = cond && cond.nonnegative;
-        const positive = cond && cond.positive;
-        const isInt = cond && cond.integer;
+        const nonnegative = data.conditions?.nonnegative;
+        const positive = data.conditions?.positive;
+        const isInt = data.conditions?.integer;
 
         if (nonnegative) {
           msg += 'non-negative ';
@@ -155,29 +156,29 @@ export default class LibraryTypeCheck {
       }
 
       else if (type === 'array') {
-        const innerType = LibraryTypeCheck.buildDescriptorTypeMessage(typeData.descriptor);
-        if (cond && cond.nonempty) {
+        const innerType = LibraryTypeCheck.buildDescriptorTypeMessage(data.descriptor);
+        if (data.conditions?.nonempty) {
           msg += 'non-empty ';
         }
         msg += 'Array<' + innerType + '>';
-        if (cond && cond.length) {
-          msg += ' of length ' + cond.length;
+        if (data.conditions?.length) {
+          msg += ' of length ' + data.conditions.length;
         }
       }
 
       else if (type === 'object') {
-        const innerType = LibraryTypeCheck.buildDescriptorTypeMessage(typeData.descriptor);
-        msg += 'Object<' + typeData.keyName + ', ' + innerType + '>';
+        const innerType = LibraryTypeCheck.buildDescriptorTypeMessage(data.descriptor);
+        msg += 'Object<' + data.keyName + ', ' + innerType + '>';
       }
 
       else if (type === 'string') {
-        if (cond && cond.keywords) {
-          if (cond.keywords.length > 1) {
+        if (data.conditions?.keywords) {
+          if (data.conditions.keywords.length > 1) {
             msg += 'one of the keywords';
           } else {
             msg += 'the keyword';
           }
-          cond.keywords.forEach(function(val, n, arr) {
+          data.conditions.keywords.forEach(function(val, n, arr) {
             if (n !== 0 && n === arr.length - 1) {
               msg += ' or';
             } else if (n !== 0) {
@@ -186,8 +187,8 @@ export default class LibraryTypeCheck {
             msg += ' "' + val + '"';
           });
         } else {
-          if (cond && cond.filled) msg += 'non-empty ';
-          if (cond && cond.wordChar) msg += 'non-number ';
+          if (data.conditions?.filled) msg += 'non-empty ';
+          if (data.conditions?.wordChar) msg += 'non-number ';
           msg += 'string';
         }
       }
@@ -196,8 +197,8 @@ export default class LibraryTypeCheck {
         msg += type;
       }
 
-      if (typeData.shape) {
-        msg += ' (' + typeData.shape + ')';
+      if (data.shape) {
+        msg += ' (' + data.shape + ')';
       }
     }
 

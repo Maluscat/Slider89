@@ -77,8 +77,6 @@ type PropertyData = DeepReadonlyObject<{
 }>
 
 // ---- Method types ----
-// TODO The current method system has a lot of overhead and is overprotective –
-//      Especially since most other methods are public as well.
 type MethodData = DeepReadonlyObject<{
   [ Key: string ]: {
     args: Array<{
