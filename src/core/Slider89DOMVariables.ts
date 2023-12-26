@@ -23,7 +23,7 @@ export default class Slider89DOMVariables extends Slider89DOMBuilder {
     if (!Object.prototype.hasOwnProperty.call(this.structureVars, propName)) return;
 
     for (const [ str, nodeList ] of Object.entries(this.structureVars[propName])) {
-      this.replaceVariableStringInNodes(str, nodeList);
+      this.#replaceVariableStringInNodes(str, nodeList);
     }
 
     if (Object.prototype.hasOwnProperty.call(Slider89StructureParser.specialVariableProxy, propName)) {
@@ -44,22 +44,22 @@ export default class Slider89DOMVariables extends Slider89DOMBuilder {
     for (const [ propName, varStrings ] of Object.entries(this.structureVarThumbStrings)) {
       for (const varString of varStrings) {
         const nodeList = this.structureVars[propName][varString];
-        this.replaceVariableStringInNodes(varString, nodeList);
+        this.#replaceVariableStringInNodes(varString, nodeList);
       }
     }
   }
 
   // ---- Helper functions ----
-  replaceVariableStringInNodes(str: string, nodeList: Node[]) {
+  #replaceVariableStringInNodes(str: string, nodeList: Node[]) {
     for (const [ element, node, baseName ] of this.#iterateVariableNodeList(nodeList)) {
       node.textContent =
         str.replace(Slider89StructureParser.regex.variable, (match, variableDelimit, variable) => {
-          return this.getValueFromVariableName(variableDelimit || variable, element, baseName);
+          return this.#getValueFromVariableName(variableDelimit || variable, element, baseName);
         });
     }
   }
 
-  getValueFromVariableName(
+  #getValueFromVariableName(
     fullVar: VariableName,
     element: Element,
     baseName: string | false

@@ -144,7 +144,7 @@ export default class Slider89StructureParser {
         const lastItem = stack.pop();
         if (lastItem !== match[2]) {
           if (stack.indexOf(match[2]) !== -1) {
-            this.closingTagError(lastItem);
+            this.#closingTagError(lastItem);
           } else {
             throw new Slider89.StructureError(
               "The closing tag ‘</" + match[2] + ">’ couldn't find a matching opening tag");
@@ -160,7 +160,7 @@ export default class Slider89StructureParser {
       throw new Slider89.StructureError(
         "Couldn't find a matching closing tag for following elements:" + Slider89.arrayToListString(stack));
     } else if (stack.length === 1) {
-      this.closingTagError(stack[0]);
+      this.#closingTagError(stack[0]);
     }
 
     return node;
@@ -186,7 +186,7 @@ export default class Slider89StructureParser {
       elem.appendChild(textNode);
 
       if (Slider89StructureParser.stringHasVariable(content)) {
-        this.parseVariables(content, textNode, name, nameStack);
+        this.#parseVariables(content, textNode, name, nameStack);
       }
     }
 
@@ -201,7 +201,7 @@ export default class Slider89StructureParser {
         elem.setAttributeNode(attribNode);
 
         if (Slider89StructureParser.stringHasVariable(attribValue)) {
-          this.parseVariables(attribValue, attribNode, name, nameStack);
+          this.#parseVariables(attribValue, attribNode, name, nameStack);
         }
       }
     }
@@ -210,7 +210,7 @@ export default class Slider89StructureParser {
   }
 
   // ---- Structure variables register ----
-  parseVariables(str: string, targetNode: Node, tagName: string, tagNameStack: string[]) {
+  #parseVariables(str: string, targetNode: Node, tagName: string, tagNameStack: string[]) {
     // Memorize & skip already handled variables for the current string
     const propNameCache: string[] = [];
     let match: RegExpExecArray;
@@ -229,14 +229,14 @@ export default class Slider89StructureParser {
             + "Please check its spelling or initialize it in the constructor");
         }
 
-        this.registerVariable(propName as keyof StructureVariables, str, targetNode);
+        this.#registerVariable(propName as keyof StructureVariables, str, targetNode);
 
         propNameCache.push(propName);
       }
     }
   }
 
-  registerVariable(propName: keyof StructureVariables, str: string, targetNode: Node) {
+  #registerVariable(propName: keyof StructureVariables, str: string, targetNode: Node) {
     if (this.structureVars[propName] == null) {
       this.structureVars[propName] = {}
     }
@@ -248,7 +248,7 @@ export default class Slider89StructureParser {
 
 
   // ---- Error helpers ----
-  closingTagError(tagName: string) {
+  #closingTagError(tagName: string) {
     throw new Slider89.StructureError(
       "Couldn't find a closing tag for the element ‘<" + tagName + ">’ (Should it be a self-closing tag marked with ‘:’?)");
   }

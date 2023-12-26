@@ -65,8 +65,8 @@ export default class Slider89Events extends Slider89Base {
 
   // ---- Properties ----
   // Storing event data for removability
-  eventList: EventData.List = {};
-  eventID = 0;
+  #eventList: EventData.List = {};
+  #eventID = 0;
 
 
   // ---- Methods ----
@@ -84,40 +84,40 @@ export default class Slider89Events extends Slider89Base {
       this.vals.events[type] = [];
     }
     this.vals.events[type].push(fn);
-    const identifier = customID || this.eventID;
+    const identifier = customID || this.#eventID;
     const eventData = {
       type: type,
       fn: fn
     };
 
     if (customID) {
-      if (!Array.isArray(this.eventList[identifier])) {
-        this.eventList[identifier] = [];
+      if (!Array.isArray(this.#eventList[identifier])) {
+        this.#eventList[identifier] = [];
       }
-      (this.eventList[identifier] as EventData.Base[]).push(eventData);
+      (this.#eventList[identifier] as EventData.Base[]).push(eventData);
     } else {
-      this.eventList[identifier] = eventData;
+      this.#eventList[identifier] = eventData;
     }
 
-    return customID || this.eventID++;
+    return customID || this.#eventID++;
   }
   removeEvent(key: EventListenerIdentifier): false | EventData.Fn[] {
     Slider89Base.selfCheckMethod('removeEvent', arguments);
 
-    if (!(key in this.eventList)) {
+    if (!(key in this.#eventList)) {
       return false;
     }
-    const eventData = this.eventList[key];
-    delete this.eventList[key];
+    const eventData = this.#eventList[key];
+    delete this.#eventList[key];
 
     return Array.isArray(eventData)
-      ? eventData.reduce(this.handleRemoveEvent.bind(this), [])
-      : this.handleRemoveEvent([], eventData);
+      ? eventData.reduce(this.#handleRemoveEvent.bind(this), [])
+      : this.#handleRemoveEvent([], eventData);
   }
 
 
   // ---- Helper functions ----
-  handleRemoveEvent(deleteCollection: EventData.Fn[], eventInfo: EventData.Base) {
+  #handleRemoveEvent(deleteCollection: EventData.Fn[], eventInfo: EventData.Base) {
     const type = eventInfo.type;
     const eventFns = this.vals.events[type];
     const deletedFn = eventFns.splice(eventFns.indexOf(eventInfo.fn), 1)[0];

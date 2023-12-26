@@ -71,12 +71,12 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
   createSliderFromStructure(thumbCount: number, structureStr: string, wrapper: HTMLElement) {
     const node = this.parseStructure(structureStr, wrapper);
-    this.parsePostProcess(node);
-    const nodes = this.expandThumbs(node as PropertyNode.Single, thumbCount);
+    this.#parsePostProcess(node);
+    const nodes = this.#expandThumbs(node as PropertyNode.Single, thumbCount);
     return nodes;
   }
 
-  expandThumbs(node: PropertyNode.Single, thumbCount: number): PropertyNode.Mult {
+  #expandThumbs(node: PropertyNode.Single, thumbCount: number): PropertyNode.Mult {
     const nodes = {
       thumb: []
     } as PropertyNode.Mult;
@@ -93,7 +93,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     }
 
     // NOTE: This needs to be called after `baseElements` is fully populated (i.e. above).
-    this.findStructureVarStringsInThumb(this.thumbBase);
+    this.#findStructureVarStringsInThumb(this.thumbBase);
     for (let i = 0; i < thumbCount; i++) {
       this.addThumbToNode(nodes);
     }
@@ -101,7 +101,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     return nodes;
   }
 
-  parsePostProcess(node: Partial<PropertyNode.Single>) {
+  #parsePostProcess(node: Partial<PropertyNode.Single>) {
     // NOTE: thumb and track can be defined independently
     // I.e. track gets the class `sl89-track`, but this.thumbParent can be a different node
     if (!node.thumb) {
@@ -135,7 +135,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     // NOTE: From here on, `node` is of type `PropertyNode.Single`
   }
 
-  findStructureVarStringsInThumb(thumbBase: typeof this.thumbBase) {
+  #findStructureVarStringsInThumb(thumbBase: typeof this.thumbBase) {
     for (const [ propName, stringList ] of Object.entries(this.structureVars)) {
       let thumbStrings: string[] = [];
       for (const [ str, nodeList ] of Object.entries(stringList)) {

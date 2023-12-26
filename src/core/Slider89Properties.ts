@@ -34,8 +34,8 @@ export default class Slider89Properties extends Slider89Events {
           const outline = this.properties[item];
           // The endpoints (see doc comment at the start of file) are defined from bottom to top
           // This ensures compatibility with getters/setters
-          this.defineDeepArrayIntermediateVals(item as keyof Properties.Deep, val);
-          this.defineDeepArrayIntermediateThis(item as keyof Properties.Deep, val, outline.keySetter, outline.keyGetter);
+          this.#defineDeepArrayIntermediateVals(item as keyof Properties.Deep, val);
+          this.#defineDeepArrayIntermediateThis(item as keyof Properties.Deep, val, outline.keySetter, outline.keyGetter);
           this.handleInternalDeepArrayChange(item, prevVal, val);
         } else {
           this.handleInternalPropertyChange(item, prevVal);
@@ -52,7 +52,7 @@ export default class Slider89Properties extends Slider89Events {
   }
 
   // ------ Object definitions for the keys/indexes of deeply defined arrays ------
-  defineDeepArrayIntermediateThis(
+  #defineDeepArrayIntermediateThis(
     parentItem: keyof Properties.Deep,
     parentValue: Properties.Deep[typeof parentItem],
     keySetter?: DeepKey.Setter<typeof parentItem>,
@@ -80,7 +80,7 @@ export default class Slider89Properties extends Slider89Events {
       this.vals.$intermediateThis[parentItem][i] = parentValue[i];
     }
   }
-  defineDeepArrayIntermediateVals(
+  #defineDeepArrayIntermediateVals(
     parentItem: keyof Properties.Deep,
     parentValue: Properties.Deep[typeof parentItem]
   ) {
