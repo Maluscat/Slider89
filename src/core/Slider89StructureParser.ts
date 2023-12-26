@@ -4,31 +4,27 @@ import Slider89 from './Slider89';
 
 // ---- Type: Special variables ----
 namespace SpecialVariables {
-  type Data<VarName> = {
-    /** Whether the variable should only be available in <thumb> and its children. */
-    thumbOnly?: boolean;
-    getter: VarName extends `thumb_${string}`
-      ? (node: HTMLDivElement, slider: Slider89, baseName: string) => any
-      : (node: Element, slider: Slider89) => any
+  interface ThumbData {
+    thumbOnly: true,
+    getter: (node: HTMLDivElement, slider: Slider89, baseName: string) => any
+  }
+  interface Data {
+    thumbOnly?: false,
+    getter: (node: Element, slider: Slider89) => any
   }
 
-  export type Base = {
-    [ VarName in SpecialVariableNames ]: Data<VarName>
-  };
-  export type Proxy = Partial<Record<keyof StructureVariables, SpecialVariableNames[]>>;
+  export type Name = keyof typeof Slider89StructureParser.specialVariables;
+  export type Base = Record<string, ThumbData | Data>;
+  export type Proxy = Partial<Record<keyof StructureVariables, SpecialVariables.Name[]>>;
 }
 
 
 // ---- Type: Structure variables ----
-export type VariableName = SpecialVariableNames | keyof Properties.WithCustom;
+export type VariableName = SpecialVariables.Name | keyof Properties.WithCustom;
 
 type StructureVariables = Partial<{
   [ V in VariableName ]: Record<string, Node[]>
 }>
-
-
-// ---- Types to keep track of ----
-type SpecialVariableNames = 'tag_node' | 'thumb_index' | 'thumb_value';
 
 
 export default class Slider89StructureParser {
@@ -36,7 +32,7 @@ export default class Slider89StructureParser {
    * Special variables inside the structure system.
    * Instead of being linked to properties, these can call arbitrary functions.
    */
-  static specialVariables: SpecialVariables.Base = <const> ({
+  static specialVariables = ({
     tag_node: {
       getter: node => node
     },
@@ -48,10 +44,10 @@ export default class Slider89StructureParser {
       thumbOnly: true,
       getter: (node, slider, baseName) => slider.values[(slider.nodes[baseName]).indexOf(node)]
     },
-  });
+  }) as const satisfies SpecialVariables.Base;
   /**
    * Links {@link specialVariables} to potential slider properties they depend on,
-   * so that the special variables get updated when the property updates.
+   * so that special variables get updated when the assigned property updates.
    */
   static specialVariableProxy: SpecialVariables.Proxy = {
     values: [ 'thumb_index', 'thumb_value' ]
