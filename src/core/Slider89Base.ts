@@ -1,9 +1,9 @@
 'use strict';
-import type { DeepReadonlyObject, Descriptor } from './LibraryTypeCheck';
+import type { DeepReadonlyObject, Descriptor } from './RuntimeTypeCheck';
 import type { EventData, EventType } from './Slider89Events';
 import Slider89DOMVariables from './Slider89DOMVariables';
 import Slider89Error from './Slider89Error';
-import LibraryTypeCheck from './LibraryTypeCheck';
+import RuntimeTypeCheck from './RuntimeTypeCheck';
 import Slider89 from './Slider89';
 
 // ---- Misc types ----
@@ -344,7 +344,7 @@ export default class Slider89Base extends Slider89Error implements Properties.Wi
    * supplied method name.
    *
    * In this context, "type checking" means the custom runtime type check
-   * provided by {@link LibraryTypeCheck}.
+   * provided by {@link RuntimeTypeCheck}.
    *
    * This method needs to be called manually with its own `arguments` object.
    * Thus, it is loosely assumed that every type checkable method calls it.
@@ -355,7 +355,7 @@ export default class Slider89Base extends Slider89Error implements Properties.Wi
 
     args.forEach((arg, i) => {
       const argDescriptor = methodInfo.args[i].descriptor;
-      const typeMsg = LibraryTypeCheck.checkTypes(arg, argDescriptor);
+      const typeMsg = RuntimeTypeCheck.checkTypes(arg, argDescriptor);
       if (typeMsg) {
         throw new this.MethodArgTypeError(methodName, i, typeMsg);
       }

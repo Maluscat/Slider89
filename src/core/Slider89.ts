@@ -1,7 +1,7 @@
 'use strict';
 import type { Properties } from './Slider89Base';
 import type { EventType } from './Slider89Events';
-import LibraryTypeCheck from './LibraryTypeCheck';
+import RuntimeTypeCheck from './RuntimeTypeCheck';
 import Slider89DOM from './Slider89DOM';
 import Slider89DOMBuilder from './Slider89DOMBuilder';
 
@@ -206,12 +206,12 @@ export default class Slider89 extends Slider89DOM {
     if (!target) {
       throw new Slider89.InitializationError('No first argument has been supplied. It needs to be the DOM target node for the slider');
     } else if (!target.nodeType || target.nodeType !== 1) {
-      throw new Slider89.InitializationError('The first argument must be a valid DOM node (got ' + LibraryTypeCheck.getType(target) + ')');
+      throw new Slider89.InitializationError('The first argument must be a valid DOM node (got ' + RuntimeTypeCheck.getType(target) + ')');
     }
   }
   testInitialConfig(config: Partial<Properties.Config>) {
     if (typeof config !== 'object' || Array.isArray(config)) {
-      throw new Slider89.InitializationError('The optional second argument needs to be a configuration object (got ' + LibraryTypeCheck.getType(config) + ')');
+      throw new Slider89.InitializationError('The optional second argument needs to be a configuration object (got ' + RuntimeTypeCheck.getType(config) + ')');
     } else if ('value' in config && 'values' in config) {
       throw new Slider89.InitializationError('Only one of ‘value’ and ‘values’ may be defined at once');
     }
@@ -322,7 +322,7 @@ export default class Slider89 extends Slider89DOM {
 
   checkProp(prop: keyof Properties.Writable, val: any) {
     const propertyInfo = Slider89.propertyData[prop];
-    const typeMsg = LibraryTypeCheck.checkTypes(val, propertyInfo.descriptor);
+    const typeMsg = RuntimeTypeCheck.checkTypes(val, propertyInfo.descriptor);
     if (typeMsg) {
       throw new Slider89.PropertyTypeError(this, prop, propertyInfo, typeMsg);
     }

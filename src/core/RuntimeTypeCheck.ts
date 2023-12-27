@@ -55,7 +55,7 @@ export namespace Descriptor {
 }
 
 
-export default class LibraryTypeCheck {
+export default class RuntimeTypeCheck {
   static getType(value) {
     if (Array.isArray(value))
       return 'Array';
@@ -84,23 +84,23 @@ export default class LibraryTypeCheck {
       ) {
         if (type === 'array') {
           for (const value of val) {
-            if (msg = LibraryTypeCheck.checkTypes(value, data.descriptor)) break;
+            if (msg = RuntimeTypeCheck.checkTypes(value, data.descriptor)) break;
           }
         } else if (type === 'object') {
           for (const value of Object.values(val)) {
-            if (msg = LibraryTypeCheck.checkTypes(value, data.descriptor)) break;
+            if (msg = RuntimeTypeCheck.checkTypes(value, data.descriptor)) break;
           }
         }
 
         if (msg) {
-          return LibraryTypeCheck.toTitleCase(type) + '<' + msg + '>';
+          return RuntimeTypeCheck.toTitleCase(type) + '<' + msg + '>';
         }
-        if (msg = LibraryTypeCheck.buildConditionTypeMessage(data.conditions, val)) break;
+        if (msg = RuntimeTypeCheck.buildConditionTypeMessage(data.conditions, val)) break;
         else return false;
       }
     }
 
-    return msg || LibraryTypeCheck.getType(val);
+    return msg || RuntimeTypeCheck.getType(val);
   }
 
   static buildConditionTypeMessage(conditions: DeepReadonlyObject<Descriptor.Conditions>, val: any) {
@@ -154,7 +154,7 @@ export default class LibraryTypeCheck {
       }
 
       else if (type === 'array') {
-        const innerType = LibraryTypeCheck.buildDescriptorTypeMessage(data.descriptor);
+        const innerType = RuntimeTypeCheck.buildDescriptorTypeMessage(data.descriptor);
         if (data.conditions?.nonempty) {
           msg += 'non-empty ';
         }
@@ -165,7 +165,7 @@ export default class LibraryTypeCheck {
       }
 
       else if (type === 'object') {
-        const innerType = LibraryTypeCheck.buildDescriptorTypeMessage(data.descriptor);
+        const innerType = RuntimeTypeCheck.buildDescriptorTypeMessage(data.descriptor);
         msg += 'Object<' + data.keyName + ', ' + innerType + '>';
       }
 

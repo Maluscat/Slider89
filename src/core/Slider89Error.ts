@@ -1,7 +1,7 @@
 'use strict';
 import type { Properties, PropertyInfo } from './Slider89Base';
-import type { Descriptor } from './LibraryTypeCheck';
-import LibraryTypeCheck from './LibraryTypeCheck';
+import type { Descriptor } from './RuntimeTypeCheck';
+import RuntimeTypeCheck from './RuntimeTypeCheck';
 import Slider89 from './Slider89';
 
 export default class Slider89Error {
@@ -77,7 +77,7 @@ export default class Slider89Error {
       const msg =
         'The ' + Slider89Error.getMethodArgMessage(argInfo, index)
         + ' has been omitted but it is required'
-        + ' (It must be of type ' + LibraryTypeCheck.buildDescriptorTypeMessage(argInfo.descriptor) + ').';
+        + ' (It must be of type ' + RuntimeTypeCheck.buildDescriptorTypeMessage(argInfo.descriptor) + ').';
 
       super(msg, methodName);
     }
@@ -101,7 +101,7 @@ export default class Slider89Error {
 
   // ---- Helper functions ----
   static getTypeErrorMessage(descriptor: Descriptor.self, typeMsg: string) {
-    return ' Expected ' + LibraryTypeCheck.buildDescriptorTypeMessage(descriptor) + ','
+    return ' Expected ' + RuntimeTypeCheck.buildDescriptorTypeMessage(descriptor) + ','
          + ' got ' + typeMsg;
   }
 
