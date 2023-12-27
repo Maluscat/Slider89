@@ -54,6 +54,17 @@ export namespace Descriptor {
   }
 }
 
+export class TypeCheckError extends Error {
+  gotMessage;
+  expectedMessage;
+
+  constructor(gotMessage, expectedMessage) {
+    super(`Expected ${expectedMessage}, got ${gotMessage}`);
+    this.gotMessage = gotMessage;
+    this.expectedMessage = expectedMessage;
+    this.name = this.constructor.name;
+  }
+}
 
 export default class RuntimeTypeCheck {
   static getType(value) {
@@ -67,7 +78,15 @@ export default class RuntimeTypeCheck {
       return typeof value;
   }
 
-  static checkTypes(val: any, descriptor: Descriptor.self): string | false {
+  static checkType(val: any, descriptor: Descriptor.self) {
+    const typeMessage = this.#checkTypeRecursive(val, descriptor);
+    if (typeMessage) {
+      throw new TypeCheckError(
+        typeMessage,
+        RuntimeTypeCheck.buildDescriptorTypeMessage(descriptor));
+    }
+  }
+  static #checkTypeRecursive(val: any, descriptor: Descriptor.self): string | false {
     let msg: string | false;
 
     for (const data of descriptor) {
@@ -84,11 +103,11 @@ export default class RuntimeTypeCheck {
       ) {
         if (type === 'array') {
           for (const value of val) {
-            if (msg = RuntimeTypeCheck.checkTypes(value, data.descriptor)) break;
+            if (msg = RuntimeTypeCheck.#checkTypeRecursive(value, data.descriptor)) break;
           }
         } else if (type === 'object') {
           for (const value of Object.values(val)) {
-            if (msg = RuntimeTypeCheck.checkTypes(value, data.descriptor)) break;
+            if (msg = RuntimeTypeCheck.#checkTypeRecursive(value, data.descriptor)) break;
           }
         }
 

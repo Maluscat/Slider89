@@ -49,14 +49,9 @@ export default class Slider89Error {
     constructor(
       slider: Slider89,
       propertyName: keyof Properties.Writable,
-      propertyInfo: PropertyInfo<typeof propertyName>,
       typeMsg: string
     ) {
-      let msg =
-        'Type mismatch.'
-        + Slider89.getTypeErrorMessage(propertyInfo.descriptor, typeMsg);
-
-      super(slider, propertyName, msg);
+      super(slider, propertyName, 'Type mismatch. ' + typeMsg);
     }
   }
 
@@ -65,8 +60,7 @@ export default class Slider89Error {
     constructor(methodName: string, index: number, typeMsg: string) {
       const argInfo = Slider89.getMethodArgInfo(methodName, index);
       const msg =
-        'Type mismatch on the ' + Slider89Error.getMethodArgMessage(argInfo, index) + '.'
-        + Slider89.getTypeErrorMessage(argInfo.descriptor, typeMsg);
+        `Type mismatch on the ${Slider89Error.getMethodArgMessage(argInfo, index)}. ${typeMsg}`;
 
       super(msg, methodName);
     }
@@ -100,11 +94,6 @@ export default class Slider89Error {
   }
 
   // ---- Helper functions ----
-  static getTypeErrorMessage(descriptor: Descriptor.self, typeMsg: string) {
-    return ' Expected ' + RuntimeTypeCheck.buildDescriptorTypeMessage(descriptor) + ','
-         + ' got ' + typeMsg;
-  }
-
   static getMethodArgMessage(argInfo, index: number) {
     let msg = '';
     if (argInfo.optional) {

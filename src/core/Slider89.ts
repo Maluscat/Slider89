@@ -1,7 +1,7 @@
 'use strict';
 import type { Properties } from './Slider89Base';
 import type { EventType } from './Slider89Events';
-import RuntimeTypeCheck from './RuntimeTypeCheck';
+import RuntimeTypeCheck, { TypeCheckError } from './RuntimeTypeCheck';
 import Slider89DOM from './Slider89DOM';
 import Slider89DOMBuilder from './Slider89DOMBuilder';
 
@@ -322,9 +322,14 @@ export default class Slider89 extends Slider89DOM {
 
   checkProp(prop: keyof Properties.Writable, val: any) {
     const propertyInfo = Slider89.propertyData[prop];
-    const typeMsg = RuntimeTypeCheck.checkTypes(val, propertyInfo.descriptor);
-    if (typeMsg) {
-      throw new Slider89.PropertyTypeError(this, prop, propertyInfo, typeMsg);
+    try {
+      RuntimeTypeCheck.checkType(val, propertyInfo.descriptor);
+    } catch (e) {
+      if (e instanceof TypeCheckError) {
+        throw new Slider89.PropertyTypeError(this, prop, e.message);
+      } else {
+        throw e;
+      }
     }
   }
 

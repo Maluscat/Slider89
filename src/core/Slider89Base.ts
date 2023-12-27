@@ -3,7 +3,7 @@ import type { DeepReadonlyObject, Descriptor } from './RuntimeTypeCheck';
 import type { EventData, EventType } from './Slider89Events';
 import Slider89DOMVariables from './Slider89DOMVariables';
 import Slider89Error from './Slider89Error';
-import RuntimeTypeCheck from './RuntimeTypeCheck';
+import RuntimeTypeCheck, { TypeCheckError } from './RuntimeTypeCheck';
 import Slider89 from './Slider89';
 
 // ---- Misc types ----
@@ -355,9 +355,14 @@ export default class Slider89Base extends Slider89Error implements Properties.Wi
 
     args.forEach((arg, i) => {
       const argDescriptor = methodInfo.args[i].descriptor;
-      const typeMsg = RuntimeTypeCheck.checkTypes(arg, argDescriptor);
-      if (typeMsg) {
-        throw new this.MethodArgTypeError(methodName, i, typeMsg);
+      try {
+        RuntimeTypeCheck.checkType(arg, argDescriptor)
+      } catch (e) {
+        if (e instanceof TypeCheckError) {
+          throw new this.MethodArgTypeError(methodName, i, e.message);
+        } else {
+          throw e;
+        }
       }
     });
     // If the next argument (length - 1 + 1), which is missing, is not optional
