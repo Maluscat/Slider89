@@ -78,29 +78,29 @@ export default class Slider89DOM extends Slider89Properties {
   }
 
   // ---- Thumb moving ----
-  moveThumbTranslate(thumb: HTMLDivElement, distance: number) {
+  moveElementTranslate(element: HTMLElement, distance: number) {
     const axis = this.vals.orientation === 'vertical' ? 'Y' : 'X';
-    thumb.style.transform = 'translate' + axis + '(' + distance + 'px)';
+    element.style.transform = 'translate' + axis + '(' + distance + 'px)';
   }
-  moveThumbRelative(thumb: HTMLDivElement, distance: number) {
+  moveElementRelative(element: HTMLElement, ratio: number, elementForDims: HTMLElement = element) {
     // Relative positioning starts at the padding, so looking at the border is not needed
     if (this.vals.orientation === 'vertical') {
       var posAnchor = 'top';
       var offsetStart = this.getTrackPadding('top');
       var offsetEnd = this.getTrackPadding('bottom');
-      var thumbDim = thumb.clientHeight;
+      var elementDim = elementForDims.clientHeight;
     } else {
       var posAnchor = 'left';
       var offsetStart = this.getTrackPadding('left');
       var offsetEnd = this.getTrackPadding('right');
-      var thumbDim = thumb.clientWidth;
+      var elementDim = elementForDims.clientWidth;
     }
 
-    let subtract = (thumbDim * distance) + 'px';
-    if (offsetEnd) subtract += ' - ' + (offsetEnd * distance) + 'px';
-    if (offsetStart) subtract += ' + ' + (offsetStart * (1 - distance)) + 'px';
+    let subtract = (elementDim * ratio) + 'px';
+    if (offsetEnd) subtract += ' - ' + (offsetEnd * ratio) + 'px';
+    if (offsetStart) subtract += ' + ' + (offsetStart * (1 - ratio)) + 'px';
 
-    thumb.style[posAnchor] = 'calc(' + (distance * 100) + '% - ' + subtract + ')';
+    element.style[posAnchor] = 'calc(' + (ratio * 100) + '% - ' + subtract + ')';
   }
 
   applyAllRatioDistances(newVals?: RecomputationNewVals) {
@@ -113,7 +113,7 @@ export default class Slider89DOM extends Slider89Properties {
 
     this.setValuesWithValueChange(thumbIndex, value);
     if (!Slider89.floatIsEqual(ratio, prevRatio)) {
-      this.moveThumbRelative(this.vals.nodes.thumb[thumbIndex], ratio);
+      this.moveElementRelative(this.vals.nodes.thumb[thumbIndex], ratio);
     }
   }
 
@@ -154,7 +154,7 @@ export default class Slider89DOM extends Slider89Properties {
         value = Slider89.getClosestNumber(value, newVals.step);
       }
     }
-    const newRatio = (value - newVals.range[0]) / (newVals.range[1] - newVals.range[0]);
+    const newRatio = this.getValueRatio(value, newVals.range);
 
     return {
       value: value,
@@ -164,6 +164,20 @@ export default class Slider89DOM extends Slider89Properties {
   }
 
   // ---- Helper functions ----
+  /**
+   * Get the ratio of the supplied value (or the slider's current value)
+   * in relation to the supplied range (or the slider's current range).
+   * @param The value to get the ratio of.
+   * @param The range to test the value against.
+   * @return The relation of `value` to `range` in a [0, 1] interval.
+   *
+   * @remarks
+   * The returned ratio can be used in {@link moveElementRelative}.
+   */
+  getValueRatio(value = this.vals.value, range = this.vals.range) {
+    return (value - range[0]) / (range[1] - range[0]);
+  }
+
   removeLastThumbNode() {
     const thumb = this.domHandler.removeThumbFromNode(this.vals.nodes);
     this.domHandler.thumbParent.removeChild(thumb);
@@ -288,7 +302,7 @@ export default class Slider89DOM extends Slider89Properties {
       var clientDim = e.clientX;
     }
     this.mouseDownPos = clientDim - distance;
-    this.moveThumbTranslate(thumbNode, distance);
+    this.moveElementTranslate(thumbNode, distance);
 
     this.invokeEvent('start', thumbIndex, eventArg);
     thumbNode.style.removeProperty(posAnchor);
@@ -311,7 +325,7 @@ export default class Slider89DOM extends Slider89Properties {
     }
 
     if (this.setValuesWithValueChange(thumbIndex, value, eventArg)) {
-      this.moveThumbTranslate(thumbNode, distance);
+      this.moveElementTranslate(thumbNode, distance);
       this.invokeEvent('move', thumbIndex, eventArg);
     }
   }
