@@ -36,7 +36,29 @@ namespace PropertyOutline {
 }
 
 export default class Slider89 extends Slider89DOM {
-  static #hasInjectedStylesheet = false;
+  /**
+   * Controls whether to inject the slider's style sheet into the current
+   * document. Is simply tested for truthyness when creating a new slider.
+   *
+   * The style sheet is only injected *once* per document upon creating the
+   * first slider with this flag present. It will not be removed again when
+   * setting this value to false.
+   *
+   * @remarks
+   * Because of this, you have to set this flag *before* creating your first slider.
+   * Setting it to falsey will throw a console warning when there is already
+   * a style sheet present.
+   *
+   * @see {@link injectedStyleSheet}
+   * @see {@link injectStyleSheetIfNeeded}
+   */
+  static injectCSS = true;
+  /**
+   * Contains the style sheet that has been injected into the document, if any.
+   * @see {@link injectCSS}
+   * @see {@link injectStyleSheetIfNeeded}
+   */
+  static injectedStyleSheet: HTMLStyleElement | null;
 
   properties: PropertiesOutline = {
     range: {
@@ -379,7 +401,7 @@ export default class Slider89 extends Slider89DOM {
   // documents at once. Thus, just setting a global flag to true should be
   // sufficient to mark the current document as already injected.
   static injectStyleSheetIfNeeded() {
-    if (this.#hasInjectedStylesheet === false) {
+    if (this.injectCSS && this.injectedStyleSheet == null) {
       const styleSheetElement = document.createElement('style');
       const firstHeadChild = document.head.firstElementChild;
 
@@ -392,7 +414,7 @@ export default class Slider89 extends Slider89DOM {
         document.head.appendChild(styleSheetElement);
       }
 
-      this.#hasInjectedStylesheet = true;
+      this.injectedStyleSheet = styleSheetElement;
     }
   }
 }
