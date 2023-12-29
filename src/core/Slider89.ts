@@ -55,6 +55,10 @@ export default class Slider89 extends Slider89DOM {
   static injectCSS = true;
   /**
    * Contains the style sheet that has been injected into the document, if any.
+   *
+   * You can use this to insert custom styles for a slider or related elements,
+   * for example when creating a plugin.
+   * 
    * @see {@link injectCSS}
    * @see {@link injectStyleSheetIfNeeded}
    */
@@ -397,9 +401,17 @@ export default class Slider89 extends Slider89DOM {
   }
 
 
-  // NOTE: I think that a global Object (like Slider89) cannot be in multiple
-  // documents at once. Thus, just setting a global flag to true should be
-  // sufficient to mark the current document as already injected.
+  /**
+   * Inject Slider89's style sheet into the document. This happens only once
+   * per document.
+   * @see {@link injectCSS} for a way to disable the automatic injection.
+   * @see {@link injectedStyleSheet} for the injected style sheet element.
+   *
+   * @privateRemarks
+   * I think that a global Object (like Slider89) cannot be in multiple
+   * documents at once. Thus, just setting a global flag to true should be
+   * sufficient to mark the current document as already injected.
+   */
   static injectStyleSheetIfNeeded() {
     if (this.injectCSS && this.injectedStyleSheet == null) {
       const styleSheetElement = document.createElement('style');
@@ -415,6 +427,17 @@ export default class Slider89 extends Slider89DOM {
       }
 
       this.injectedStyleSheet = styleSheetElement;
+    }
+  }
+  /**
+   * Remove Slider89's style sheet again, if it has already been injected
+   * by {@link injectStyleSheetIfNeeded}.
+   * @see {@link injectedStyleSheet}.
+   */
+  static removeInjectedStyleSheet() {
+    if (this.injectedStyleSheet != null) {
+      document.head.removeChild(this.injectedStyleSheet);
+      this.injectedStyleSheet = null;
     }
   }
 }
