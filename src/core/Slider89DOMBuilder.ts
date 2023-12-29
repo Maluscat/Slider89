@@ -1,7 +1,4 @@
 'use strict';
-// @ts-ignore (Webpack import)
-import defaultStylesString from '../css/default-styles.css';
-
 import type { Properties, PropertyNode } from './Slider89Base';
 import type { VariableName } from './Slider89StructureParser';
 import Slider89 from './Slider89';
@@ -10,8 +7,6 @@ import Slider89StructureParser from './Slider89StructureParser';
 type VariableThumbStrings = Partial<Record<VariableName, string[]>>;
 
 export default class Slider89DOMBuilder extends Slider89StructureParser {
-  static hasInjectedStylesheet = false;
-
   /** A basic thumb node used for cloning. */
   thumbBase: HTMLDivElement;
   thumbParent: HTMLElement;
@@ -236,27 +231,6 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
   static getNodeOwner(node: Node): HTMLElement {
     // @ts-ignore
     return node.ownerElement || node.parentElement;
-  }
-
-  // NOTE: I think that a global Object (like Slider89) cannot be in multiple
-  // documents at once. Thus, just setting a global flag to true should be
-  // sufficient to mark the current document as already injected.
-  static injectStyleSheetIfNeeded() {
-    if (Slider89DOMBuilder.hasInjectedStylesheet === false) {
-      const styleSheetElement = document.createElement('style');
-      const firstHeadChild = document.head.firstElementChild;
-
-      styleSheetElement.textContent = defaultStylesString;
-
-      // Ensure that it is the first style sheet in the document
-      if (firstHeadChild) {
-        document.head.insertBefore(styleSheetElement, firstHeadChild);
-      } else {
-        document.head.appendChild(styleSheetElement);
-      }
-
-      Slider89DOMBuilder.hasInjectedStylesheet = true;
-    }
   }
 
   /**

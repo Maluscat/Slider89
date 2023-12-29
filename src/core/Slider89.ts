@@ -1,4 +1,7 @@
 'use strict';
+// @ts-ignore (Webpack import)
+import defaultStylesString from '../css/default-styles.css';
+
 import type { Properties } from './Slider89Base';
 import type { EventType } from './Slider89Events';
 import RuntimeTypeCheck, { TypeCheckError } from './RuntimeTypeCheck';
@@ -33,6 +36,8 @@ namespace PropertyOutline {
 }
 
 export default class Slider89 extends Slider89DOM {
+  static #hasInjectedStylesheet = false;
+
   properties: PropertiesOutline = {
     range: {
       default: [0, 100],
@@ -260,7 +265,7 @@ export default class Slider89 extends Slider89DOM {
       this.vals.classList,
       this.vals.orientation === 'vertical');
 
-    Slider89DOMBuilder.injectStyleSheetIfNeeded();
+    Slider89.injectStyleSheetIfNeeded();
 
     this.trackStyle = getComputedStyle(this.vals.node.track);
   }
@@ -367,5 +372,27 @@ export default class Slider89 extends Slider89DOM {
         ? prev
         : current
     });
+  }
+
+
+  // NOTE: I think that a global Object (like Slider89) cannot be in multiple
+  // documents at once. Thus, just setting a global flag to true should be
+  // sufficient to mark the current document as already injected.
+  static injectStyleSheetIfNeeded() {
+    if (this.#hasInjectedStylesheet === false) {
+      const styleSheetElement = document.createElement('style');
+      const firstHeadChild = document.head.firstElementChild;
+
+      styleSheetElement.textContent = defaultStylesString;
+
+      // Ensure that it is the first style sheet in the document
+      if (firstHeadChild) {
+        document.head.insertBefore(styleSheetElement, firstHeadChild);
+      } else {
+        document.head.appendChild(styleSheetElement);
+      }
+
+      this.#hasInjectedStylesheet = true;
+    }
   }
 }
