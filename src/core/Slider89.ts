@@ -312,7 +312,7 @@ export default class Slider89 extends Slider89DOM {
 
     Object.defineProperty(this, item, {
       set: (val: Properties.Base[Item]) => {
-        if ('readonly' in propData) {
+        if ('readOnly' in propData) {
           throw new Slider89.Error('Property ‘' + item + '’ is read-only (It was just set with the value ‘' + val + '’)');
         }
         if (('constructorOnly' in propData) && !this.initial) {
