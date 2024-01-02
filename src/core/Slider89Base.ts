@@ -59,7 +59,8 @@ export namespace Properties {
   export type Custom = Record<CustomPropertyName, any>;
   export type WithCustom = Base & Custom;
 
-  export type Config = Omit<WithCustom, keyof Readonly>;
+  export type ConfigFull = Omit<WithCustom, keyof Readonly>;
+  export type Config = Partial<ConfigFull>;
   export type Writable = Omit<Base, keyof Readonly>;
 }
 

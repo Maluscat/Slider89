@@ -209,7 +209,7 @@ export default class Slider89 extends Slider89DOM {
     }
   };
 
-  constructor(target: HTMLElement, config?: Partial<Properties.Config> | false, replace = false) {
+  constructor(target: HTMLElement, config?: Properties.Config | false, replace = false) {
     super();
     this.initial = true;
 
@@ -240,7 +240,7 @@ export default class Slider89 extends Slider89DOM {
       throw new Slider89.InitializationError('The first argument must be a valid DOM node (got ' + RuntimeTypeCheck.getType(target) + ')');
     }
   }
-  testInitialConfig(config: Partial<Properties.Config>) {
+  testInitialConfig(config: Properties.Config) {
     if (typeof config !== 'object' || Array.isArray(config)) {
       throw new Slider89.InitializationError('The optional second argument needs to be a configuration object (got ' + RuntimeTypeCheck.getType(config) + ')');
     } else if ('value' in config && 'values' in config) {
@@ -250,7 +250,7 @@ export default class Slider89 extends Slider89DOM {
 
 
   // ---- Initialization ----
-  initializeClassProperties(config: Partial<Properties.Config>) {
+  initializeClassProperties(config: Properties.Config) {
     for (const [ item, prop ] of Object.entries(this.properties)) {
       this.initializeProperty(item as keyof PropertiesOutline, prop);
 
