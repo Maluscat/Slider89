@@ -250,7 +250,7 @@ export default class Slider89 extends Slider89DOM {
 
 
   // ---- Initialization ----
-  initializeClassProperties(config: Properties.Config) {
+  initializeProperties(config: Properties.Config) {
     for (const [ item, prop ] of Object.entries(this.properties)) {
       this.initializeProperty(item as keyof PropertiesOutline, prop);
 
@@ -262,17 +262,10 @@ export default class Slider89 extends Slider89DOM {
         ((prop.getter || prop.keyGetter) ? this : this.vals)[item] = (typeof def === 'function' ? def() : def);
       }
     }
-  }
 
-  initializeCustomProperties(config: Partial<Properties.Custom>) {
     for (const item in config) {
-      if (item[0] === '_') {
-        this.defineDeepProperty(this, item as keyof Properties.Custom, this.vals);
-        this.vals[item] = config[item];
-      } else {
-        throw new Slider89.InitializationError(
-          '‘' + item + '’ is not a valid property name. Check its spelling or prefix it with an underscore to use it as custom property (‘_' + item + '’)');
-      }
+      this.defineDeepProperty(this, item as keyof Properties.Custom, this.vals);
+      this.vals[item] = config[item];
     }
   }
 
