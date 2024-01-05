@@ -312,14 +312,11 @@ export default class Slider89 extends Slider89DOM {
 
     Object.defineProperty(this, item, {
       set: (val: Properties.Base[Item]) => {
-        if ('readOnly' in propData) {
-          throw new Slider89.Error('Property ‘' + item + '’ is read-only (It was just set with the value ‘' + val + '’)');
-        }
         if (('constructorOnly' in propData) && !this.initial) {
           throw new Slider89.Error('Property ‘' + item + '’ may only be defined in the constructor (It was just set with the value ‘' + val + '’)');
         }
 
-        this.checkProp(item as keyof Properties.Writable, val);
+        this.checkProp(item as keyof Properties.Base, val);
 
         if (!prop.setter || !prop.setter(val)) {
           // @ts-ignore ???
@@ -351,16 +348,19 @@ export default class Slider89 extends Slider89DOM {
     }
   }
 
-  checkProp(prop: keyof Properties.Writable, val: any) {
-    const propertyInfo = Slider89.propertyData[prop];
+  checkProp(prop: keyof Properties.Base, val: any) {
+    const propData = Slider89.propertyData[prop];
+
+    if ('readOnly' in propData) {
+      throw new Slider89.Error('Property ‘' + prop + '’ is read-only (It was just set with the value ‘' + val + '’)');
+    }
+
     try {
-      RuntimeTypeCheck.checkType(val, propertyInfo.descriptor);
+      RuntimeTypeCheck.checkType(val, propData.descriptor);
     } catch (e) {
       if (e instanceof TypeCheckError) {
-        throw new Slider89.PropertyTypeError(this, prop, e.message);
-      } else {
-        throw e;
-      }
+        throw new Slider89.PropertyTypeError(this, prop as keyof Properties.Writable, e.message);
+      } else throw e;
     }
   }
 
