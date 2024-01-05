@@ -248,6 +248,17 @@ export default class Slider89 extends Slider89DOM {
     }
   }
 
+  testConfig(config: Properties.Config) {
+    for (const [ item, value ] of Object.entries(config)) {
+      if (item in this.properties) {
+        this.checkProp(item as keyof PropertiesOutline, value);
+      } else if (item[0] !== '_') {
+        throw new Slider89.InitializationError(
+          '‘' + item + '’ is not a valid property name. Check its spelling or prefix it with an underscore to use it as custom property (‘_' + item + '’)');
+      }
+    }
+  }
+
 
   // ---- Initialization ----
   initializeProperties(config: Properties.Config) {
