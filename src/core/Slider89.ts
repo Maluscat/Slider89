@@ -206,6 +206,9 @@ export default class Slider89 extends Slider89DOM {
     },
     plugins: {
       default: false
+    },
+    extend: {
+      default: false
     }
   };
 
