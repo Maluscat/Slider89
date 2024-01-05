@@ -216,13 +216,11 @@ export default class Slider89 extends Slider89DOM {
     super();
     this.initial = true;
 
-    this.testInitialTarget(target);
-
     if (config == null || config === false) config = {};
+    this.testInitialTarget(target);
     this.testInitialConfig(config);
-
-    this.initializeClassProperties(config);
-    this.initializeCustomProperties(config);
+    this.testAndExtendConfig(config);
+    this.initializeProperties(config);
 
     this.buildSlider(target, replace);
     this.applyAllRatioDistances();
@@ -264,6 +262,23 @@ export default class Slider89 extends Slider89DOM {
 
 
   // ---- Initialization ----
+  testAndExtendConfig(config: Properties.Config) {
+    this.testConfig(config);
+    if (config.extend) {
+      for (let i = config.extend.length - 1; i >= 0; i--) {
+        const mixin = config.extend[i];
+
+        this.testAndExtendConfig(mixin);
+        delete mixin.extend;
+        for (const [ item, value ] of Object.entries(mixin)) {
+          if (!(item in config)) {
+            config[item] = value;
+          }
+        }
+      }
+    }
+  }
+
   initializeProperties(config: Properties.Config) {
     for (const [ item, prop ] of Object.entries(this.properties)) {
       this.initializeProperty(item as keyof PropertiesOutline, prop);
