@@ -37,10 +37,10 @@ export namespace Descriptor {
   type Type = ObjectType | ArrayType | DefaultType;
 
   type ArrayType = TypeCreate<'array'> & {
-    descriptor: self;
+    descriptor?: self;
   }
   type ObjectType = TypeCreate<'object'> & {
-    descriptor: self;
+    descriptor?: self;
     keyName?: string;
   }
   type DefaultType = TypeCreate<keyof Omit<TypeConditions, 'array' | 'object'>>;
@@ -101,12 +101,9 @@ export default class RuntimeTypeCheck {
         type === 'function' && typeof val === 'function' ||
         type === 'string' && typeof val === 'string'
       ) {
-        if (type === 'array') {
-          for (const value of val) {
-            if (msg = RuntimeTypeCheck.#checkTypeRecursive(value, data.descriptor)) break;
-          }
-        } else if (type === 'object') {
-          for (const value of Object.values(val)) {
+        if ('descriptor' in data && (type === 'array' || type === 'object')) {
+          let values = type === 'array' ? val : Object.values(val);
+          for (const value of values) {
             if (msg = RuntimeTypeCheck.#checkTypeRecursive(value, data.descriptor)) break;
           }
         }
@@ -173,19 +170,27 @@ export default class RuntimeTypeCheck {
       }
 
       else if (type === 'array') {
-        const innerType = RuntimeTypeCheck.buildDescriptorTypeMessage(data.descriptor);
         if (data.conditions?.nonempty) {
           msg += 'non-empty ';
         }
-        msg += 'Array<' + innerType + '>';
+        if (data.descriptor) {
+          const innerType = RuntimeTypeCheck.buildDescriptorTypeMessage(data.descriptor);
+          msg += 'Array<' + innerType + '>';
+        } else {
+          msg += 'array';
+        }
         if (data.conditions?.length) {
           msg += ' of length ' + data.conditions.length;
         }
       }
 
       else if (type === 'object') {
-        const innerType = RuntimeTypeCheck.buildDescriptorTypeMessage(data.descriptor);
-        msg += 'Object<' + data.keyName + ', ' + innerType + '>';
+        if (data.descriptor) {
+          const innerType = RuntimeTypeCheck.buildDescriptorTypeMessage(data.descriptor);
+          msg += 'Object<' + data.keyName + ', ' + innerType + '>';
+        } else {
+          msg += 'object';
+        }
       }
 
       else if (type === 'string') {
