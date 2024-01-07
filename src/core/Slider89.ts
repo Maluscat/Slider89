@@ -25,6 +25,15 @@ namespace PropertyOutline {
     getter: (val: Type) => typeof val;
   }
   type Additional<Type> = {
+    /**
+     * Can be called to call a custom assignment when `extend`ing this property.
+     * For example, this is used to merge two configs with overlapping `events`.
+     * @param target The parent config the property will be assigned to.
+     * @param value The value of the assigned property.
+     * @param source The config that is being assigned.
+     * @param index The currently handled index of the `extend` array.
+     */
+    extendAssigner: (target: Properties.Config, value: Type, source: Properties.Config, index: number) => void,
     postSetter: (val: Type, prevVal: Type) => void | boolean;
     keySetter: Type extends Array<any>
       ? (val: Type[0], key: number) => void | boolean
@@ -272,9 +281,10 @@ export default class Slider89 extends Slider89DOM {
         const mixin = config.extend[i];
 
         this.testAndExtendConfig(mixin);
-        delete mixin.extend;
         for (const [ item, value ] of Object.entries(mixin)) {
-          if (!(item in config)) {
+          if (this.properties[item]?.extendAssigner) {
+            this.properties[item].extendAssigner(config, value, mixin, i);
+          } else if (!(item in config)) {
             config[item] = value;
           }
         }
