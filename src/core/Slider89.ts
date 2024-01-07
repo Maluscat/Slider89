@@ -191,7 +191,10 @@ export default class Slider89 extends Slider89DOM {
     events: {
       default: {},
       setter: (val) => {
-        if (val !== false) {
+        if (val === false) {
+          this.vals.events = {};
+          return true;
+        } else {
           const errTypes = [];
           for (let eventType in val) {
             if (!this.checkEventType(eventType as EventType.Base)) errTypes.push(eventType);
