@@ -196,6 +196,12 @@ export default class Slider89 extends Slider89DOM {
     },
     classList: {
       default: false,
+      extendAssigner: (target, value) => {
+        if (value && target.classList !== false) {
+          target.classList ||= {};
+          Slider89.#mergeArrayObjects(target.classList, value);
+        }
+      }
     },
     events: {
       default: {},
@@ -214,13 +220,26 @@ export default class Slider89 extends Slider89DOM {
               + 'Available event types are:' + Slider89.arrayToListString(Slider89.availableEventTypes));
           }
         }
+      },
+      extendAssigner: (target, value) => {
+        if (value && target.events !== false) {
+          target.events ||= {};
+          Slider89.#mergeArrayObjects(target.events, value);
+        }
       }
     },
     plugins: {
       default: false
     },
     extend: {
-      default: false
+      default: false,
+      extendAssigner: (target, value, source, i) => {
+        if (value) {
+          // Special case: Assigners can only be reached if `target.extend` is given.
+          (target.extend as Properties.Config[]).splice(i, 0, ...value);
+        }
+        delete source.extend;
+      }
     }
   };
 
@@ -473,6 +492,20 @@ export default class Slider89 extends Slider89DOM {
     if (this.injectedStyleSheet != null) {
       document.head.removeChild(this.injectedStyleSheet);
       this.injectedStyleSheet = null;
+    }
+  }
+
+  // ---- Internal helpers ----
+  /**
+   * Merge two identically typed "array objects" of the form { key: any[] }
+   * into the former, keeping only unique values.
+   */
+  static #mergeArrayObjects<V extends any[]>(target: Record<string, V>, source: Record<string, V>) {
+    for (const [ key, value ] of Object.entries(source)) {
+      // @ts-ignore
+      target[key] ||= [];
+      target[key].push(
+        ...value.filter(val => !target[key].includes(val)));
     }
   }
 }
