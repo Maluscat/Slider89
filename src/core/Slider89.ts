@@ -29,11 +29,10 @@ namespace PropertyOutline {
      * Can be called to call a custom assignment when `extend`ing this property.
      * For example, this is used to merge two configs with overlapping `events`.
      * @param target The config the property will be assigned to.
-     * @param config The parent of the assigned config.
      * @param value The value of the assigned property.
      * @param index The currently handled index of the `extend` array.
      */
-    extendAssigner: (target: Properties.Config, config: Readonly<Properties.Config>, value: Type, index: number) => void,
+    extendAssigner: (target: Properties.Config, value: Exclude<Type, false>, index: number) => void,
     postSetter: (val: Type, prevVal: Type) => void | boolean;
     keySetter: Type extends Array<any>
       ? (val: Type[0], key: number) => void | boolean
@@ -196,11 +195,9 @@ export default class Slider89 extends Slider89DOM {
     },
     classList: {
       default: false,
-      extendAssigner: (target, config, value) => {
-        if (value && config.classList !== false) {
-          target.classList ||= {};
-          Slider89.#mergeArrayObjects(target.classList, value);
-        }
+      extendAssigner: (target, value) => {
+        target.classList ||= {};
+        Slider89.#mergeArrayObjects(target.classList, value);
       }
     },
     events: {
@@ -221,31 +218,25 @@ export default class Slider89 extends Slider89DOM {
           }
         }
       },
-      extendAssigner: (target, config, value) => {
-        if (value && config.events !== false) {
-          target.events ||= {};
-          Slider89.#mergeArrayObjects(target.events, value);
-        }
+      extendAssigner: (target, value) => {
+        target.events ||= {};
+        Slider89.#mergeArrayObjects(target.events, value);
       }
     },
     plugins: {
       default: false,
-      extendAssigner: (target, config, value) => {
-        if (value && config.plugins !== false) {
-          target.plugins ||= [];
-          target.plugins.unshift(
-            // @ts-ignore `target.plugins` is not false since `config` === `target` in the first pass.
-            ...value.filter(val => !target.plugins.includes(val)));
-        }
+      extendAssigner: (target, value) => {
+        target.plugins ||= [];
+        target.plugins.unshift(
+          // @ts-ignore `target.plugins` is asserted not to be false.
+          ...value.filter(val => !target.plugins.includes(val)));
       }
     },
     extend: {
       default: false,
-      extendAssigner: (target, config, value, i) => {
-        if (value) {
-          // Special case: Assigners can only be reached if `target.extend` is given.
-          (target.extend as Properties.Config[]).splice(i, 0, ...value);
-        }
+      extendAssigner: (target, value, i) => {
+        // Special case: Assigners can only be reached if `target.extend` is given.
+        (target.extend as Properties.Config[]).splice(i, 0, ...value);
       }
     }
   };
@@ -308,7 +299,9 @@ export default class Slider89 extends Slider89DOM {
 
         for (const [ item, value ] of Object.entries(mixin)) {
           if (this.properties[item]?.extendAssigner) {
-            this.properties[item].extendAssigner(target, config, value, i);
+            if (value !== false && config[item] !== false) {
+              this.properties[item].extendAssigner(target, value, i);
+            }
           } else if (!(item in target)) {
             target[item] = value;
           }
