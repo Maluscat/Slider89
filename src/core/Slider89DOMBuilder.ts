@@ -178,14 +178,13 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     }
   }
 
-  // Add the specified classes and collecting all nonexistent nodes in `errNodes`
+  /**
+   * Iterate over a {@link Properties.Base.classList} and add all its
+   * class names to the specified {@link Properties.Base.nodes}.
+   */
   addClassesFromClassList(nodes: PropertyNode.Mult, classList: Exclude<Properties.Base['classList'], false>) {
-    const errNodes: string[] = [];
-
     for (const [ nodeName, classes ] of Object.entries(classList)) {
-      if (!Object.prototype.hasOwnProperty.call(nodes, nodeName)) {
-        errNodes.push(nodeName);
-      } else if (errNodes.length === 0) {
+      if (Object.prototype.hasOwnProperty.call(nodes, nodeName)) {
         const elements = nodes[nodeName];
 
         for (const className of classes) {
@@ -194,13 +193,6 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
           }
         }
       }
-    }
-
-    if (errNodes.length > 0) {
-      const msg =
-        "The given object contains items which aren't nodes of this slider:" + Slider89.arrayToListString(errNodes) +
-        "Following nodes are part of this slider's node pool:" + Slider89.arrayToListString(Object.keys(nodes))
-      throw new Slider89.Error(msg, 'classList', true);
     }
   }
 
