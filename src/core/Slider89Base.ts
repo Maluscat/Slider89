@@ -50,6 +50,7 @@ export namespace Properties {
     events: Partial<EventList> | false;
     plugins: PluginCallback[] | false;
     extend: Properties.Config[] | false;
+    data: object | false;
   }
   export interface Vals extends WithCustom {
     readonly $: Base;
@@ -111,6 +112,7 @@ export default class Slider89Base extends Slider89Error implements Properties.Wi
   events: Properties.Base['events']
   plugins: Properties.Base['plugins']
   extend: Properties.Base['extend']
+  data: Properties.Base['data']
 
   /**
    * @remarks
@@ -305,6 +307,13 @@ export default class Slider89Base extends Slider89Error implements Properties.Wi
             type: 'object'
           }]
         },
+        { type: 'false' }
+      ]
+    },
+    data: {
+      constructorOnly: true,
+      descriptor: [
+        { type: 'object' },
         { type: 'false' }
       ]
     }

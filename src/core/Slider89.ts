@@ -232,6 +232,12 @@ export default class Slider89 extends Slider89DOM {
         // Special case: Assigners can only be reached if `target.extend` is given.
         (target.extend as Properties.Config[]).splice(i, 0, ...value);
       }
+    },
+    data: {
+      default: false,
+      extendAssigner: (target, value) => {
+        target.data = Object.assign(value, target.data || {});
+      }
     }
   };
 
