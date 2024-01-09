@@ -195,10 +195,7 @@ export default class Slider89 extends Slider89DOM {
     },
     classList: {
       default: false,
-      extendAssigner: (target, value) => {
-        target.classList ||= {};
-        Slider89.#mergeArrayObjects(target.classList, value);
-      }
+      extendAssigner: Slider89.#arrayObjectAssigner.bind(Slider89, 'classList')
     },
     events: {
       default: {},
@@ -218,10 +215,7 @@ export default class Slider89 extends Slider89DOM {
           }
         }
       },
-      extendAssigner: (target, value) => {
-        target.events ||= {};
-        Slider89.#mergeArrayObjects(target.events, value);
-      }
+      extendAssigner: Slider89.#arrayObjectAssigner.bind(Slider89, 'events')
     },
     plugins: {
       default: false,
@@ -496,6 +490,20 @@ export default class Slider89 extends Slider89DOM {
   }
 
   // ---- Internal helpers ----
+  /**
+   * General extend assigner that merges two "array objects" of the form
+   * { key: any[] }. Can easily be utilized with `bind()`.
+   * @see {@link #mergeArrayObjects}.
+   */
+  static #arrayObjectAssigner<P extends keyof Properties.Config>(
+    propertyName: P,
+    target: Properties.Config,
+    value: Exclude<Properties.Config[P], false>
+  ) {
+    target[propertyName] ||= {};
+    this.#mergeArrayObjects(target[propertyName], value);
+  }
+
   /**
    * Merge two identically typed "array objects" of the form { key: any[] }
    * into the former, keeping only unique values.
