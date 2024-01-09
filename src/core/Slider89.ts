@@ -194,7 +194,7 @@ export default class Slider89 extends Slider89DOM {
       }
     },
     classList: {
-      default: false,
+      default: {},
       extendAssigner: Slider89.#arrayObjectAssigner.bind(Slider89, 'classList')
     },
     events: {
@@ -218,7 +218,7 @@ export default class Slider89 extends Slider89DOM {
       extendAssigner: Slider89.#arrayObjectAssigner.bind(Slider89, 'events')
     },
     plugins: {
-      default: false,
+      default: [],
       extendAssigner: (target, value) => {
         target.plugins ||= [];
         target.plugins.unshift(
@@ -227,14 +227,14 @@ export default class Slider89 extends Slider89DOM {
       }
     },
     extend: {
-      default: false,
+      default: [],
       extendAssigner: (target, value, i) => {
         // Special case: Assigners can only be reached if `target.extend` is given.
         (target.extend as Properties.Config[]).splice(i, 0, ...value);
       }
     },
     data: {
-      default: false,
+      default: {},
       extendAssigner: (target, value) => {
         target.data = Object.assign(value, target.data || {});
       }
