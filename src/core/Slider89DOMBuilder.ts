@@ -58,7 +58,6 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     }
     // Thumb classes are applied in `createNewThumb`;
     // Slider classes are applied in `addClasses`.
-    track.classList.add('sl89-track');
     wrapper.appendChild(track);
 
     return nodes;
@@ -125,8 +124,6 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     if (!this.thumbParent) {
       this.thumbParent = node.track;
     }
-
-    node.track.classList.add('sl89-track');
     // NOTE: From here on, `node` is of type `PropertyNode.Single`
   }
 
@@ -168,10 +165,11 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
 
   // ---- Misc functions ----
-  addClasses(slider: HTMLElement, nodes: PropertyNode.Mult, classList: Properties.Base['classList'], isVertical: boolean) {
-    slider.classList.add('slider89');
+  addClasses(nodes: PropertyNode.Mult, classList: Properties.Base['classList'], isVertical: boolean) {
+    nodes.track[0].classList.add('sl89-track');
+    nodes.slider[0].classList.add('slider89');
     if (isVertical) {
-      slider.classList.add('vertical');
+      nodes.slider[0].classList.add('vertical');
     }
     if (classList) {
       this.addClassesFromClassList(nodes, classList);

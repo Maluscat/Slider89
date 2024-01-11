@@ -340,7 +340,6 @@ export default class Slider89 extends Slider89DOM {
     }
 
     this.domHandler.addClasses(
-      this.vals.node.slider,
       this.vals.nodes,
       this.vals.classList,
       this.vals.orientation === 'vertical');
