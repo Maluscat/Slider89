@@ -112,17 +112,14 @@ export default class Slider89Properties extends Slider89Events {
   // `this` items are compared to accomodate for getters (e.g. `value` (precision))
   handleInternalPropertyChange(
     item: keyof Properties.WithCustom,
-    prevVal?: Properties.WithCustom[typeof item],
-    skipEvent = false
+    prevVal?: Properties.WithCustom[typeof item]
   ) {
     // Object types (arrays included) always invoke a variable update
     // due to inability to deeply compare them (efficiently)
     if (!this.initial && (typeof this[item] === 'object' || prevVal !== this[item])) {
+      prevVal ??= this[item];
       this.domHandler.updatePotentialVariable(item);
-      if (!skipEvent) {
-        prevVal ??= this[item];
-        this.invokeEvent(('change:' + item) as EventType.Base, this[item], prevVal);
-      }
+      this.invokeEvent(('change:' + item) as EventType.Base, this[item], prevVal);
     }
   }
   handleInternalDeepArrayChange(

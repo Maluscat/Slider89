@@ -117,14 +117,15 @@ export default class Slider89 extends Slider89DOM {
       },
       postSetter: (val, prevVal) => {
         if (!this.initial) {
-          const lengthHasChanged = prevVal.length !== val.length;
           // Manually invoke some property changes
           this.handleInternalPropertyChange('value', prevVal[0]);
-          // Invoke `node(s)` property change
-          // and invoke a change event if the `values` length has changed.
-          this.handleInternalPropertyChange('node', null, !lengthHasChanged);
-          this.handleInternalPropertyChange('nodes', null, !lengthHasChanged);
-          this.domHandler.expandAllBaseElementVariables();
+          // Invoke `node(s)` property change and expand all `thumb` structure variables
+          // if the `values` length has changed.
+          if (prevVal.length !== val.length) {
+            this.handleInternalPropertyChange('node');
+            this.handleInternalPropertyChange('nodes');
+            this.domHandler.expandAllBaseElementVariables();
+          }
         }
       },
       keySetter: (val, key) => {
