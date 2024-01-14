@@ -2,28 +2,31 @@
 // @ts-ignore (Webpack import)
 import defaultStylesString from '../css/default-styles.css';
 
-import type { Properties } from './Base';
+import type { Properties as Props } from './Base';
+import type { Operation } from './Definition.ts';
 import type { EventType } from './Events';
 import RuntimeTypeCheck, { TypeCheckError } from './type-check/RuntimeTypeCheck';
 import DOM from './DOM';
 
 export type PropertiesOutline = {
-  [ Prop in keyof Properties.Base ]: PropertyOutline.self<Properties.Base[Prop]>;
+  [ Prop in keyof Props.Base ]: PropertyOutline.self<Prop>;
 }
 
 namespace PropertyOutline {
-  export type self<Type> =
-      Default<Type> & Partial<GetterSetter<Type>> & Partial<Additional<Type>>
-    | GetterSetter<Type> & Partial<Default<Type>> & Partial<Additional<Type>>;
+  type Type<I extends keyof Props.Base> = Props.Base[I];
 
-  type Default<Type> = {
-    default: Type | (() => Type);
+  export type self<I extends keyof Props.Base> =
+      Default<I> & Partial<GetterSetter<I>> & Partial<Additional<I>>
+    | GetterSetter<I> & Partial<Default<I>> & Partial<Additional<I>>;
+
+  type Default<I extends keyof Props.Base> = {
+    default: Type<I> | (() => Type<I>);
   }
-  type GetterSetter<Type> = {
-    setter: (val: Type) => void | boolean;
-    getter: (val: Type) => typeof val;
+  type GetterSetter<I extends keyof Props.Base> = {
+    setter: Operation.Setter<I>;
+    getter: Operation.Getter<I>;
   }
-  type Additional<Type> = {
+  type Additional<I extends keyof Props.Base> = {
     /**
      * Can be called to call a custom assignment when `extend`ing this property.
      * For example, this is used to merge two configs with overlapping `events`.
@@ -31,19 +34,12 @@ namespace PropertyOutline {
      * @param value The value of the assigned property.
      * @param index The currently handled index of the `extend` array.
      */
-    extendAssigner: (target: Properties.Config, value: Exclude<Type, false>, index: number) => void,
-    postSetter: (val: Type, prevVal: Type) => void | boolean;
-    internalKeySetter: KeySetter<Type>;
-    keySetter: KeySetter<Type>;
-    keyGetter: KeyGetter<Type>;
+    extendAssigner: (target: Props.Config, value: Exclude<Type<I>, false>, index: number) => void,
+    postSetter: Operation.PostSetter<I>;
+    internalKeySetter: Operation.KeySetter<I>;
+    keySetter: Operation.KeySetter<I>;
+    keyGetter: Operation.KeyGetter<I>;
   }
-
-  type KeySetter<Type> = Type extends Array<any>
-    ? (val: Type[number], key: number, prevValTop?: Type) => void | boolean
-    : never;
-  type KeyGetter<Type> = Type extends Array<any>
-    ? (val: Type[number], key: number) => typeof val
-    : never;
 }
 
 export default class Slider89 extends DOM {
@@ -245,7 +241,7 @@ export default class Slider89 extends DOM {
       default: [],
       extendAssigner: (target, value, i) => {
         // Special case: Assigners can only be reached if `target.extend` is given.
-        (target.extend as Properties.Config[]).splice(i, 0, ...value);
+        (target.extend as Props.Config[]).splice(i, 0, ...value);
       }
     },
     data: {
@@ -256,7 +252,7 @@ export default class Slider89 extends DOM {
     }
   };
 
-  constructor(target: HTMLElement, config?: Properties.Config | false, replace = false) {
+  constructor(target: HTMLElement, config?: Props.Config | false, replace = false) {
     super();
     this.initial = true;
 
@@ -285,7 +281,7 @@ export default class Slider89 extends DOM {
       throw new Slider89.InitializationError('The first argument must be a valid DOM node (got ' + RuntimeTypeCheck.getType(target) + ')');
     }
   }
-  testInitialConfig(config: Properties.Config) {
+  testInitialConfig(config: Props.Config) {
     if (typeof config !== 'object' || Array.isArray(config)) {
       throw new Slider89.InitializationError('The optional second argument needs to be a configuration object (got ' + RuntimeTypeCheck.getType(config) + ')');
     } else if ('value' in config && 'values' in config) {
@@ -293,7 +289,7 @@ export default class Slider89 extends DOM {
     }
   }
 
-  testConfig(config: Properties.Config) {
+  testConfig(config: Props.Config) {
     for (const [ item, value ] of Object.entries(config)) {
       if (item in this.properties) {
         this.checkProp(item as keyof PropertiesOutline, value);
@@ -306,7 +302,7 @@ export default class Slider89 extends DOM {
 
 
   // ---- Initialization ----
-  testAndExtendConfig(config: Readonly<Properties.Config>, target: Properties.Config = config) {
+  testAndExtendConfig(config: Readonly<Props.Config>, target: Props.Config = config) {
     this.testConfig(config);
     if (config.extend) {
       for (let i = config.extend.length - 1; i >= 0; i--) {
@@ -326,7 +322,7 @@ export default class Slider89 extends DOM {
     }
   }
 
-  initializeProperties(config: Properties.Config) {
+  initializeProperties(config: Props.Config) {
     for (const [ item, prop ] of Object.entries(this.properties)) {
       this.initializeProperty(item as keyof PropertiesOutline, prop);
 
@@ -340,7 +336,7 @@ export default class Slider89 extends DOM {
     }
 
     for (const item in config) {
-      this.defineInternalProperty(this, this.vals, item as keyof Properties.Custom);
+      this.defineInternalProperty(this, this.vals, item as keyof Props.Custom);
       this.vals[item] = config[item];
     }
   }
@@ -365,7 +361,7 @@ export default class Slider89 extends DOM {
   }
 
   // ---- Plugins ----
-  callPlugins(plugins: Properties.Base['plugins']) {
+  callPlugins(plugins: Props.Base['plugins']) {
     if (plugins === false) return;
 
     for (const callback of plugins) {
@@ -382,7 +378,7 @@ export default class Slider89 extends DOM {
   defineInternalBuiltinProperty<I extends keyof PropertiesOutline>(item: I, outline: PropertiesOutline[I]) {
     const propData = Slider89.propertyData[item];
     Object.defineProperty(this, item, {
-      set: (val: Properties.Base[I]) => {
+      set: (val: Props.Base[I]) => {
         if ((propData as any).constructorOnly && !this.initial) {
           throw new Slider89.Error('Property ‘' + item + '’ may only be defined in the constructor (It was just set with the value ‘' + val + '’)');
         }
@@ -417,7 +413,7 @@ export default class Slider89 extends DOM {
     }
   }
 
-  checkProp(prop: keyof Properties.Base, val: any) {
+  checkProp(prop: keyof Props.Base, val: any) {
     const propData = Slider89.propertyData[prop];
 
     if ('readOnly' in propData) {
@@ -428,12 +424,12 @@ export default class Slider89 extends DOM {
       RuntimeTypeCheck.checkType(val, propData.descriptor);
     } catch (e) {
       if (e instanceof TypeCheckError) {
-        throw new Slider89.PropertyTypeError(this, prop as keyof Properties.Writable, e.message);
+        throw new Slider89.PropertyTypeError(this, prop as keyof Props.Writable, e.message);
       } else throw e;
     }
   }
 
-  adaptValueToRange(value: Properties.Base['value']) {
+  adaptValueToRange(value: Props.Base['value']) {
     if (this.vals.range[0] < this.vals.range[1]) {
       if (value < this.vals.range[0]) {
         return this.vals.range[0];
@@ -516,10 +512,10 @@ export default class Slider89 extends DOM {
    * { key: any[] }. Can easily be utilized with `bind()`.
    * @see {@link #mergeArrayObjects}.
    */
-  static #arrayObjectAssigner<P extends keyof Properties.Config>(
+  static #arrayObjectAssigner<P extends keyof Props.Config>(
     propertyName: P,
-    target: Properties.Config,
-    value: Exclude<Properties.Config[P], false>
+    target: Props.Config,
+    value: Exclude<Props.Config[P], false>
   ) {
     target[propertyName] ||= {};
     this.#mergeArrayObjects(target[propertyName], value);

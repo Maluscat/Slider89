@@ -5,15 +5,25 @@ import { PropertiesOutline as Outline } from './Slider89';
 import Events from './Events';
 
 
-export namespace DeepKey {
-  export type Type<P extends keyof Props.Deep> = Props.Deep[P][number];
+export namespace Operation {
+  type Type<I extends keyof Props.Base> = Props.Base[I];
 
-  export type Setter<P extends keyof Props.Deep> =
-    (val: Type<P>, index: number) => void | boolean;
+  export type Setter<I extends keyof Props.Base> =
+    (val: Type<I>) => void | boolean;
+  export type PostSetter<I extends keyof Props.Base> =
+    (val: Type<I>, prevVal: Type<I>) => void | boolean;
 
-  export type Getter<P extends keyof Props.Deep> =
-    (val: Type<P>, index: number) => typeof val;
+  export type Getter<I extends keyof Props.Base> =
+    (val: Type<I>) => Type<I>;
+
+  export type KeySetter<I extends keyof Props.Base> = I extends keyof Props.Deep
+    ? (val: Type<I>[number], key: number, prevValTop?: Type<I>) => void | boolean
+    : never;
+  export type KeyGetter<I extends keyof Props.Base> = I extends keyof Props.Deep
+    ? (val: Type<I>[number], key: number) => Type<I>[number]
+    : never;
 }
+
 
 export default class Definition extends Events {
   /**
