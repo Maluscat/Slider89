@@ -22,7 +22,7 @@ export default class Slider89Properties extends Slider89Events {
    * bypasses any additional actions done beside setting the endpoint.
    *
    * This is utilized when calling the key setters in the
-   * [definition setup]({@link #defineDeepArray) to mitigate potential
+   * [definition setup]({@link #defineDeepArray)} to mitigate potential
    * recursion and side effects of them influencing each other.
    */
   #isDefining = false;
