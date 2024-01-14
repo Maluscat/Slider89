@@ -49,12 +49,12 @@ export default class Slider89Properties extends Slider89Events {
     Object.defineProperty(target, item, {
       set: (val: typeof target[I]) => {
         if (!this.initial) {
-          var prevVal = (isDeepDefinedArray ? Array.from(this[item as keyof Props.Deep]) : this[item]);
+          var prevVal: typeof val = (isDeepDefinedArray ? Array.from(this[item as keyof Props.Deep]) : this[item]);
         }
         endpoint[item] = val;
         if (isDeepDefinedArray) {
-          this.#defineDeepArray(item as keyof Props.Deep, val, prevVal as Props.Deep[keyof Props.Deep], outline as Outline[keyof Props.Deep]);
-          this.handleInternalDeepArrayChange(item, prevVal, val);
+          this.#defineDeepArray(item as keyof Props.Deep, val, prevVal, outline as Outline[keyof Props.Deep]);
+          this.handleInternalDeepArrayChange(item as keyof Props.Deep, prevVal, val);
         } else {
           this.handleInternalPropertyChange(item, prevVal);
         }
@@ -71,7 +71,10 @@ export default class Slider89Properties extends Slider89Events {
 
   // ---- Defining the keys of deeply defined arrays ----
   #defineDeepArray<I extends keyof Props.Deep>(
-    item: I, val: Props.Deep[I], prevValTop: Props.Deep[I], outline: Outline[I]
+    item: I,
+    val: Props.Deep[I],
+    prevValTop: Props.Deep[I],
+    outline: Outline[I]
   ) {
     const descriptorVals = this.#descriptorIntermediateVals.bind(this, item, outline.internalKeySetter);
     const descriptorThis = this.#descriptorIntermediateThis.bind(this, item, outline.keySetter, outline.keyGetter);
@@ -115,12 +118,12 @@ export default class Slider89Properties extends Slider89Events {
           endpoint[item][key] = val;
         } else {
           if (!this.initial) {
-            var prevVal = Array.from(this[item]);
+            var prevValFull = Array.from(this[item]) as Props.Deep[I];
           }
           if (!internalKeySetter || !internalKeySetter(val, key)) {
             endpoint[item][key] = val;
           }
-          this.handleInternalDeepArrayChange(item, prevVal, null, key);
+          this.handleInternalDeepArrayChange(item, prevValFull, null, key);
         }
       },
       get() {
@@ -129,10 +132,10 @@ export default class Slider89Properties extends Slider89Events {
     } as PropertyDescriptor;
   }
 
-  #defineDeepArrayIntermediate<P extends keyof Props.Deep>(
+  #defineDeepArrayIntermediate<I extends keyof Props.Deep>(
     definitionPoint: Props.Deep,
-    parentItem: P,
-    parentValue: Props.Deep[P],
+    parentItem: I,
+    parentValue: Props.Deep[I],
     descriptorFactory: (key: number) => PropertyDescriptor
   ) {
     // @ts-ignore (Only Setup)
@@ -150,9 +153,8 @@ export default class Slider89Properties extends Slider89Events {
 
   // ---- Property change tracking ----
   // `this` items are compared to accomodate for getters (e.g. `value` (precision))
-  handleInternalPropertyChange(
-    item: keyof Props.WithCustom,
-    prevVal?: Props.WithCustom[typeof item]
+  handleInternalPropertyChange<I extends keyof Props.WithCustom>(
+    item: I, prevVal?: Props.WithCustom[I]
   ) {
     // Object types (arrays included) always invoke a variable update
     // due to inability to deeply compare them (efficiently)
@@ -162,10 +164,10 @@ export default class Slider89Properties extends Slider89Events {
       this.invokeEvent(('change:' + item) as EventType.Base, this[item], prevVal);
     }
   }
-  handleInternalDeepArrayChange(
-    item: keyof Props.WithCustom,
-    prevVal: Props.WithCustom[typeof item],
-    val: Props.WithCustom[typeof item],
+  handleInternalDeepArrayChange<I extends keyof Props.Deep>(
+    item: I,
+    prevVal: Props.Deep[I],
+    val: Props.Deep[I],
     deepDefinedIndex?: number
   ) {
     if (!this.initial) {
@@ -180,9 +182,9 @@ export default class Slider89Properties extends Slider89Events {
     }
   }
 
-  invokeDeepArrayChangeEvent(
-    item: keyof Props.WithCustom,
-    prevVal: Props.WithCustom[typeof item],
+  invokeDeepArrayChangeEvent<I extends keyof Props.Deep>(
+    item: I,
+    prevVal: Props.Deep[I],
     deepDefinedIndex: number
   ) {
     if (prevVal[deepDefinedIndex] !== this[item][deepDefinedIndex]) {
