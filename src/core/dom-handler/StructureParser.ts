@@ -1,6 +1,6 @@
 'use strict';
-import type { Properties, PropertyNode } from './Slider89Base';
-import Slider89 from './Slider89';
+import type { Properties, PropertyNode } from '../Base';
+import Slider89 from '../Slider89';
 
 // ---- Type: Special variables ----
 namespace SpecialVariables {

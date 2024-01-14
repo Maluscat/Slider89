@@ -1,8 +1,8 @@
-import type { Properties } from './Slider89Base';
-import type { VariableName } from './Slider89StructureParser';
-import Slider89 from './Slider89';
-import Slider89DOMBuilder from './Slider89DOMBuilder';
-import Slider89StructureParser from './Slider89StructureParser';
+import type { Properties } from '../Base';
+import type { VariableName } from './StructureParser';
+import Slider89 from '../Slider89';
+import Slider89DOMBuilder from './DOMBuilder';
+import Slider89StructureParser from './StructureParser';
 
 
 export default class Slider89DOMVariables extends Slider89DOMBuilder {

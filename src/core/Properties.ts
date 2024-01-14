@@ -1,8 +1,8 @@
 'use strict';
-import type { Properties as Props } from './Slider89Base';
-import type { EventType } from './Slider89Events';
+import type { Properties as Props } from './Base';
+import type { EventType } from './Events';
 import { PropertiesOutline as Outline } from './Slider89';
-import Slider89Events from './Slider89Events';
+import Slider89Events from './Events';
 
 
 export namespace DeepKey {

@@ -1,7 +1,7 @@
 'use strict';
-import type { Properties } from './Slider89Base';
+import type { Properties } from './Base';
 import Slider89 from './Slider89';
-import Slider89Base from './Slider89Base';
+import Slider89Base from './Base';
 
 export namespace EventType {
   type NamesBasic = typeof Slider89Events.eventTypes[number];

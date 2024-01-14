@@ -1,9 +1,9 @@
 'use strict';
-import type { DeepReadonlyObject, Descriptor } from './RuntimeTypeCheck';
-import type { EventData, EventType } from './Slider89Events';
-import Slider89DOMVariables from './Slider89DOMVariables';
-import Slider89Error from './Slider89Error';
-import RuntimeTypeCheck, { TypeCheckError } from './RuntimeTypeCheck';
+import type { DeepReadonlyObject, Descriptor } from './type-check/RuntimeTypeCheck';
+import type { EventData, EventType } from './Events';
+import Slider89DOMVariables from './dom-handler/DOMVariables';
+import Slider89Error from './SliderError';
+import RuntimeTypeCheck, { TypeCheckError } from './type-check/RuntimeTypeCheck';
 import Slider89 from './Slider89';
 
 // ---- Misc types ----

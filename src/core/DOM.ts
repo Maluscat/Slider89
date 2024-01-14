@@ -1,8 +1,8 @@
 'use strict';
-import type { Properties } from './Slider89Base';
+import type { Properties } from './Base';
 import Slider89 from './Slider89';
-import Slider89Properties from './Slider89Properties';
-import Slider89DOMVariables from './Slider89DOMVariables';
+import Slider89Properties from './Properties';
+import Slider89DOMVariables from './dom-handler/DOMVariables';
 
 interface ClientXY {
   clientX: number;

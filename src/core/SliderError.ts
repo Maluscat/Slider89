@@ -1,6 +1,6 @@
 'use strict';
-import type { Properties } from './Slider89Base';
-import RuntimeTypeCheck from './RuntimeTypeCheck';
+import type { Properties } from './Base';
+import RuntimeTypeCheck from './type-check/RuntimeTypeCheck';
 import Slider89 from './Slider89';
 
 export default class Slider89Error {

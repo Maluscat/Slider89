@@ -2,10 +2,10 @@
 // @ts-ignore (Webpack import)
 import defaultStylesString from '../css/default-styles.css';
 
-import type { Properties } from './Slider89Base';
-import type { EventType } from './Slider89Events';
-import RuntimeTypeCheck, { TypeCheckError } from './RuntimeTypeCheck';
-import Slider89DOM from './Slider89DOM';
+import type { Properties } from './Base';
+import type { EventType } from './Events';
+import RuntimeTypeCheck, { TypeCheckError } from './type-check/RuntimeTypeCheck';
+import Slider89DOM from './DOM';
 
 export type PropertiesOutline = {
   [ Prop in keyof Properties.Base ]: PropertyOutline.self<Properties.Base[Prop]>;
