@@ -1,6 +1,5 @@
 'use strict';
-import type { Properties, PropertyInfo } from './Slider89Base';
-import type { Descriptor } from './RuntimeTypeCheck';
+import type { Properties } from './Slider89Base';
 import RuntimeTypeCheck from './RuntimeTypeCheck';
 import Slider89 from './Slider89';
 

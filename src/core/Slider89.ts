@@ -6,7 +6,6 @@ import type { Properties } from './Slider89Base';
 import type { EventType } from './Slider89Events';
 import RuntimeTypeCheck, { TypeCheckError } from './RuntimeTypeCheck';
 import Slider89DOM from './Slider89DOM';
-import Slider89DOMBuilder from './Slider89DOMBuilder';
 
 type PropertiesOutline = {
   [ Prop in keyof Properties.Base ]: PropertyOutline.self<Properties.Base[Prop]>;

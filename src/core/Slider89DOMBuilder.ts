@@ -1,7 +1,6 @@
 'use strict';
 import type { Properties, PropertyNode } from './Slider89Base';
 import type { VariableName } from './Slider89StructureParser';
-import Slider89 from './Slider89';
 import Slider89StructureParser from './Slider89StructureParser';
 
 type VariableThumbStrings = Partial<Record<VariableName, string[]>>;
