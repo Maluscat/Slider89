@@ -1,11 +1,11 @@
 'use strict';
 import type { Properties, PropertyNode } from '../Base';
 import type { VariableName } from './StructureParser';
-import Slider89StructureParser from './StructureParser';
+import StructureParser from './StructureParser';
 
 type VariableThumbStrings = Partial<Record<VariableName, string[]>>;
 
-export default class Slider89DOMBuilder extends Slider89StructureParser {
+export default class DOMBuilder extends StructureParser {
   /** A basic thumb node used for cloning. */
   thumbBase: HTMLDivElement;
   thumbParent: HTMLElement;
@@ -149,7 +149,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
     const newThumb = this.createNewThumb();
     nodes.thumb.push(newThumb);
 
-    (Slider89DOMBuilder.findNodeChildren(newThumb) as HTMLElement[])
+    (DOMBuilder.findNodeChildren(newThumb) as HTMLElement[])
       .forEach((childNode, i) => {
         const childName = this.thumbChildren[i];
         nodes[childName].push(childNode);
@@ -211,7 +211,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
   nodeHasBaseElementOwner(node: Node) {
     for (const [ baseName, element ] of Object.entries(this.baseElements)) {
-      if (Slider89DOMBuilder.getNodeOwner(node) === element) return baseName;
+      if (DOMBuilder.getNodeOwner(node) === element) return baseName;
     }
     return false;
   }
@@ -233,7 +233,7 @@ export default class Slider89DOMBuilder extends Slider89StructureParser {
 
     for (const child of node.children) {
       collector.push(child);
-      Slider89DOMBuilder.findNodeChildren(child, collector);
+      DOMBuilder.findNodeChildren(child, collector);
     }
     return collector;
   }

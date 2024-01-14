@@ -1,11 +1,11 @@
 'use strict';
 import type { Properties } from './Base';
 import Slider89 from './Slider89';
-import Slider89Base from './Base';
+import Base from './Base';
 
 export namespace EventType {
-  type NamesBasic = typeof Slider89Events.eventTypes[number];
-  type NamesSpecial = keyof typeof Slider89Events.eventTypesSpecial;
+  type NamesBasic = typeof Events.eventTypes[number];
+  type NamesSpecial = keyof typeof Events.eventTypesSpecial;
 
   export type HumanList = Array<NamesBasic | NamesSpecial>;
   export interface Special {
@@ -33,7 +33,7 @@ export namespace EventData {
 type EventListenerIdentifier = number | string;
 
 
-export default class Slider89Events extends Slider89Base {
+export default class Events extends Base {
   // ---- Constant statics ----
   static eventTypes = [
     'update',
@@ -71,12 +71,12 @@ export default class Slider89Events extends Slider89Base {
 
   // ---- Methods ----
   addEvent(type: EventType.Base, fn: EventData.Fn, customID?: string): EventListenerIdentifier {
-    Slider89Base.selfCheckMethod('addEvent', arguments);
+    Base.selfCheckMethod('addEvent', arguments);
 
     if (!this.checkEventType(type)) {
       const msg =
         'The specified event type ‘' + type + '’ is not valid. Available types are:'
-        + Slider89.arrayToListString(Slider89Events.availableEventTypes);
+        + Slider89.arrayToListString(Events.availableEventTypes);
       throw new Slider89.Error(msg, 'addEvent');
     }
 
@@ -102,7 +102,7 @@ export default class Slider89Events extends Slider89Base {
     return customID || this.#eventID++;
   }
   removeEvent(key: EventListenerIdentifier): false | EventData.Fn[] {
-    Slider89Base.selfCheckMethod('removeEvent', arguments);
+    Base.selfCheckMethod('removeEvent', arguments);
 
     if (!(key in this.#eventList)) {
       return false;
@@ -142,7 +142,7 @@ export default class Slider89Events extends Slider89Base {
   }
 
   checkEventType(type: EventType.Base) {
-    for (const eventTypeData of Object.values(Slider89Events.eventTypesSpecial)) {
+    for (const eventTypeData of Object.values(Events.eventTypesSpecial)) {
       if (type.startsWith(eventTypeData.prefix)) {
         const suffix = type.slice(eventTypeData.prefix.length);
         eventTypeData.fn(this as unknown as Slider89, suffix, type);
@@ -150,6 +150,6 @@ export default class Slider89Events extends Slider89Base {
       }
     }
     // @ts-ignore
-    return Slider89Events.eventTypes.includes(type);
+    return Events.eventTypes.includes(type);
   }
 }

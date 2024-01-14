@@ -1,8 +1,8 @@
 'use strict';
 import type { DeepReadonlyObject, Descriptor } from './type-check/RuntimeTypeCheck';
 import type { EventData, EventType } from './Events';
-import Slider89DOMVariables from './dom-handler/DOMVariables';
-import Slider89Error from './SliderError';
+import type DOMVariables from './dom-handler/DOMVariables';
+import SliderError from './SliderError';
 import RuntimeTypeCheck, { TypeCheckError } from './type-check/RuntimeTypeCheck';
 import Slider89 from './Slider89';
 
@@ -90,10 +90,10 @@ type MethodData = DeepReadonlyObject<{
   }
 }>
 
-export type TypedMethods = keyof typeof Slider89Base.methodData;
+export type TypedMethods = keyof typeof Base.methodData;
 
 
-export default class Slider89Base extends Slider89Error implements Properties.WithCustom {
+export default class Base extends SliderError implements Properties.WithCustom {
   // TypeScript does not allow custom properties in classes
   // because they are busy ignoring all open issues with good suggestions
   // Thus, NOTE: Update this (copy-paste) whenever the properties expand.
@@ -117,7 +117,7 @@ export default class Slider89Base extends Slider89Error implements Properties.Wi
   /**
    * @remarks
    * When adding a method here, remember that it must call
-   * the {@link Slider89Base.selfCheckMethod} itself!
+   * the {@link Base.selfCheckMethod} itself!
    */
   static methodData = ({
     addEvent: {
@@ -321,7 +321,7 @@ export default class Slider89Base extends Slider89Error implements Properties.Wi
 
   properties;
 
-  domHandler: Slider89DOMVariables;
+  domHandler: DOMVariables;
 
   // @ts-ignore
   vals: Properties.Vals = {}; // holding every class property

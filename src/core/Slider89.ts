@@ -5,7 +5,7 @@ import defaultStylesString from '../css/default-styles.css';
 import type { Properties } from './Base';
 import type { EventType } from './Events';
 import RuntimeTypeCheck, { TypeCheckError } from './type-check/RuntimeTypeCheck';
-import Slider89DOM from './DOM';
+import DOM from './DOM';
 
 export type PropertiesOutline = {
   [ Prop in keyof Properties.Base ]: PropertyOutline.self<Properties.Base[Prop]>;
@@ -46,7 +46,7 @@ namespace PropertyOutline {
     : never;
 }
 
-export default class Slider89 extends Slider89DOM {
+export default class Slider89 extends DOM {
   /**
    * Controls whether to inject the slider's style sheet into the current
    * document. Is simply tested for truthyness when creating a new slider.

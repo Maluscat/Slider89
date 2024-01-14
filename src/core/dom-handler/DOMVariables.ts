@@ -1,11 +1,11 @@
 import type { Properties } from '../Base';
 import type { VariableName } from './StructureParser';
 import Slider89 from '../Slider89';
-import Slider89DOMBuilder from './DOMBuilder';
-import Slider89StructureParser from './StructureParser';
+import DOMBuilder from './DOMBuilder';
+import StructureParser from './StructureParser';
 
 
-export default class Slider89DOMVariables extends Slider89DOMBuilder {
+export default class DOMVariables extends DOMBuilder {
   slider: Slider89;
 
 
@@ -26,8 +26,8 @@ export default class Slider89DOMVariables extends Slider89DOMBuilder {
       this.#replaceVariableStringInNodes(str, nodeList);
     }
 
-    if (Object.prototype.hasOwnProperty.call(Slider89StructureParser.specialVariableProxy, propName)) {
-      for (const varName of Slider89StructureParser.specialVariableProxy[propName]) {
+    if (Object.prototype.hasOwnProperty.call(StructureParser.specialVariableProxy, propName)) {
+      for (const varName of StructureParser.specialVariableProxy[propName]) {
         this.updatePotentialVariable(varName);
       }
     }
@@ -53,7 +53,7 @@ export default class Slider89DOMVariables extends Slider89DOMBuilder {
   #replaceVariableStringInNodes(str: string, nodeList: Node[]) {
     for (const [ element, node, baseName ] of this.#iterateVariableNodeList(nodeList)) {
       node.textContent =
-        str.replace(Slider89StructureParser.regex.variable, (match, variableDelimit, variable) => {
+        str.replace(StructureParser.regex.variable, (match, variableDelimit, variable) => {
           return this.#getValueFromVariableName(variableDelimit || variable, element, baseName);
         });
     }
@@ -68,8 +68,8 @@ export default class Slider89DOMVariables extends Slider89DOMBuilder {
     const initialVarName = varIterator.next().value;
     let value: Properties.WithCustom[keyof Properties.WithCustom];
 
-    if (initialVarName in Slider89StructureParser.specialVariables) {
-      const specialVarData = Slider89StructureParser.specialVariables[initialVarName];
+    if (initialVarName in StructureParser.specialVariables) {
+      const specialVarData = StructureParser.specialVariables[initialVarName];
       value = specialVarData.getter(element, this.slider, baseName);
     } else {
       value = this.slider[initialVarName];
@@ -103,7 +103,7 @@ export default class Slider89DOMVariables extends Slider89DOMBuilder {
           }
         }
       } else {
-        const element = Slider89DOMBuilder.getNodeOwner(node);
+        const element = DOMBuilder.getNodeOwner(node);
         yield [ element, node, baseName ];
       }
     }

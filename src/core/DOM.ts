@@ -1,8 +1,8 @@
 'use strict';
-import type { Properties } from './Base';
+import type { Properties as Props } from './Base';
 import Slider89 from './Slider89';
-import Slider89Properties from './Properties';
-import Slider89DOMVariables from './dom-handler/DOMVariables';
+import Properties from './Properties';
+import DOMVariables from './dom-handler/DOMVariables';
 
 interface ClientXY {
   clientX: number;
@@ -12,10 +12,10 @@ interface ClientXY {
 type StyleDirection = 'top' | 'right' | 'bottom' | 'left';
 
 type RecomputationNewVals = Partial<{
-  [ Prop in 'value' | 'range' | 'step' ]: Properties.Base[Prop]
+  [ Prop in 'value' | 'range' | 'step' ]: Props.Base[Prop]
 }>
 
-export default class Slider89DOM extends Slider89Properties {
+export default class DOM extends Properties {
   activeTouchIDs = new Map<number, HTMLDivElement>();
   activeThumb: HTMLDivElement;
   mouseDownPos: number;
@@ -35,7 +35,7 @@ export default class Slider89DOM extends Slider89Properties {
 
     this.keyDown = this.keyDown.bind(this);
 
-    this.domHandler = new Slider89DOMVariables(this as unknown as Slider89, this.vals, {
+    this.domHandler = new DOMVariables(this as unknown as Slider89, this.vals, {
       touchstart: this.touchStart,
       mousedown: this.mouseStart,
       keydown: this.keyDown
@@ -124,7 +124,7 @@ export default class Slider89DOM extends Slider89Properties {
   }
 
   computeRatioDistance(thumbIndex: number, newVals?: RecomputationNewVals) {
-    let value: Properties.Base['value'];
+    let value: Props.Base['value'];
     let ratio: number;
 
     if (!newVals) {
@@ -172,7 +172,7 @@ export default class Slider89DOM extends Slider89Properties {
    * This method can be used by plugins when modifying the value
    * in a non-trivial way (e.g. when changing the value with the arrow keys).
    */
-  setValueWithUpdateEvent(value: Properties.Base['value'], index = 0, eventArg?: UIEvent) {
+  setValueWithUpdateEvent(value: Props.Base['value'], index = 0, eventArg?: UIEvent) {
     const prevValThis = this.values[index];
     this.values[index] = value;
     if (!Slider89.floatIsEqual(value, this.values[index])) {
@@ -185,7 +185,7 @@ export default class Slider89DOM extends Slider89Properties {
    *
    * Do not use this unless you know exactly what you're doing.
    */
-  setValueWithUpdateEventUnsafe(value: Properties.Base['value'], index: number, eventArg: UIEvent) {
+  setValueWithUpdateEventUnsafe(value: Props.Base['value'], index: number, eventArg: UIEvent) {
     const prevValThis = this.values[index];
     this.vals.values[index] = value;
     this.invokeEvent('update', this.values[index], prevValThis, index, event);
@@ -213,7 +213,7 @@ export default class Slider89DOM extends Slider89Properties {
     this.domHandler.addThumbToNode(this.vals.nodes);
   }
 
-  changeOrientationDOM(newOrientation: Properties.Base['orientation']) {
+  changeOrientationDOM(newOrientation: Props.Base['orientation']) {
     if (newOrientation === 'vertical') {
       this.#removeThumbsDOMProperty('left');
       this.vals.node.slider.classList.add('vertical');

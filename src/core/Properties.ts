@@ -2,7 +2,7 @@
 import type { Properties as Props } from './Base';
 import type { EventType } from './Events';
 import { PropertiesOutline as Outline } from './Slider89';
-import Slider89Events from './Events';
+import Events from './Events';
 
 
 export namespace DeepKey {
@@ -15,7 +15,7 @@ export namespace DeepKey {
     (val: Type<P>, index: number) => typeof val;
 }
 
-export default class Slider89Properties extends Slider89Events {
+export default class Properties extends Events {
   /**
    * When set to true, the internal key definition
    * (`this.vals[item][key]` -> `this.vals.$intermediateVals[item][key]`)
@@ -44,7 +44,7 @@ export default class Slider89Properties extends Slider89Events {
     outline?: Outline[I extends keyof Outline ? I : never]
   ) {
     // @ts-ignore Shut up
-    const isDeepDefinedArray: boolean = Slider89Properties.propertyData[item]?.isDeepDefinedArray;
+    const isDeepDefinedArray: boolean = Properties.propertyData[item]?.isDeepDefinedArray;
 
     Object.defineProperty(target, item, {
       set: (val: typeof target[I]) => {

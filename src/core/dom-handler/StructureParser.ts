@@ -13,7 +13,7 @@ namespace SpecialVariables {
     getter: (node: Element, slider: Slider89) => any
   }
 
-  export type Name = keyof typeof Slider89StructureParser.specialVariables;
+  export type Name = keyof typeof StructureParser.specialVariables;
   export type Base = Record<string, ThumbData | Data>;
   export type Proxy = Partial<Record<keyof StructureVariables, SpecialVariables.Name[]>>;
 }
@@ -27,7 +27,7 @@ type StructureVariables = Partial<{
 }>
 
 
-export default class Slider89StructureParser {
+export default class StructureParser {
   /**
    * Special variables inside the structure system.
    * Instead of being linked to properties, these can call arbitrary functions.
@@ -108,9 +108,9 @@ export default class Slider89StructureParser {
 
     // Reset the global RegExp-internal `lastIndex` flag
     // This would otherwise clash with multiple slider instances, because the regexes are global
-    for (const regexpName in Slider89StructureParser.regex) {
-      if (Slider89StructureParser.regex[regexpName].global) {
-        Slider89StructureParser.regex[regexpName].lastIndex = 0;
+    for (const regexpName in StructureParser.regex) {
+      if (StructureParser.regex[regexpName].global) {
+        StructureParser.regex[regexpName].lastIndex = 0;
       }
     }
 
@@ -118,13 +118,13 @@ export default class Slider89StructureParser {
     let currentIndex = 0;
     let match: RegExpExecArray;
     // match: [matchedStr, type, name, tag, innerContent, attributes]
-    while (match = Slider89StructureParser.regex.tag.exec(structureStr)) {
+    while (match = StructureParser.regex.tag.exec(structureStr)) {
       if (match.index !== currentIndex) {
         const beforeFailure = 'tag ‘<' + (match[1] || '') + match[2] + '>’';
         const pointOfFailure = structureStr.slice(currentIndex, match.index).trim();
         throw new Slider89.StructureParseError(beforeFailure, pointOfFailure);
       }
-      currentIndex = Slider89StructureParser.regex.tag.lastIndex;
+      currentIndex = StructureParser.regex.tag.lastIndex;
 
       if (match[1] !== '/') {
         const lastName = stack[stack.length - 1] || 'slider';
@@ -185,14 +185,14 @@ export default class Slider89StructureParser {
       textNode.textContent = content;
       elem.appendChild(textNode);
 
-      if (Slider89StructureParser.stringHasVariable(content)) {
+      if (StructureParser.stringHasVariable(content)) {
         this.#parseVariables(content, textNode, name, nameStack);
       }
     }
 
     if (attributes) {
       let match;
-      while (match = Slider89StructureParser.regex.attributes.exec(attributes)) {
+      while (match = StructureParser.regex.attributes.exec(attributes)) {
         const attribName = match[1];
         const attribValue = match[2];
 
@@ -200,7 +200,7 @@ export default class Slider89StructureParser {
         attribNode.textContent = attribValue;
         elem.setAttributeNode(attribNode);
 
-        if (Slider89StructureParser.stringHasVariable(attribValue)) {
+        if (StructureParser.stringHasVariable(attribValue)) {
           this.#parseVariables(attribValue, attribNode, name, nameStack);
         }
       }
@@ -214,7 +214,7 @@ export default class Slider89StructureParser {
     // Memorize & skip already handled variables for the current string
     const propNameCache: string[] = [];
     let match: RegExpExecArray;
-    while (match = Slider89StructureParser.regex.variable.exec(str)) {
+    while (match = StructureParser.regex.variable.exec(str)) {
       const varName = match[1] || match[2];
       const propName = varName.indexOf('.') !== -1
         ? varName.slice(0, varName.indexOf('.'))
@@ -222,7 +222,7 @@ export default class Slider89StructureParser {
 
       if (!propNameCache.hasOwnProperty(propName)) {
         if (!Object.prototype.hasOwnProperty.call(this.vals, propName)
-            && !Slider89StructureParser.checkForSpecialVariables(propName, tagName, tagNameStack)
+            && !StructureParser.checkForSpecialVariables(propName, tagName, tagNameStack)
         ) {
           throw new Slider89.StructureError(
             "‘" + propName + "’ is not a recognized property and cannot be used as variable."
@@ -257,12 +257,12 @@ export default class Slider89StructureParser {
   // ---- Static helpers ----
   static stringHasVariable(str: string): boolean {
     // Need to use a RegExp without /g/ because the internal `lastIndex` mustn't be advanced by a mere test
-    return Slider89StructureParser.regex.variableNoFlag.test(str);
+    return StructureParser.regex.variableNoFlag.test(str);
   }
 
   static checkForSpecialVariables(varName: string, tagName: string, tagNameStack: string[]): boolean {
-    if (Object.prototype.hasOwnProperty.call(Slider89StructureParser.specialVariables, varName)) {
-      const varData = Slider89StructureParser.specialVariables[varName];
+    if (Object.prototype.hasOwnProperty.call(StructureParser.specialVariables, varName)) {
+      const varData = StructureParser.specialVariables[varName];
       if (varData.thumbOnly && tagName !== 'thumb' && !tagNameStack.includes('thumb')) {
         throw new Slider89.StructureError(
           "The variable ‘$" + varName + "’ may only be used inside the ‘<thumb>’ tag and its children "
