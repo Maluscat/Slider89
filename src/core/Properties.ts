@@ -15,7 +15,7 @@ export namespace DeepKey {
     (val: Type<P>, index: number) => typeof val;
 }
 
-export default class Properties extends Events {
+export default class Definition extends Events {
   /**
    * When set to true, the internal key definition
    * (`this.vals[item][key]` -> `this.vals.$intermediateVals[item][key]`)
@@ -44,7 +44,7 @@ export default class Properties extends Events {
     outline?: Outline[I extends keyof Outline ? I : never]
   ) {
     // @ts-ignore Shut up
-    const isDeepDefinedArray: boolean = Properties.propertyData[item]?.isDeepDefinedArray;
+    const isDeepDefinedArray: boolean = Definition.propertyData[item]?.isDeepDefinedArray;
 
     Object.defineProperty(target, item, {
       set: (val: typeof target[I]) => {
