@@ -329,7 +329,7 @@ export default class Slider89 extends Slider89DOM {
     }
 
     for (const item in config) {
-      this.defineDeepProperty(this, item as keyof Properties.Custom, this.vals);
+      this.defineDeepProperty(this, this.vals, item as keyof Properties.Custom);
       this.vals[item] = config[item];
     }
   }
@@ -363,34 +363,35 @@ export default class Slider89 extends Slider89DOM {
   }
 
   // ---- Initialization helpers ----
-  initializeProperty<Item extends keyof PropertiesOutline>(item: Item, prop: PropertiesOutline[Item]) {
+  initializeProperty<I extends keyof PropertiesOutline>(item: I, outline: PropertiesOutline[I]) {
     const propData = Slider89.propertyData[item];
-    const isDeep = 'isDeepDefinedArray' in propData;
 
     Object.defineProperty(this, item, {
-      set: (val: Properties.Base[Item]) => {
-        if (('constructorOnly' in propData) && !this.initial) {
+      set: (val: Properties.Base[I]) => {
+        // @ts-ignore Shut up
+        if (propData.constructorOnly && !this.initial) {
           throw new Slider89.Error('Property ‘' + item + '’ may only be defined in the constructor (It was just set with the value ‘' + val + '’)');
         }
 
         this.checkProp(item as keyof Properties.Base, val);
 
-        if (!prop.setter || !prop.setter(val)) {
+        if (!outline.setter || !outline.setter(val)) {
           // @ts-ignore ???
           this.vals[item] = val;
         }
       },
       get: () => {
-        const getterEndpoint = (isDeep)
+        // @ts-ignore Shut up
+        const getterEndpoint = propData.isDeepDefinedArray
           ? this.vals.$intermediateThis
           : this.vals;
         // @ts-ignore `getterEndpoint` is safe here
-        return (prop.getter ? prop.getter(getterEndpoint[item]) : getterEndpoint[item]);
+        return (outline.getter ? outline.getter(getterEndpoint[item]) : getterEndpoint[item]);
       },
       enumerable: true
     });
 
-    this.defineDeepProperty(this.vals, item as keyof Properties.Base, this.vals.$, prop.postSetter, isDeep);
+    this.defineDeepProperty(this.vals, this.vals.$, item, outline);
   }
 
   // ---- Helper functions ----

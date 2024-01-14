@@ -1,118 +1,158 @@
 'use strict';
-import type { Properties } from './Slider89Base';
+import type { Properties as Props } from './Slider89Base';
 import type { EventType } from './Slider89Events';
+import { PropertiesOutline as Outline } from './Slider89';
 import Slider89Events from './Slider89Events';
 
 
-namespace DeepKey {
-  export type Type<Prop extends keyof Properties.Deep> = Properties.Deep[Prop][number];
+export namespace DeepKey {
+  export type Type<P extends keyof Props.Deep> = Props.Deep[P][number];
 
-  export type Setter<Prop extends keyof Properties.Deep> =
-    (val: Type<Prop>, index: number) => void | boolean;
+  export type Setter<P extends keyof Props.Deep> =
+    (val: Type<P>, index: number) => void | boolean;
 
-  export type Getter<Prop extends keyof Properties.Deep> =
-    (val: Type<Prop>, index: number) => typeof val;
+  export type Getter<P extends keyof Props.Deep> =
+    (val: Type<P>, index: number) => typeof val;
 }
 
-
 export default class Slider89Properties extends Slider89Events {
-  // ------ Object definition ------
-  defineDeepProperty(
-    target: Object,
-    item: keyof Properties.WithCustom,
-    endpoint: Properties.Vals[keyof Properties.Vals],
-    postSetter?: (val: Properties.WithCustom[typeof item], prevVal: typeof val) => void | boolean,
-    isDeepDefinedArray?: boolean
+  /**
+   * When set to true, the internal key definition
+   * (`this.vals[item][key]` -> `this.vals.$intermediateVals[item][key]`)
+   * bypasses any additional actions done beside setting the endpoint.
+   *
+   * This is utilized when calling the key setters in the
+   * [definition setup]({@link #defineDeepArray) to mitigate potential
+   * recursion and side effects of them influencing each other.
+   */
+  #isDefining = false;
+
+  // ---- Object definition ----
+  defineDeepProperty<I extends keyof Props.Base>(
+    target: Props.WithCustom,
+    endpoint: Props.Base,
+    item: I,
+    outline: Outline[I]);
+  defineDeepProperty<I extends keyof Props.WithCustom>(
+    target: Props.WithCustom,
+    endpoint: Props.WithCustom,
+    item: I);
+  defineDeepProperty<I extends keyof Props.Base | keyof Props.WithCustom>(
+    target: Props.WithCustom,
+    endpoint: I extends keyof Props.WithCustom ? Props.WithCustom : Props.Base,
+    item: I,
+    outline?: Outline[I extends keyof Outline ? I : never]
   ) {
+    // @ts-ignore Shut up
+    const isDeepDefinedArray: boolean = Slider89Properties.propertyData[item]?.isDeepDefinedArray;
+
     Object.defineProperty(target, item, {
-      set: (val) => {
+      set: (val: typeof target[I]) => {
         if (!this.initial) {
-          var prevVal = (isDeepDefinedArray ? Array.from(this[item]) : this[item]);
+          var prevVal = (isDeepDefinedArray ? Array.from(this[item as keyof Props.Deep]) : this[item]);
         }
         endpoint[item] = val;
         if (isDeepDefinedArray) {
-          const outline = this.properties[item];
-          // The endpoints (see doc comment at the start of file) are defined from bottom to top
-          // This ensures compatibility with getters/setters
-          this.#defineDeepArrayIntermediateVals(item as keyof Properties.Deep, val);
-          this.#defineDeepArrayIntermediateThis(item as keyof Properties.Deep, val, outline.keySetter, outline.keyGetter);
+          this.#defineDeepArray(item as keyof Props.Deep, val, prevVal as Props.Deep[keyof Props.Deep], outline as Outline[keyof Props.Deep]);
           this.handleInternalDeepArrayChange(item, prevVal, val);
         } else {
           this.handleInternalPropertyChange(item, prevVal);
         }
-        if (postSetter) {
-          postSetter(val, prevVal);
-        }
+        // @ts-ignore
+        outline?.postSetter?.(val, prevVal);
       },
       get: () => {
+        // @ts-ignore Shut up
         return (isDeepDefinedArray ? this.vals.$intermediateVals : endpoint)[item];
       },
       enumerable: true
     });
   }
 
-  // ------ Object definitions for the keys/indexes of deeply defined arrays ------
-  #defineDeepArrayIntermediateThis(
-    parentItem: keyof Properties.Deep,
-    parentValue: Properties.Deep[typeof parentItem],
-    keySetter?: DeepKey.Setter<typeof parentItem>,
-    keyGetter?: DeepKey.Getter<typeof parentItem>
+  // ---- Defining the keys of deeply defined arrays ----
+  #defineDeepArray<I extends keyof Props.Deep>(
+    item: I, val: Props.Deep[I], prevValTop: Props.Deep[I], outline: Outline[I]
+  ) {
+    const descriptorVals = this.#descriptorIntermediateVals.bind(this, item, outline.internalKeySetter);
+    const descriptorThis = this.#descriptorIntermediateThis.bind(this, item, outline.keySetter, outline.keyGetter);
+
+    this.#defineDeepArrayIntermediate(this.vals.$intermediateVals, item, val, descriptorVals);
+    this.#defineDeepArrayIntermediate(this.vals.$intermediateThis, item, val, descriptorThis);
+
+    // Invoke all key setters manually. Also see `this.#isDefining`
+    this.#isDefining = true;
+    for (let i = 0; i < val.length; i++) {
+      // @ts-ignore ???
+      outline.keySetter?.(val[i], i, prevValTop);
+      // @ts-ignore ???
+      outline.internalKeySetter?.(val[i], i, prevValTop);
+    }
+    this.#isDefining = false;
+  }
+
+  #descriptorIntermediateThis<I extends keyof Props.Deep>(
+    item: I, keySetter: Outline[I]['keySetter'], keyGetter: Outline[I]['keyGetter'], key: number
   ) {
     const endpoint = this.vals;
-
-    // @ts-ignore (Only setup)
-    this.vals.$intermediateThis[parentItem] = [];
-    for (let i = 0; i < parentValue.length; i++) {
-      const value = parentValue[i];
-
-      Object.defineProperty(this.vals.$intermediateThis[parentItem], i, {
-        set: (val: DeepKey.Type<typeof parentItem>) => {
-          if (!keySetter || !keySetter(val, i)) {
-            endpoint[parentItem][i] = val;
-          }
-        },
-        get: () => {
-          return (keyGetter ? keyGetter(endpoint[parentItem][i], i) : endpoint[parentItem][i]);
-        },
-        enumerable: true
-      });
-      // This assignment is necessary to invoke a potential keySetter (e.g. from `values`)
-      this.vals.$intermediateThis[parentItem][i] = parentValue[i];
-    }
+    return {
+      set: (val: Props.Deep[I][typeof key]) => {
+        if (!keySetter || !keySetter(val, key)) {
+          endpoint[item][key] = val;
+        }
+      },
+      get() {
+        return keyGetter ? keyGetter(endpoint[item][key], key) : endpoint[item][key];
+      }
+    } as PropertyDescriptor;
   }
-  #defineDeepArrayIntermediateVals(
-    parentItem: keyof Properties.Deep,
-    parentValue: Properties.Deep[typeof parentItem]
+  #descriptorIntermediateVals<I extends keyof Props.Deep>(
+    item: I, internalKeySetter: Outline[I]['internalKeySetter'], key: number
   ) {
     const endpoint = this.vals.$;
+    return {
+      set: (val: Props.Deep[I][typeof key]) => {
+        if (this.#isDefining) {
+          endpoint[item][key] = val;
+        } else {
+          if (!this.initial) {
+            var prevVal = Array.from(this[item]);
+          }
+          if (!internalKeySetter || !internalKeySetter(val, key)) {
+            endpoint[item][key] = val;
+          }
+          this.handleInternalDeepArrayChange(item, prevVal, null, key);
+        }
+      },
+      get() {
+        return endpoint[item][key];
+      }
+    } as PropertyDescriptor;
+  }
 
+  #defineDeepArrayIntermediate<P extends keyof Props.Deep>(
+    definitionPoint: Props.Deep,
+    parentItem: P,
+    parentValue: Props.Deep[P],
+    descriptorFactory: (key: number) => PropertyDescriptor
+  ) {
     // @ts-ignore (Only Setup)
-    this.vals.$intermediateVals[parentItem] = [];
+    definitionPoint[parentItem] = [];
     for (let i = 0; i < parentValue.length; i++) {
       const value = parentValue[i];
 
-      Object.defineProperty(this.vals.$intermediateVals[parentItem], i, {
-        set: (val: DeepKey.Type<typeof parentItem>) => {
-          if (!this.initial) {
-            var prevVal = Array.from(this[parentItem]);
-          }
-          endpoint[parentItem][i] = val;
-          this.handleInternalDeepArrayChange(parentItem, prevVal, null, i);
-        },
-        get: () => {
-          return endpoint[parentItem][i];
-        },
+      const descriptor = descriptorFactory(i);
+      Object.defineProperty(definitionPoint[parentItem], i, Object.assign(descriptor, {
         enumerable: true
-      });
+      }));
     }
   }
 
 
-  // ------ Property change tracking ------
+  // ---- Property change tracking ----
   // `this` items are compared to accomodate for getters (e.g. `value` (precision))
   handleInternalPropertyChange(
-    item: keyof Properties.WithCustom,
-    prevVal?: Properties.WithCustom[typeof item]
+    item: keyof Props.WithCustom,
+    prevVal?: Props.WithCustom[typeof item]
   ) {
     // Object types (arrays included) always invoke a variable update
     // due to inability to deeply compare them (efficiently)
@@ -123,9 +163,9 @@ export default class Slider89Properties extends Slider89Events {
     }
   }
   handleInternalDeepArrayChange(
-    item: keyof Properties.WithCustom,
-    prevVal: Properties.WithCustom[typeof item],
-    val: Properties.WithCustom[typeof item],
+    item: keyof Props.WithCustom,
+    prevVal: Props.WithCustom[typeof item],
+    val: Props.WithCustom[typeof item],
     deepDefinedIndex?: number
   ) {
     if (!this.initial) {
@@ -141,8 +181,8 @@ export default class Slider89Properties extends Slider89Events {
   }
 
   invokeDeepArrayChangeEvent(
-    item: keyof Properties.WithCustom,
-    prevVal: Properties.WithCustom[typeof item],
+    item: keyof Props.WithCustom,
+    prevVal: Props.WithCustom[typeof item],
     deepDefinedIndex: number
   ) {
     if (prevVal[deepDefinedIndex] !== this[item][deepDefinedIndex]) {
