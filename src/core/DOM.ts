@@ -1,7 +1,7 @@
 'use strict';
 import type { Properties as Props } from './Base';
 import Slider89 from './Slider89';
-import Definition from './Properties';
+import Definition from './Definition';
 import DOMVariables from './dom-handler/DOMVariables';
 
 interface ClientXY {
