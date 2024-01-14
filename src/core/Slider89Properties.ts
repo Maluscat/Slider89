@@ -28,16 +28,16 @@ export default class Slider89Properties extends Slider89Events {
   #isDefining = false;
 
   // ---- Object definition ----
-  defineDeepProperty<I extends keyof Props.Base>(
+  defineInternalProperty<I extends keyof Props.Base>(
     target: Props.WithCustom,
     endpoint: Props.Base,
     item: I,
     outline: Outline[I]);
-  defineDeepProperty<I extends keyof Props.WithCustom>(
+  defineInternalProperty<I extends keyof Props.WithCustom>(
     target: Props.WithCustom,
     endpoint: Props.WithCustom,
     item: I);
-  defineDeepProperty<I extends keyof Props.Base | keyof Props.WithCustom>(
+  defineInternalProperty<I extends keyof Props.Base | keyof Props.WithCustom>(
     target: Props.WithCustom,
     endpoint: I extends keyof Props.WithCustom ? Props.WithCustom : Props.Base,
     item: I,
@@ -54,9 +54,9 @@ export default class Slider89Properties extends Slider89Events {
         endpoint[item] = val;
         if (isDeepDefinedArray) {
           this.#defineDeepArray(item as keyof Props.Deep, val, prevVal, outline as Outline[keyof Props.Deep]);
-          this.handleInternalDeepArrayChange(item as keyof Props.Deep, prevVal, val);
+          this.invokeInternalDeepArrayChange(item as keyof Props.Deep, prevVal, val);
         } else {
-          this.handleInternalPropertyChange(item, prevVal);
+          this.invokeInternalPropertyChange(item, prevVal);
         }
         // @ts-ignore
         outline?.postSetter?.(val, prevVal);
@@ -123,7 +123,7 @@ export default class Slider89Properties extends Slider89Events {
           if (!internalKeySetter || !internalKeySetter(val, key)) {
             endpoint[item][key] = val;
           }
-          this.handleInternalDeepArrayChange(item, prevValFull, null, key);
+          this.invokeInternalDeepArrayChange(item, prevValFull, null, key);
         }
       },
       get() {
@@ -153,7 +153,7 @@ export default class Slider89Properties extends Slider89Events {
 
   // ---- Property change tracking ----
   // `this` items are compared to accomodate for getters (e.g. `value` (precision))
-  handleInternalPropertyChange<I extends keyof Props.WithCustom>(
+  invokeInternalPropertyChange<I extends keyof Props.WithCustom>(
     item: I, prevVal?: Props.WithCustom[I]
   ) {
     // Object types (arrays included) always invoke a variable update
@@ -164,7 +164,7 @@ export default class Slider89Properties extends Slider89Events {
       this.invokeEvent(('change:' + item) as EventType.Base, this[item], prevVal);
     }
   }
-  handleInternalDeepArrayChange<I extends keyof Props.Deep>(
+  invokeInternalDeepArrayChange<I extends keyof Props.Deep>(
     item: I,
     prevVal: Props.Deep[I],
     val: Props.Deep[I],

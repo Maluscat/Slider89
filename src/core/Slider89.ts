@@ -123,8 +123,8 @@ export default class Slider89 extends Slider89DOM {
           // Invoke `node(s)` property change and expand all `thumb` structure variables
           // if the `values` length has changed.
           if (prevVal.length !== val.length) {
-            this.handleInternalPropertyChange('node');
-            this.handleInternalPropertyChange('nodes');
+            this.invokeInternalPropertyChange('node');
+            this.invokeInternalPropertyChange('nodes');
             this.domHandler.expandAllBaseElementVariables();
           }
         }
@@ -138,7 +138,7 @@ export default class Slider89 extends Slider89DOM {
             prevVal = this.vals.values[key];
             this.vals.$.values[key] = val;
           }
-          this.handleInternalPropertyChange('value', prevVal);
+          this.invokeInternalPropertyChange('value', prevVal);
           return true;
         }
       },
@@ -340,7 +340,7 @@ export default class Slider89 extends Slider89DOM {
     }
 
     for (const item in config) {
-      this.defineDeepProperty(this, this.vals, item as keyof Properties.Custom);
+      this.defineInternalProperty(this, this.vals, item as keyof Properties.Custom);
       this.vals[item] = config[item];
     }
   }
@@ -375,16 +375,19 @@ export default class Slider89 extends Slider89DOM {
 
   // ---- Initialization helpers ----
   initializeProperty<I extends keyof PropertiesOutline>(item: I, outline: PropertiesOutline[I]) {
-    const propData = Slider89.propertyData[item];
+    this.defineInternalBuiltinProperty(item, outline);
+    this.defineInternalProperty(this.vals, this.vals.$, item, outline);
+  }
 
+  defineInternalBuiltinProperty<I extends keyof PropertiesOutline>(item: I, outline: PropertiesOutline[I]) {
+    const propData = Slider89.propertyData[item];
     Object.defineProperty(this, item, {
       set: (val: Properties.Base[I]) => {
-        // @ts-ignore Shut up
-        if (propData.constructorOnly && !this.initial) {
+        if ((propData as any).constructorOnly && !this.initial) {
           throw new Slider89.Error('Property ‘' + item + '’ may only be defined in the constructor (It was just set with the value ‘' + val + '’)');
         }
 
-        this.checkProp(item as keyof Properties.Base, val);
+        this.checkProp(item, val);
 
         if (!outline.setter || !outline.setter(val)) {
           // @ts-ignore ???
@@ -392,8 +395,7 @@ export default class Slider89 extends Slider89DOM {
         }
       },
       get: () => {
-        // @ts-ignore Shut up
-        const getterEndpoint = propData.isDeepDefinedArray
+        const getterEndpoint = (propData as any).isDeepDefinedArray
           ? this.vals.$intermediateThis
           : this.vals;
         // @ts-ignore `getterEndpoint` is safe here
@@ -401,8 +403,6 @@ export default class Slider89 extends Slider89DOM {
       },
       enumerable: true
     });
-
-    this.defineDeepProperty(this.vals, this.vals.$, item, outline);
   }
 
   // ---- Helper functions ----
