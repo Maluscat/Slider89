@@ -34,13 +34,17 @@ namespace PropertyOutline {
      */
     extendAssigner: (target: Properties.Config, value: Exclude<Type, false>, index: number) => void,
     postSetter: (val: Type, prevVal: Type) => void | boolean;
-    keySetter: Type extends Array<any>
-      ? (val: Type[0], key: number) => void | boolean
-      : never;
-    keyGetter: Type extends Array<any>
-      ? (val: Type[0], key: number) => typeof val
-      : never;
+    internalKeySetter: KeySetter<Type>;
+    keySetter: KeySetter<Type>;
+    keyGetter: KeyGetter<Type>;
   }
+
+  type KeySetter<Type> = Type extends Array<any>
+    ? (val: Type[number], key: number, prevValTop?: Type) => void | boolean
+    : never;
+  type KeyGetter<Type> = Type extends Array<any>
+    ? (val: Type[number], key: number) => typeof val
+    : never;
 }
 
 export default class Slider89 extends Slider89DOM {
