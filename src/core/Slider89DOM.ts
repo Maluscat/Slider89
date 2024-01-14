@@ -165,6 +165,33 @@ export default class Slider89DOM extends Slider89Properties {
 
   // ---- Helper functions ----
   /**
+   * Set a value at the specified (thumb) index and invoke an 'update' event
+   * if the values are not equal. You can also pass an event object as
+   * additional parameter for the event callback.
+   *
+   * This method can be used by plugins when modifying the value
+   * in a non-trivial way (e.g. when changing the value with the arrow keys).
+   */
+  setValueWithUpdateEvent(value: Properties.Base['value'], index = 0, eventArg?: UIEvent) {
+    const prevValThis = this.values[index];
+    this.values[index] = value;
+    if (!Slider89.floatIsEqual(value, this.values[index])) {
+      this.invokeEvent('update', this.values[index], prevValThis, index, event);
+    }
+  }
+  /**
+   * Same as {@link setValueWithUpdateEvent} but it is assumed that `value` is
+   * in its final state and does not need to be modified and checked further.
+   *
+   * Do not use this unless you know exactly what you're doing.
+   */
+  setValueWithUpdateEventUnsafe(value: Properties.Base['value'], index: number, eventArg: UIEvent) {
+    const prevValThis = this.values[index];
+    this.vals.values[index] = value;
+    this.invokeEvent('update', this.values[index], prevValThis, index, event);
+  }
+
+  /**
    * Get the ratio of the supplied value (or the slider's current value)
    * in relation to the supplied range (or the slider's current range).
    * @param The value to get the ratio of.
@@ -305,7 +332,7 @@ export default class Slider89DOM extends Slider89Properties {
     }
 
     if (!Slider89.floatIsEqual(value, this.vals.values[thumbIndex])) {
-      this.vals.values[thumbIndex] = value;
+      this.setValueWithUpdateEventUnsafe(value, thumbIndex, eventArg);
       this.moveElementTranslate(thumbNode, distance);
       this.invokeEvent('move', thumbIndex, eventArg);
     }
