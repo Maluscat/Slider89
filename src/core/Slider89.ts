@@ -7,7 +7,7 @@ import type { EventType } from './Slider89Events';
 import RuntimeTypeCheck, { TypeCheckError } from './RuntimeTypeCheck';
 import Slider89DOM from './Slider89DOM';
 
-type PropertiesOutline = {
+export type PropertiesOutline = {
   [ Prop in keyof Properties.Base ]: PropertyOutline.self<Properties.Base[Prop]>;
 }
 
@@ -120,8 +120,6 @@ export default class Slider89 extends Slider89DOM {
       },
       postSetter: (val, prevVal) => {
         if (!this.initial) {
-          // Manually invoke some property changes
-          this.handleInternalPropertyChange('value', prevVal[0]);
           // Invoke `node(s)` property change and expand all `thumb` structure variables
           // if the `values` length has changed.
           if (prevVal.length !== val.length) {
@@ -129,6 +127,19 @@ export default class Slider89 extends Slider89DOM {
             this.handleInternalPropertyChange('nodes');
             this.domHandler.expandAllBaseElementVariables();
           }
+        }
+      },
+      internalKeySetter: (val, key, prevValTop) => {
+        if (!this.initial && key === 0) {
+          let prevVal;
+          if (prevValTop) {
+            prevVal = prevValTop[key];
+          } else {
+            prevVal = this.vals.values[key];
+            this.vals.$.values[key] = val;
+          }
+          this.handleInternalPropertyChange('value', prevVal);
+          return true;
         }
       },
       keySetter: (val, key) => {

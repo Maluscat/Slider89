@@ -111,7 +111,7 @@ export default class Slider89DOM extends Slider89Properties {
   applyOneRatioDistance(thumbIndex: number, newVals?: RecomputationNewVals) {
     const { value, prevRatio, ratio } = this.computeRatioDistance(thumbIndex, newVals);
 
-    this.setValuesWithValueChange(thumbIndex, value);
+    this.vals.values[thumbIndex] = value;
     if (!Slider89.floatIsEqual(ratio, prevRatio)) {
       this.moveElementRelative(this.vals.nodes.thumb[thumbIndex], ratio);
     }
@@ -200,25 +200,6 @@ export default class Slider89DOM extends Slider89Properties {
       thumb.style.removeProperty(property);
     }
   }
-
-  setValuesWithValueChange(thumbIndex: number, value: Properties.Base['value'], ...eventArgs: any[]): boolean {
-    const prevVal = this.vals.values[thumbIndex];
-    const prevValThis = this.values[thumbIndex];
-    if (!Slider89.floatIsEqual(value, prevVal)) {
-      this.vals.values[thumbIndex] = value;
-      if (thumbIndex === 0) {
-        this.handleInternalPropertyChange('value', prevVal);
-      }
-
-      const newValThis = this.values[thumbIndex];
-      if (!Slider89.floatIsEqual(newValThis, prevValThis)) {
-        this.invokeEvent('update', newValThis, prevValThis, thumbIndex, ...eventArgs);
-      }
-      return true;
-    }
-    return false;
-  }
-
 
   // ---- Touch events ----
   touchStart(e: TouchEvent) {
@@ -323,7 +304,8 @@ export default class Slider89DOM extends Slider89Properties {
       distance = computedProperties.ratio * absSize;
     }
 
-    if (this.setValuesWithValueChange(thumbIndex, value, eventArg)) {
+    if (!Slider89.floatIsEqual(value, this.vals.values[thumbIndex])) {
+      this.vals.values[thumbIndex] = value;
       this.moveElementTranslate(thumbNode, distance);
       this.invokeEvent('move', thumbIndex, eventArg);
     }
