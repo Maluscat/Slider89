@@ -20,6 +20,7 @@ export default class DOM extends Setup {
   activeThumb: HTMLDivElement;
   mouseDownPos: number;
 
+  /** Live style of the slider track. */
   trackStyle: CSSStyleDeclaration;
 
   constructor() {
@@ -44,14 +45,24 @@ export default class DOM extends Setup {
 
 
   // ---- DOM getters ----
+  /** Get the padding of the track element for the given direction.  */
   getTrackPadding(direction: StyleDirection): number {
     return parseFloat(this.trackStyle.getPropertyValue('padding-' + direction));
   }
+  /**
+   * Get the offset (border AND padding) of the track element
+   * for the given direction.
+   */
   getTrackOffset(direction: StyleDirection): number {
     return parseFloat(this.trackStyle.getPropertyValue('border-' + direction + '-width'))
       + this.getTrackPadding(direction);
   }
 
+  /**
+   * Get the absolute pixel distance of the given thumb element in the track,
+   * automatically adapted to the slider's current orientation.
+   * @param thumb The thumb element to get the distance of.
+   */
   getDistance(thumb: HTMLDivElement): number {
     if (this.vals.orientation === 'vertical') {
       return thumb.getBoundingClientRect().top
@@ -63,6 +74,16 @@ export default class DOM extends Setup {
         - this.getTrackOffset('left');
     }
   }
+  /**
+   * Get the absolute pixel distance of the *active* track,
+   * automatically adapted to the slider's current orientation.
+   *
+   * The active track is the part of the track element that contributes
+   * to the dragged thumb, so minus any offsets (border and padding) and
+   * minus the thumb's width/height. 
+   *
+   * @param thumb The thumb element to test the distance against.
+   */
   getAbsoluteTrackSize(thumb: HTMLDivElement): number {
     if (this.vals.orientation === 'vertical') {
       return this.vals.node.track.getBoundingClientRect().height
@@ -78,6 +99,11 @@ export default class DOM extends Setup {
   }
 
   // ---- Thumb moving ----
+  /**
+   * Translate an element by the given absolute pixel distance.
+   * @param element The element to transform(translate), most likely a thumb on the track.
+   * @param distance The absolute pixel distance to translate the element by.
+   */
   moveElementTranslate(element: HTMLElement, distance: number) {
     const axis = this.vals.orientation === 'vertical' ? 'Y' : 'X';
     element.style.transform = 'translate' + axis + '(' + distance + 'px)';

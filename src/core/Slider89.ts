@@ -272,6 +272,10 @@ export default class Slider89 extends DOM {
   }
 
   // ---- Static helpers ----
+  /**
+   * Check for rough equality of two floats, with a
+   * sensible threshold that works well with Slider89.
+   */
   static floatIsEqual(val0: number, val1: number) {
     return Math.abs(val0 - val1) < 0.00000000001;
   }
