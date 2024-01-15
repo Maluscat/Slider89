@@ -228,6 +228,27 @@ export default class DOM extends Setup {
     }
   }
 
+  /**
+   * Clamps the given `value` to the given `range`, ensuring
+   * that the value does not exceed the range.
+   */
+  clampValueToRange(value: Props.Base['value'], range: Props.Base['range']) {
+    if (range[0] < range[1]) {
+      if (value < range[0]) {
+        return range[0];
+      } else if (value > range[1]) {
+        return range[1];
+      }
+    } else {
+      if (value > range[0]) {
+        return range[0];
+      } else if (value < range[1]) {
+        return range[1];
+      }
+    }
+    return value;
+  }
+
   // ---- Touch events ----
   touchStart(e: TouchEvent) {
     e.preventDefault();

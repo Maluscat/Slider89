@@ -138,7 +138,7 @@ export default class Slider89 extends DOM {
         }
       },
       keySetter: (val, key) => {
-        val = this.adaptValueToRange(val);
+        val = this.clampValueToRange(val, this.vals.range);
         if (!this.initial) {
           this.applyOneRatioDistance(key, {value: val});
         } else {
@@ -271,25 +271,7 @@ export default class Slider89 extends DOM {
     this.callPlugins(this.vals.plugins);
   }
 
-  // ---- Helper functions ----
-  adaptValueToRange(value: Props.Base['value']) {
-    if (this.vals.range[0] < this.vals.range[1]) {
-      if (value < this.vals.range[0]) {
-        return this.vals.range[0];
-      } else if (value > this.vals.range[1]) {
-        return this.vals.range[1];
-      }
-    } else {
-      if (value > this.vals.range[0]) {
-        return this.vals.range[0];
-      } else if (value < this.vals.range[1]) {
-        return this.vals.range[1];
-      }
-    }
-    return value;
-  }
-
-  // ---- Helper functions ----
+  // ---- Static helpers ----
   static floatIsEqual(val0: number, val1: number) {
     return Math.abs(val0 - val1) < 0.00000000001;
   }
