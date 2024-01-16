@@ -227,14 +227,6 @@ export default class DOM extends Setup {
     return (value - range[0]) / (range[1] - range[0]);
   }
 
-  removeLastThumbNode() {
-    const thumb = this.domHandler.removeThumbFromNode(this.vals.nodes);
-    this.domHandler.thumbParent.removeChild(thumb);
-  }
-  appendNewThumbNode() {
-    this.domHandler.addThumbToNode(this.vals.nodes);
-  }
-
   changeOrientationDOM(newOrientation: Props.Base['orientation']) {
     if (newOrientation === 'vertical') {
       this.#removeThumbsDOMProperty('left');

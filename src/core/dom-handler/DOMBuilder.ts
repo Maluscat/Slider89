@@ -155,11 +155,13 @@ export default class DOMBuilder extends StructureParser {
         nodes[childName].push(childNode);
       });
   }
-  removeThumbFromNode(nodes: PropertyNode.Mult) {
+  removeLastThumbFromNode(nodes: PropertyNode.Mult) {
     for (const nodeName of this.thumbChildren) {
       nodes[nodeName].pop();
     }
-    return nodes.thumb.pop();
+    const thumb = nodes.thumb.pop();
+    this.thumbParent.removeChild(thumb);
+    return thumb;
   }
 
 
