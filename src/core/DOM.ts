@@ -171,11 +171,7 @@ export default class DOM extends Setup {
     // Round value to a given step
     if (newVals.step !== false) {
       if (typeof newVals.step === 'number') {
-        if (Math.abs(newVals.range[1] - newVals.range[0]) < newVals.step) {
-          value = newVals.range[0];
-        } else {
-          value = newVals.range[0] + Math.round((value - newVals.range[0]) / newVals.step) * newVals.step;
-        }
+        value = this.clampValueToStep(value, newVals.step, newVals.range);
       } else {
         value = Slider89.getClosestNumber(value, newVals.step);
       }
@@ -255,7 +251,23 @@ export default class DOM extends Setup {
   }
 
   /**
-   * Clamps the given `value` to the given `range`, ensuring
+   * Modify and return the passed value to match the confines of the given step.
+   * Is always clamped to the given range.
+   */
+  clampValueToStep(value: Props.Base['value'], step: number, range: Props.Base['range']) {
+    if (range[0] < range[1]) {
+      return Math.min(range[1],
+        Math.max(range[0],
+          range[0] + Math.ceil((value - range[0]) / step) * step));
+    } else {
+      return Math.min(range[0],
+        Math.max(range[1],
+          range[0] + Math.floor((value - range[0]) / step) * step));
+    }
+  }
+
+  /**
+   * Clamp the given `value` to the given `range`, ensuring
    * that the value does not exceed the range.
    */
   clampValueToRange(value: Props.Base['value'], range: Props.Base['range']) {
