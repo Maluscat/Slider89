@@ -1,6 +1,6 @@
 'use strict';
 import type { Properties, PropertyNode } from '../Base';
-import Slider89 from '../Slider89';
+import { Slider89 } from '../Slider89';
 
 // ---- Type: Special variables ----
 namespace SpecialVariables {
@@ -27,7 +27,7 @@ type StructureVariables = Partial<{
 }>
 
 
-export default class StructureParser {
+export class StructureParser {
   /**
    * Special variables inside the structure system.
    * Instead of being linked to properties, these can call arbitrary functions.

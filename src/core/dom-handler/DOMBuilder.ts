@@ -1,11 +1,11 @@
 'use strict';
 import type { Properties, PropertyNode } from '../Base';
 import type { VariableName } from './StructureParser';
-import StructureParser from './StructureParser';
+import { StructureParser } from './StructureParser';
 
 type VariableThumbStrings = Partial<Record<VariableName, string[]>>;
 
-export default class DOMBuilder extends StructureParser {
+export class DOMBuilder extends StructureParser {
   /** A basic thumb node used for cloning. */
   thumbBase: HTMLDivElement;
   thumbParent: HTMLElement;

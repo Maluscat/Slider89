@@ -5,7 +5,7 @@ import defaultStylesString from '../css/default-styles.css';
 import type { Properties as Props } from './Base';
 import type { Operation } from './Definition.ts';
 import type { EventType } from './Events';
-import DOM from './DOM';
+import { DOM } from './DOM';
 
 export type PropertiesOutline = {
   [ Prop in keyof Props.Base ]: PropertyOutline.self<Prop>;
@@ -41,7 +41,7 @@ namespace PropertyOutline {
   }
 }
 
-export default class Slider89 extends DOM {
+export class Slider89 extends DOM {
   /**
    * Controls whether to inject the slider's style sheet into the current
    * document. Is simply tested for truthyness when creating a new slider.
@@ -239,7 +239,8 @@ export default class Slider89 extends DOM {
     extend: {
       default: [],
       extendAssigner: (target, value, i) => {
-        // Special case: Assigners can only be reached if `target.extend` is given.
+        // Special case: `target.extend` must be defined since
+        // only then an assigner can be reached
         (target.extend as Props.Config[]).splice(i, 0, ...value);
       }
     },

@@ -1,11 +1,11 @@
 import type { Properties } from '../Base';
 import type { VariableName } from './StructureParser';
-import Slider89 from '../Slider89';
-import DOMBuilder from './DOMBuilder';
-import StructureParser from './StructureParser';
+import { DOMBuilder } from './DOMBuilder';
+import { StructureParser } from './StructureParser';
+import { Slider89 } from '../Slider89';
 
 
-export default class DOMVariables extends DOMBuilder {
+export class DOMVariables extends DOMBuilder {
   slider: Slider89;
 
 

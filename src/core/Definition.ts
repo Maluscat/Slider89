@@ -2,7 +2,7 @@
 import type { Properties as Props } from './Base';
 import type { EventType } from './Events';
 import { PropertiesOutline as Outline } from './Slider89';
-import Events from './Events';
+import { Events } from './Events';
 
 
 export namespace Operation {
@@ -25,7 +25,7 @@ export namespace Operation {
 }
 
 
-export default class Definition extends Events {
+export class Definition extends Events {
   /**
    * When set to true, the internal key definition
    * (`this.vals[item][key]` -> `this.vals.$intermediateVals[item][key]`)

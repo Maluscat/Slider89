@@ -66,7 +66,7 @@ export class TypeCheckError extends Error {
   }
 }
 
-export default class RuntimeTypeCheck {
+export class RuntimeTypeCheck {
   static getType(value) {
     if (Array.isArray(value))
       return 'Array';

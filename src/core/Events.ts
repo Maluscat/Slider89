@@ -1,7 +1,7 @@
 'use strict';
 import type { Properties } from './Base';
-import Slider89 from './Slider89';
-import Base from './Base';
+import { Base } from './Base';
+import { Slider89 } from './Slider89';
 
 export namespace EventType {
   type NamesBasic = typeof Events.eventTypes[number];
@@ -33,7 +33,7 @@ export namespace EventData {
 type EventListenerIdentifier = number | string;
 
 
-export default class Events extends Base {
+export class Events extends Base {
   // ---- Constant statics ----
   static eventTypes = [
     'update',

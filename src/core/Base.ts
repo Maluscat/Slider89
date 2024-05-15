@@ -1,10 +1,10 @@
 'use strict';
 import type { DeepReadonlyObject, Descriptor } from './type-check/RuntimeTypeCheck';
 import type { EventData, EventType } from './Events';
-import type DOMVariables from './dom-handler/DOMVariables';
-import SliderError from './SliderError';
-import RuntimeTypeCheck, { TypeCheckError } from './type-check/RuntimeTypeCheck';
-import Slider89 from './Slider89';
+import type { DOMVariables } from './dom-handler/DOMVariables';
+import { SliderError } from './SliderError';
+import { RuntimeTypeCheck, TypeCheckError } from './type-check/RuntimeTypeCheck';
+import { Slider89 } from './Slider89';
 
 // ---- Misc types ----
 export namespace PropertyNode {
@@ -93,7 +93,7 @@ type MethodData = DeepReadonlyObject<{
 export type TypedMethods = keyof typeof Base.methodData;
 
 
-export default class Base extends SliderError implements Properties.WithCustom {
+export class Base extends SliderError implements Properties.WithCustom {
   // TypeScript does not allow custom properties in classes
   // because they are busy ignoring all open issues with good suggestions
   // Thus, NOTE: Update this (copy-paste) whenever the properties expand.

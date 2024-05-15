@@ -1,9 +1,9 @@
 'use strict';
 import type { Properties } from './Base';
-import RuntimeTypeCheck from './type-check/RuntimeTypeCheck';
-import Slider89 from './Slider89';
+import { RuntimeTypeCheck } from './type-check/RuntimeTypeCheck';
+import { Slider89 } from './Slider89';
 
-export default class SliderError {
+export class SliderError {
   static COUNTS = <const> ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth'];
 
   static Error = class extends Error {

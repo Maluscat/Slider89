@@ -1,8 +1,8 @@
 'use strict';
 import type { Properties as Props } from './Base';
-import Setup from './Setup';
-import Slider89 from './Slider89';
-import DOMVariables from './dom-handler/DOMVariables';
+import { Setup } from './Setup';
+import { DOMVariables } from './dom-handler/DOMVariables';
+import { Slider89 } from './Slider89';
 
 interface ClientXY {
   clientX: number;
@@ -15,7 +15,7 @@ type RecomputationNewVals = Partial<{
   [ Prop in 'value' | 'range' | 'step' ]: Props.Base[Prop]
 }>
 
-export default class DOM extends Setup {
+export class DOM extends Setup {
   activeTouchIDs = new Map<number, HTMLDivElement>();
   activeThumb: HTMLDivElement;
   mouseDownPos: number;
