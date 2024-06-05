@@ -179,8 +179,7 @@ export class Base extends SliderError implements Properties.WithCustom {
           descriptor: [{
             type: 'number'
           }]
-        },
-        { type: 'boolean' }
+        }
       ]
     },
     values: {
