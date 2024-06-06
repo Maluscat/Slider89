@@ -1,8 +1,7 @@
-const path = require('path');
-const ESBuild = require('esbuild');
-const pnpPlugin = require('pnp-webpack-plugin');
-const { EsbuildPlugin } = require('esbuild-loader');
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+import path from 'path';
+import ESBuild from 'esbuild';
+import { EsbuildPlugin } from 'esbuild-loader';
+import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
 
 const esbuildConfig = {
   implementation: ESBuild,
@@ -29,12 +28,10 @@ const commonConfig = {
     },
   },
   resolve: {
-    extensions: [ '.ts', '.tsx', '.js' ],
-    plugins: [ pnpPlugin ]
+    extensions: [ '.ts', '.js' ],
   },
   resolveLoader: {
     modules: [ 'node_modules', path.resolve('./src/loaders') ],
-    plugins: [ pnpPlugin.moduleLoader(module) ]
   },
   plugins: [ new ForkTsCheckerWebpackPlugin(tsCheckerConfig) ],
   module: {
@@ -67,7 +64,7 @@ const config = {
   }
 };
 
-module.exports = Object.keys(config).map(key => {
+export default Object.keys(config).map(key => {
   config[key].name = key;
   return deepMergeCopy(commonConfig, config[key]);
 });
