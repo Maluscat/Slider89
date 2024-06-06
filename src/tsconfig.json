@@ -2,22 +2,22 @@
   "$schema": "https://json.schemastore.org/tsconfig",
 
   "compilerOptions": {
-    "outDir": "./dist/",
+    "outDir": "../dist/",
     "sourceMap": true,
-    "target": "es2015",
-    "module": "es2015",
-    "lib": [ "esnext", "dom", "dom.iterable" ],
+    "target": "es2022",
+    "module": "es2022",
+    "lib": [ "es2022", "dom", "dom.iterable" ],
     "forceConsistentCasingInFileNames": true,
     "alwaysStrict": true,
     "strict": true,
     "strictFunctionTypes": false,
     "strictNullChecks": false,
     "noImplicitAny": false,
+    "declaration": true,
     // "strictPropertyInitialization": false,
     // "strictBindCallApply": true,
     // "noImplicitThis": true,
     "skipLibCheck": true,
-    "allowJs": true,
     "checkJs": true
   },
   "include": [
