@@ -1,12 +1,14 @@
 {
-  "name": "slider89",
+  "name": "Slider89",
+  "type": "module",
   "version": "1.0.0",
-  "main": "./dist/slider89.js",
-  "private": true,
-  "sideEffects": false,
-  "repository": "https://github.com/Hallo89/Slider89",
-  "author": "Hallo89 <hallo89@protonmail.com>",
   "license": "MIT",
+  "repository": "https://github.com/Maluscat/Slider89",
+  "author": "Maluscat <hallo89@protonmail.com> (https://malus.zone/)",
+  "main": "./dist/Slider89.js",
+  "bugs": {
+    "url": "https://github.com/Maluscat/Slider89/issues"
+  },
   "scripts": {
     "dev": "webpack --watch --config-name dev",
     "test": "webpack --config-name dev",

@@ -698,6 +698,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"Slider89@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "Slider89@workspace:."
+  dependencies:
+    esbuild: "npm:^0.21.4"
+    esbuild-loader: "npm:^4.1.0"
+    fork-ts-checker-webpack-plugin: "npm:^9.0.2"
+    ts-loader: "npm:^9.5.1"
+    typescript: "npm:^5.4.5"
+    webpack: "npm:^5.91.0"
+    webpack-cli: "npm:^5.1.4"
+  languageName: unknown
+  linkType: soft
+
 "abbrev@npm:^2.0.0":
   version: 2.0.0
   resolution: "abbrev@npm:2.0.0"
@@ -2517,21 +2531,6 @@ __metadata:
   checksum: 41602dce540e46d599edba9d9860193398d135f7ff72cab629db5171516cfae628d21e7bfccde1bbfdf11c48726bc2a6d1a8fb8701125852fbfda7cf19c6aa83
   languageName: node
   linkType: hard
-
-"slider89@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "slider89@workspace:."
-  dependencies:
-    esbuild: "npm:^0.21.4"
-    esbuild-loader: "npm:^4.1.0"
-    fork-ts-checker-webpack-plugin: "npm:^9.0.2"
-    pnp-webpack-plugin: "npm:^1.7.0"
-    ts-loader: "npm:^9.5.1"
-    typescript: "npm:^5.4.5"
-    webpack: "npm:^5.91.0"
-    webpack-cli: "npm:^5.1.4"
-  languageName: unknown
-  linkType: soft
 
 "smart-buffer@npm:^4.2.0":
   version: 4.2.0
