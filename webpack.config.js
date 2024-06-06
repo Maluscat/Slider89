@@ -15,16 +15,18 @@ const tsCheckerConfig = {
   }
 };
 
-const common = {
+const commonConfig = {
   entry: './src/core/Slider89.ts',
   target: [ 'web', 'es2023' ],
+  experiments: {
+    outputModule: true,
+  },
   output: {
-    filename: 'slider89.js',
+    filename: 'Slider89.js',
     path: path.resolve('./dist'),
-    library: 'Slider89',
-    libraryTarget: 'umd',
-    libraryExport: 'default',
-    globalObject: 'this'
+    library: {
+      type: 'window',
+    },
   },
   resolve: {
     extensions: [ '.ts', '.tsx', '.js' ],
@@ -42,8 +44,7 @@ const common = {
         loader: 'esbuild-loader',
         include: path.resolve('./src'),
         options: esbuildConfig
-      },
-      {
+      }, {
         test: /\.css$/i,
         use: 'css-rule-loader',
         include: path.resolve('./src/css')
@@ -54,18 +55,46 @@ const common = {
 
 const config = {
   dev: {
-    devtool: 'inline-source-map',
     mode: 'development',
+    devtool: 'inline-source-map',
   },
+
   prod: {
     mode: 'production',
     optimization: {
       minimizer: [ new EsbuildPlugin(esbuildConfig) ]
-    }
+    },
   }
-}
+};
 
 module.exports = Object.keys(config).map(key => {
   config[key].name = key;
-  return Object.assign(Object.assign({}, common), config[key]);
+  return deepMergeCopy(commonConfig, config[key]);
 });
+
+
+
+/**
+ * Merge all plain object and array properties of two
+ * objects deeply, returning a new copy.
+ * Opinionated, effortless, works perfectly.
+ */
+function deepMergeCopy(target, source) {
+  if (!source) return;
+  if (!target) return source;
+
+  if (Array.isArray(source) && Array.isArray(target)) {
+    return [ ...target, ...source ];
+  }
+  if (target.toString() === '[object Object]' && source.toString() === '[object Object]') {
+    const newTarget = Object.assign({}, target);
+    for (const key in source) {
+      const result = deepMergeCopy(target[key], source[key]);
+      if (result != null) {
+        newTarget[key] = result;
+      }
+    }
+    return newTarget;
+  }
+  return source;
+}
