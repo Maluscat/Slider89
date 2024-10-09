@@ -79,7 +79,7 @@ export class Slider89 extends DOM {
             'The given range of [' + val.join(', ') + '] defines the same value for both range start and end');
         }
         if (!this.initial) {
-          this.applyAllRatioDistances({ range: val });
+          this.applyAllRelativeValues({ range: val });
         }
       },
       keySetter: (val, key) => {
@@ -91,7 +91,7 @@ export class Slider89 extends DOM {
         if (!this.initial) {
           const newRange = Array.from(this.vals.range) as typeof this.vals.range;
           newRange[key] = val;
-          this.applyAllRatioDistances({ range: newRange });
+          this.applyAllRelativeValues({ range: newRange });
         }
       }
     },
@@ -140,7 +140,7 @@ export class Slider89 extends DOM {
       keySetter: (val, key) => {
         val = this.clampValueToRange(val, this.vals.range);
         if (!this.initial) {
-          this.applyOneRatioDistance(key, {value: val});
+          this.applyRelativeValue(key, {value: val});
         } else {
           this.vals.values[key] = val;
         }
@@ -163,7 +163,7 @@ export class Slider89 extends DOM {
       default: false,
       setter: (val) => {
         if (!this.initial) {
-          this.applyAllRatioDistances();
+          this.applyAllRelativeValues();
         }
       }
     },
@@ -177,7 +177,7 @@ export class Slider89 extends DOM {
             'The given value of ' + val + ' exceeds the currently set precision of ' + this.vals.precision);
         }
         if (!this.initial) {
-          this.applyAllRatioDistances({ step: val })
+          this.applyAllRelativeValues({ step: val })
         }
       }
     },
@@ -196,9 +196,9 @@ export class Slider89 extends DOM {
       default: 'horizontal',
       setter: (val) => {
         if (!this.initial) {
-          this.changeOrientationDOM(val);
+          this.changeDOMOrientation(val);
           this.vals.orientation = val;
-          this.applyAllRatioDistances();
+          this.applyAllRelativeValues();
           return true;
         }
       }
@@ -263,7 +263,7 @@ export class Slider89 extends DOM {
     this.initializeProperties(config, this.properties);
 
     this.buildSlider(target, replace);
-    this.applyAllRatioDistances();
+    this.applyAllRelativeValues();
     // This needs to happen as the last step in the initialization process.
     this.domHandler.updateAllVariables();
 

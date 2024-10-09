@@ -9,7 +9,18 @@ interface ClientXY {
   clientY: number;
 }
 
-type StyleDirection = 'top' | 'right' | 'bottom' | 'left';
+/**
+ * Contains strings that are useful for getting distance and dimension
+ * information, adapted to the slider's current orientation.
+ */
+export interface DirectionRect {
+  sizeC: 'Width' | 'Height';
+  size: 'width' | 'height';
+  start: 'left' | 'top';
+  end: 'right' | 'bottom';
+}
+
+export type StyleDirection = 'top' | 'right' | 'bottom' | 'left';
 
 type RecomputationNewVals = Partial<{
   [ Prop in 'value' | 'range' | 'step' ]: Props.Base[Prop]
@@ -44,7 +55,27 @@ export class DOM extends Setup {
   }
 
 
-  // ---- DOM getters ----
+  // ---- Basic DOM getters ----
+  /**
+   * Get an object containing strings useful for getting distance and
+   * dimension information, automatically adapted to the slider's orientation.
+   */
+  getDirection(): DirectionRect {
+    if (this.vals.orientation === 'vertical') {
+      return {
+        sizeC: 'Height',
+        size: 'height',
+        start: 'top',
+        end: 'bottom',
+      };
+    } else return {
+      sizeC: 'Width',
+      size: 'width',
+      start: 'left',
+      end: 'right',
+    };
+  }
+
   /** Get the padding of the track element for the given direction.  */
   getTrackPadding(direction: StyleDirection): number {
     return parseFloat(this.trackStyle.getPropertyValue('padding-' + direction));
@@ -59,69 +90,77 @@ export class DOM extends Setup {
   }
   /**
    * Get the absolute pixel position of the *active* track
-   * in the window at the specified direction.
+   * relative to the window, at the specified direction.
    *
-   * The active track is the part of the track element that contributes
-   * to the dragged thumb, so minus any offsets (border and padding).
+   * The active track describes the track element
+   * minus any effective offsets (border and padding).
    */
   getTrackPosition(direction: StyleDirection): number {
     return this.vals.node.track.getBoundingClientRect()[direction]
       + this.getTrackOffset(direction);
   }
 
+  // ---- Automatic DOM getters ----
   /**
-   * Get the absolute pixel distance of the given offset
-   * in the *active* track along the given direction.
-   * @param offset An offset that is subtracted from the track position.
-   * @param direction The used direction. Defaults to the slider's current orientation.
+   * Get the absolute pixel distance to the given offset in the
+   * *active* track, automatically adapted to the slider's orientation.
+   *
+   * The active track describes the track element
+   * minus any effective offsets (border and padding).
+   *
+   * @param offset A point of the viewport at which to get the distance.
    */
-  getDistance(
-    offset: number,
-    direction: StyleDirection = this.vals.orientation === 'vertical' ? 'top' : 'left'
-  ) {
+  getDistance(offset: number) {
+    const direction = this.getDirection().start;
     return offset - this.getTrackPosition(direction);
   }
   /**
-   * Get the absolute pixel distance of the given thumb element
-   * in the *active* track along the given direction
+   * Get the absolute pixel distance of the given thumb element in the
+   * *active* track, automatically adapted to the slider's orientation.
    *
-   * This is anchored at the front of the thumb, so either the top
-   * or left ledge, depending on the given direction.
+   * This is anchored at the front of the thumb,
+   * so either the left or top edge.
+   *
+   * @remarks
+   * Because of floating-point math, the result may be slightly imprecise
+   * and should not be compared directly with other values.
+   * {@link Slider89.floatIsEqual} is a convenient helper.
+   *
    * @param thumb The thumb element to get the distance of.
-   * @param direction The used direction. Defaults to the slider's current orientation.
    */
-  getThumbDistance(
-    thumb: HTMLDivElement,
-    direction: StyleDirection = this.vals.orientation === 'vertical' ? 'top' : 'left'
-  ): number {
-    return this.getDistance(thumb.getBoundingClientRect()[direction], direction);
+  getThumbDistance(thumb: HTMLDivElement): number {
+    const direction = this.getDirection().start;
+    return this.getDistance(thumb.getBoundingClientRect()[direction]);
+  }
+  /**
+   * Same as {@link getThumbDistance} but instead of being anchored at the
+   * thumb's left or top edge, the result is centered to the thumb.
+   */
+  getThumbDistanceCentered(thumb: HTMLDivElement): number {
+    const direction = this.getDirection();
+    const rect = thumb.getBoundingClientRect();
+    return this.getDistance(rect[direction.start] + rect[direction.size] / 2);
   }
 
   /**
-   * Get the absolute pixel size of the *active* track,
+   * Get the absolute pixel size of the *absolute* track,
    * automatically adapted to the slider's current orientation.
    *
-   * The active track is the part of the track element that contributes
+   * The absolute track is the part of the track element that contributes
    * to the dragged thumb, so minus any offsets (border and padding)
    * and minus the thumb's width/height. 
    *
    * @param thumb The thumb element to test the distance against.
    */
   getAbsoluteTrackSize(thumb: HTMLDivElement): number {
-    if (this.vals.orientation === 'vertical') {
-      return this.vals.node.track.getBoundingClientRect().height
-        - this.getTrackOffset('top')
-        - this.getTrackOffset('bottom')
-        - thumb.getBoundingClientRect().height;
-    } else {
-      return this.vals.node.track.getBoundingClientRect().width
-        - this.getTrackOffset('left')
-        - this.getTrackOffset('right')
-        - thumb.getBoundingClientRect().width;
-    }
+    const direction = this.getDirection();
+    return this.vals.node.track.getBoundingClientRect()[direction.size]
+      - this.getTrackOffset(direction.start)
+      - this.getTrackOffset(direction.end)
+      - thumb.getBoundingClientRect()[direction.size]
   }
 
-  // ---- Thumb moving ----
+  // ---- Thumb movement ----
   /**
    * Translate an element by the given absolute pixel distance.
    * @param element The element to transform(translate), most likely a thumb on the track.
@@ -132,49 +171,53 @@ export class DOM extends Setup {
     element.style.transform = 'translate' + axis + '(' + distance + 'px)';
   }
   /**
-   * Move an element using relative positioning (CSS "top" or "left" properties).
+   * Move an element (most likely the thumb) using relative
+   * positioning (CSS "top" or "left" properties), automatically
+   * adapted to the slider's current orientation.
    *
    * The benefit of relative positioning over translation is that nothing
    * has to be recomputed if the parent element's dimensions change.
    *
    * @remarks
-   * Moving an element (most likely the thumb) this way is extremely costly
-   * for the browser. In Slider89, the thumb is moved using `translate`
-   * and only upon thumb release the movement is converted into a
-   * relative position. **Please** think twice before using this method.
+   * Moving an element  this way is extremely costly for the browser.
+   * In Slider89, the thumb is moved using `translate` and only upon thumb
+   * release the movement is converted into a relative position. **Please**
+   * think twice before using this method in conjunction with a mouse event.
    *
    * @param element The element to move
    * @param ratio The distance as percentage in the interval [0, 1]
    * @param elementForDims A differing element that is used for the position offset.
    */
   moveElementRelative(element: HTMLElement, ratio: number, elementForDims: HTMLElement = element) {
+    const direction = this.getDirection();
     // Relative positioning starts at the padding, so looking at the border is not needed
-    if (this.vals.orientation === 'vertical') {
-      var posAnchor = 'top';
-      var offsetStart = this.getTrackPadding('top');
-      var offsetEnd = this.getTrackPadding('bottom');
-      var elementDim = elementForDims.clientHeight;
-    } else {
-      var posAnchor = 'left';
-      var offsetStart = this.getTrackPadding('left');
-      var offsetEnd = this.getTrackPadding('right');
-      var elementDim = elementForDims.clientWidth;
-    }
+    const offsetStart = this.getTrackPadding(direction.start);
+    const offsetEnd = this.getTrackPadding(direction.end);
+    const elementDim = elementForDims.getBoundingClientRect()[direction.size];
 
     let subtract = (elementDim * ratio) + 'px';
     if (offsetEnd) subtract += ' - ' + (offsetEnd * ratio) + 'px';
     if (offsetStart) subtract += ' + ' + (offsetStart * (1 - ratio)) + 'px';
 
-    element.style[posAnchor] = 'calc(' + (ratio * 100) + '% - ' + subtract + ')';
+    element.style[direction.start] = 'calc(' + (ratio * 100) + '% - ' + subtract + ')';
   }
 
-  applyAllRatioDistances(newVals?: RecomputationNewVals) {
+  applyAllRelativeValues(newVals?: RecomputationNewVals) {
     for (let i = 0; i < this.vals.values.length; i++) {
-      this.applyOneRatioDistance(i, newVals);
+      this.applyRelativeValue(i, newVals);
     }
   }
-  applyOneRatioDistance(thumbIndex: number, newVals?: RecomputationNewVals) {
-    const { value, prevRatio, ratio } = this.computeRatioDistance(thumbIndex, newVals);
+  /**
+   * Apply the new value of the given index according to the passed
+   * property values and move the thumb accordingly.
+   *
+   * Does not set the given values.
+   *
+   * @param thumbIndex The value/thumb index that should be recomputed.
+   * @param newVals New property values to apply, or none to recompute in-place.
+  */
+  applyRelativeValue(thumbIndex: number, newVals?: RecomputationNewVals) {
+    const { value, prevRatio, ratio } = this.computeRelativeValue(thumbIndex, newVals);
 
     this.vals.values[thumbIndex] = value;
     if (!Slider89.floatIsEqual(ratio, prevRatio)) {
@@ -185,9 +228,9 @@ export class DOM extends Setup {
   // ---- Distance computation ----
   /**
    * Compute the resulting value of the given thumb at the given
-   * absolute pixel distance of the *active* track.
+   * absolute pixel distance of the *absolute* track.
    *
-   * The active track is the part of the track element that contributes
+   * The absolute track is the part of the track element that contributes
    * to the dragged thumb, so minus any offsets (border and padding) and
    * minus the thumb's width/height.
    *
@@ -204,7 +247,7 @@ export class DOM extends Setup {
     return distance / absSize * (this.vals.range[1] - this.vals.range[0]) + this.vals.range[0];
   }
 
-  computeRatioDistance(thumbIndex: number, newVals?: RecomputationNewVals) {
+  computeRelativeValue(thumbIndex: number, newVals?: RecomputationNewVals) {
     let value: Props.Base['value'];
     let ratio: number;
 
@@ -282,7 +325,7 @@ export class DOM extends Setup {
     return (value - range[0]) / (range[1] - range[0]);
   }
 
-  changeOrientationDOM(newOrientation: Props.Base['orientation']) {
+  changeDOMOrientation(newOrientation: Props.Base['orientation']) {
     if (newOrientation === 'vertical') {
       this.#removeThumbsDOMProperty('left');
       this.vals.node.slider.classList.add('vertical');
@@ -298,8 +341,8 @@ export class DOM extends Setup {
   }
 
   /**
-   * Modify and return the passed value to match the confines of the given step.
-   * Is always clamped to the given range.
+   * Modify and return the passed value to match the confines
+   * of the given step. Is always clamped to the given range.
    */
   clampValueToStep(value: Props.Base['value'], step: number, range: Props.Base['range']) {
     if (range[0] < range[1]) {
@@ -431,7 +474,7 @@ export class DOM extends Setup {
 
     let value = this.computeDistanceValue(thumbNode, distance, absSize);
     if (this.vals.step !== false) {
-      const computedProperties = this.computeRatioDistance(thumbIndex, { value: value });
+      const computedProperties = this.computeRelativeValue(thumbIndex, { value: value });
       value = computedProperties.value;
       distance = computedProperties.ratio * absSize;
     }
@@ -445,7 +488,7 @@ export class DOM extends Setup {
   slideEnd(thumbNode: HTMLDivElement, e: ClientXY, eventArg: UIEvent) {
     const thumbIndex = this.vals.nodes.thumb.indexOf(thumbNode);
 
-    this.applyOneRatioDistance(thumbIndex);
+    this.applyRelativeValue(thumbIndex);
     thumbNode.style.removeProperty('transform');
 
     this.invokeEvent('end', thumbIndex, eventArg);
