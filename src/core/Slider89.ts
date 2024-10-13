@@ -82,6 +82,14 @@ export class Slider89 extends Setup {
           this.applyAllRelativeValues({ range: val });
         }
       },
+      internalKeySetter: (val, key) => {
+        if (this.nodes) {
+          const attributeName = key === 0 ? 'aria-valuemin' : 'aria-valuemax';
+          this.nodes.thumb.forEach(thumb => {
+            thumb.setAttribute(attributeName, val.toString());
+          });
+        }
+      },
       keySetter: (val, key) => {
         // Compare `val` with the value at the other key (0 or 1)
         if (val === this.vals.range[Math.abs(key - 1)]) {
@@ -104,11 +112,11 @@ export class Slider89 extends Setup {
           // Add/remove thumbs if the given array is bigger/smaller than the current `values` array
           if (val.length > this.vals.values.length) {
             for (let i = this.vals.values.length; i < val.length; i++) {
-              this.domHandler.addThumbToNode(this.vals.nodes);
+              this.addThumbElement(val[i]);
             }
           } else if (val.length < this.vals.values.length) {
             for (let i = val.length; i < this.vals.values.length; i++) {
-              this.domHandler.removeLastThumbFromNode(this.vals.nodes);
+              this.removeThumbElement();
             }
           }
         }
@@ -125,6 +133,9 @@ export class Slider89 extends Setup {
         }
       },
       internalKeySetter: (val, key, prevValTop) => {
+        if (this.nodes) {
+          this.nodes.thumb[key].setAttribute('aria-valuenow', val.toString());
+        }
         if (!this.initial && key === 0) {
           let prevVal;
           if (prevValTop) {
@@ -295,6 +306,7 @@ export class Slider89 extends Setup {
     });
   }
 
+  // ---- Style sheet helpers ----
   /**
    * Inject Slider89's style sheet into the document. This happens only once
    * per document.

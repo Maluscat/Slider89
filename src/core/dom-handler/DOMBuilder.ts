@@ -5,6 +5,8 @@ import { StructureParser } from './StructureParser';
 
 type VariableThumbStrings = Partial<Record<VariableName, string[]>>;
 
+export type AccessibilityVals = Pick<Properties.Base, 'range' | 'value' | 'orientation'>;
+
 export class DOMBuilder extends StructureParser {
   /** A basic thumb node used for cloning. */
   thumbBase: HTMLDivElement;
@@ -32,11 +34,18 @@ export class DOMBuilder extends StructureParser {
 
   // ---- Element builder ----
   createSliderNode(
-    thumbCount: number, structureStr: Properties.Base['structure'], wrapper: HTMLElement
+    thumbCount: number,
+    structureStr: Properties.Base['structure'],
+    wrapper: HTMLElement
   ): PropertyNode.Mult {
-    return !structureStr
+    const nodes = !structureStr
       ? this.createSliderManually(thumbCount, wrapper)
       : this.createSliderFromStructure(thumbCount, structureStr, wrapper);
+
+    for (let i = 0; i < thumbCount; i++) {
+      this.addThumbToNodes(nodes, Infinity);
+    }
+    return nodes;
   }
 
 
@@ -46,30 +55,29 @@ export class DOMBuilder extends StructureParser {
     const nodes: PropertyNode.KnownMult = {
       slider: [ wrapper ],
       track: [ track ],
-      thumb: new Array(thumbCount),
+      thumb: [],
     };
 
     this.thumbBase = document.createElement('div');
     this.thumbParent = track;
 
-    for (let i = 0; i < thumbCount; i++) {
-      nodes.thumb[i] = this.createNewThumb();
-    }
     // Thumb classes are applied in `createNewThumb`;
     // Slider classes are applied in `addClasses`.
     wrapper.appendChild(track);
-
     return nodes;
   }
 
-  createSliderFromStructure(thumbCount: number, structureStr: string, wrapper: HTMLElement) {
+  createSliderFromStructure(
+    thumbCount: number,
+    structureStr: string,
+    wrapper: HTMLElement
+  ) {
     const node = this.parseStructure(structureStr, wrapper);
     this.#parsePostProcess(node);
-    const nodes = this.#expandThumbs(node as PropertyNode.Single, thumbCount);
-    return nodes;
+    return this.#expandThumbs(node as PropertyNode.Single, thumbCount);
   }
 
-  #expandThumbs(node: PropertyNode.Single, thumbCount: number): PropertyNode.Mult {
+  #expandThumbs(node: PropertyNode.Single, thumbCount: number) {
     const nodes = {
       thumb: []
     } as PropertyNode.Mult;
@@ -87,10 +95,6 @@ export class DOMBuilder extends StructureParser {
 
     // NOTE: This needs to be called after `baseElements` is fully populated (i.e. above).
     this.#findStructureVarStringsInThumb(this.thumbBase);
-    for (let i = 0; i < thumbCount; i++) {
-      this.addThumbToNode(nodes);
-    }
-
     return nodes;
   }
 
@@ -145,63 +149,40 @@ export class DOMBuilder extends StructureParser {
 
 
   // ---- Thumb helpers ----
-  addThumbToNode(nodes: PropertyNode.Mult) {
-    const newThumb = this.createNewThumb();
-    nodes.thumb.push(newThumb);
-
+  /**
+   * Add a new thumb element with all of its descendants to the
+   * passed {@link Properties.Base.nodes} at the specified index
+   * (can be negative, counting backwards).
+   */
+  addThumbToNodes(nodes: PropertyNode.Mult, thumbIndex: number) {
+    const newThumb = this.#createNewBlankThumb();
+    nodes.thumb.splice(thumbIndex, 0, newThumb);
     (DOMBuilder.findNodeChildren(newThumb) as HTMLElement[])
       .forEach((childNode, i) => {
         const childName = this.thumbChildren[i];
-        nodes[childName].push(childNode);
+        nodes[childName].splice(thumbIndex, 0, childNode);
       });
+    return newThumb;
   }
-  removeLastThumbFromNode(nodes: PropertyNode.Mult) {
+  /**
+   * Remove a thumb and all of its descendants from the passed
+   * {@link Properties.Base.nodes} at the specified index
+   * (can be negative, counting backwards).
+   */
+  removeThumbFromNodes(nodes: PropertyNode.Mult, thumbIndex: number) {
+    const thumb = nodes.thumb.at(thumbIndex);
+    nodes.thumb.splice(thumbIndex, 1);
     for (const nodeName of this.thumbChildren) {
-      nodes[nodeName].pop();
+      nodes[nodeName].splice(thumbIndex, 1);
     }
-    const thumb = nodes.thumb.pop();
     this.thumbParent.removeChild(thumb);
     return thumb;
   }
 
 
-  // ---- Misc functions ----
-  addClasses(nodes: PropertyNode.Mult, classList: Properties.Base['classList'], isVertical: boolean) {
-    nodes.track[0].classList.add('sl89-track');
-    nodes.slider[0].classList.add('slider89');
-    if (isVertical) {
-      nodes.slider[0].classList.add('vertical');
-    }
-    if (classList) {
-      this.addClassesFromClassList(nodes, classList);
-    }
-  }
-
-  /**
-   * Iterate over a {@link Properties.Base.classList} and add all its
-   * class names to the specified {@link Properties.Base.nodes}.
-   */
-  addClassesFromClassList(nodes: PropertyNode.Mult, classList: Exclude<Properties.Base['classList'], false>) {
-    for (const [ nodeName, classes ] of Object.entries(classList)) {
-      if (Object.prototype.hasOwnProperty.call(nodes, nodeName)) {
-        const elements = nodes[nodeName];
-
-        for (const className of classes) {
-          for (const element of Object.values(elements)) {
-            element.classList.add(className);
-          }
-        }
-      }
-    }
-  }
-
   // ---- Helper functions ----
-  createNewThumb() {
+  #createNewBlankThumb() {
     const newThumb = this.thumbBase.cloneNode(true) as typeof this.thumbBase;
-    newThumb.classList.add('sl89-thumb');
-    if (newThumb.tabIndex === -1) {
-      newThumb.tabIndex = 0;
-    }
     for (const [ eventName, callback ] of Object.entries(this.thumbEvents)) {
       newThumb.addEventListener(eventName, callback, {
         passive: !(eventName.startsWith('touch') || eventName.startsWith('key'))
@@ -218,7 +199,8 @@ export class DOMBuilder extends StructureParser {
     return false;
   }
 
-  // ---- Static style sheet creation ----
+
+  // ---- Static helpers ----
   static getNodeOwner(node: Node): HTMLElement {
     // @ts-ignore
     return node.ownerElement || node.parentElement;

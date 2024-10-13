@@ -9,17 +9,18 @@ export class Setup extends DOM {
   // ---- DOM init ----
   buildSlider(target: HTMLElement, replace: boolean) {
     const wrapper = (replace ? target : document.createElement('div'));
-    this.vals.nodes = this.domHandler.createSliderNode(this.vals.values.length, this.vals.structure, wrapper);
-    this.defineNodeGetters(this.vals.nodes);
+    this.vals.nodes = this.domHandler.createSliderNode(
+      this.vals.values.length, this.vals.structure, wrapper);
+
+    this.#defineNodeGetters();
+    this.#addNodesAttributes();
+    this.vals.nodes.thumb.forEach((thumb, i) => {
+      this.setThumbAttributes(thumb, this.vals.values[i]);
+    })
 
     if (!replace) {
       target.appendChild(this.vals.node.slider);
     }
-
-    this.domHandler.addClasses(
-      this.vals.nodes,
-      this.vals.classList,
-      this.vals.orientation === 'vertical');
 
     Slider89.injectStyleSheetIfNeeded();
 
@@ -55,18 +56,46 @@ export class Setup extends DOM {
     }
   }
 
-  // ---- Initialization ----
-  defineNodeGetters(nodes) {
-    for (const nodeName in nodes) {
+  // ---- DOM initialization ----
+  #defineNodeGetters() {
+    for (const nodeName in this.vals.nodes) {
       Object.defineProperty(this.vals.node, nodeName, {
         get: () => {
-          return nodes[nodeName][0];
+          return this.vals.nodes[nodeName][0];
         },
         enumerable: true
       });
     }
   }
 
+  #addNodesAttributes() {
+    this.vals.nodes.track[0].classList.add('sl89-track');
+    this.vals.nodes.slider[0].classList.add('slider89');
+    if (this.vals.orientation === 'vertical') {
+      this.vals.nodes.slider[0].classList.add('vertical');
+    }
+    if (this.vals.classList) {
+      this.addClassesToNodes(this.vals.classList);
+    }
+  }
+  /**
+   * Iterate over a {@link Properties.Base.classList} and add
+   * all of its class names to the current {@link nodes}.
+   */
+  addClassesToNodes(classList: Exclude<Props.Base['classList'], false>) {
+    for (const [ nodeName, classes ] of Object.entries(classList)) {
+      if (Object.prototype.hasOwnProperty.call(this.vals.nodes, nodeName)) {
+        const elements = this.vals.nodes[nodeName];
+        for (const className of classes) {
+          for (const element of elements) {
+            element.classList.add(className);
+          }
+        }
+      }
+    }
+  }
+
+  // ---- Property initialization ----
   initializeProperties(config: Props.Config, properties: PropertiesOutline) {
     for (const [ item, prop ] of Object.entries(properties)) {
       this.initializeProperty(item as keyof PropertiesOutline, prop);

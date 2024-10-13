@@ -280,6 +280,44 @@ export class DOM extends Definition {
     };
   }
 
+  // ---- Thumb helpers ----
+  /**
+   * Add a new thumb element along with all of its descendants to {@link nodes}
+   * at the specified index (or push it to the end if unspecified).
+   *
+   * @remarks
+   * This does *not* add a new value to {@link values}.
+   */
+  addThumbElement(thumbValue: number, thumbIndex = this.vals.nodes.thumb.length - 1) {
+    const thumb = this.domHandler.addThumbToNodes(this.vals.nodes, thumbIndex);
+    this.setThumbAttributes(thumb, thumbValue);
+  }
+  /**
+   * Remove a thumb element along with all of its descendants from {@link nodes}
+   * at the specified index (or the last thumb if unspecified).
+   *
+   * @remarks
+   * This does *not* modify {@link values} in any way.
+   */
+  removeThumbElement(thumbIndex = -1) {
+    this.domHandler.removeThumbFromNodes(this.vals.nodes, thumbIndex);
+  }
+  /**
+   * Set the required attributes to a thumb at the specified index.
+   * @internal
+   */
+  setThumbAttributes(thumb: HTMLDivElement, thumbValue: number) {
+    thumb.classList.add('sl89-thumb');
+    thumb.setAttribute('role', 'slider');
+    thumb.setAttribute('aria-valuenow', thumbValue.toString());
+    thumb.setAttribute('aria-valuemin', this.vals.range[0].toString());
+    thumb.setAttribute('aria-valuemax', this.vals.range[1].toString());
+    thumb.setAttribute('aria-orientation', this.vals.orientation);
+    if (thumb.tabIndex === -1) {
+      thumb.tabIndex = 0;
+    }
+  }
+
   // ---- Helper functions ----
   /**
    * Set a value at the specified (thumb) index and invoke an 'update' event
@@ -330,6 +368,9 @@ export class DOM extends Definition {
       this.#removeThumbsDOMProperty('top');
       this.vals.node.slider.classList.remove('vertical');
     }
+    this.nodes.thumb.forEach(thumb => {
+      thumb.setAttribute('aria-orientation', newOrientation);
+    });
   }
   #removeThumbsDOMProperty(property: string) {
     for (const thumb of this.vals.nodes.thumb) {
