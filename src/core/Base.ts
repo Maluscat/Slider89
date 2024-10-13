@@ -115,7 +115,7 @@ export class Base extends SliderError implements Properties.WithCustom {
   data: Properties.Base['data']
 
   /**
-   * @remarks
+   * @privateRemarks
    * When adding a method here, remember that it must call
    * the {@link Base.selfCheckMethod} itself!
    */

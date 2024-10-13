@@ -1,8 +1,8 @@
 'use strict';
 import type { Properties as Props } from './Base';
-import { Setup } from './Setup';
 import { DOMVariables } from './dom-handler/DOMVariables';
 import { Slider89 } from './Slider89';
+import { Definition } from './Definition';
 
 interface ClientXY {
   clientX: number;
@@ -21,12 +21,9 @@ export interface DirectionRect {
 }
 
 export type StyleDirection = 'top' | 'right' | 'bottom' | 'left';
+export type RecomputationNewVals = Partial<Pick<Props.Base, 'value' | 'range' | 'step'>>;
 
-type RecomputationNewVals = Partial<{
-  [ Prop in 'value' | 'range' | 'step' ]: Props.Base[Prop]
-}>
-
-export class DOM extends Setup {
+export class DOM extends Definition {
   activeTouchIDs = new Map<number, HTMLDivElement>();
   activeThumb: HTMLDivElement;
   mouseDownPos: number;

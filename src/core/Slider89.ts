@@ -5,7 +5,7 @@ import defaultStylesString from '../css/default-styles.css';
 import type { Properties as Props } from './Base';
 import type { Operation } from './Definition.ts';
 import type { EventType } from './Events';
-import { DOM } from './DOM';
+import { Setup } from './Setup';
 
 export type PropertiesOutline = {
   [ Prop in keyof Props.Base ]: PropertyOutline.self<Prop>;
@@ -41,7 +41,7 @@ namespace PropertyOutline {
   }
 }
 
-export class Slider89 extends DOM {
+export class Slider89 extends Setup {
   /**
    * Controls whether to inject the slider's style sheet into the current
    * document. Is simply tested for truthyness when creating a new slider.

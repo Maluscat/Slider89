@@ -1,10 +1,11 @@
 import type { Properties as Props } from './Base';
 import type { PropertiesOutline } from './Slider89';
 import { RuntimeTypeCheck, TypeCheckError } from './type-check/RuntimeTypeCheck';
-import { Definition } from './Definition';
+import { DOMBuilder } from './dom-handler/DOMBuilder';
 import { Slider89 } from './Slider89';
+import { DOM } from './DOM';
 
-export class Setup extends Definition {
+export class Setup extends DOM {
   // ---- DOM init ----
   buildSlider(target: HTMLElement, replace: boolean) {
     const wrapper = (replace ? target : document.createElement('div'));
