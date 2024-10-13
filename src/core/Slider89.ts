@@ -123,13 +123,11 @@ export class Slider89 extends Setup {
       },
       postSetter: (val, prevVal) => {
         if (!this.initial) {
-          // Invoke `node(s)` property change and expand all `thumb` structure variables
-          // if the `values` length has changed.
           if (prevVal.length !== val.length) {
             this.invokeInternalPropertyChange('node');
             this.invokeInternalPropertyChange('nodes');
-            this.domHandler.expandAllBaseElementVariables();
           }
+          this.domHandler.expandAllBaseElementVariables();
         }
       },
       internalKeySetter: (val, key, prevValTop) => {
