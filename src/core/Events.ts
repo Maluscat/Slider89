@@ -15,7 +15,6 @@ export namespace EventType {
     }
   }
 
-  // ---- Types to keep track of ----
   export type Base = NamesBasic | `change:${keyof Properties.WithCustom}`;
 }
 
@@ -34,7 +33,6 @@ type EventListenerIdentifier = number | string;
 
 
 export class Events extends Base {
-  // ---- Constant statics ----
   static eventTypes = [
     'update',
     'start',
@@ -56,20 +54,17 @@ export class Events extends Base {
     }
   }) as const satisfies EventType.Special;
 
-  // Statically getting the name of all event types. This is just for humans.
+  /** List of all available event types. */
   static availableEventTypes = (() => {
     // @ts-ignore
     return this.eventTypes.concat(Object.keys(this.eventTypesSpecial)) as EventType.HumanList;
   })();
 
 
-  // ---- Properties ----
-  // Storing event data for removability
   #eventList: EventData.List = {};
   #eventID = 0;
 
 
-  // ---- Methods ----
   addEvent(type: EventType.Base, fn: EventData.Fn, customID?: string): EventListenerIdentifier {
     Base.selfCheckMethod('addEvent', arguments);
 
@@ -80,26 +75,7 @@ export class Events extends Base {
       throw new Slider89.Error(msg, 'addEvent');
     }
 
-    if (!Array.isArray(this.vals.events[type])) {
-      this.vals.events[type] = [];
-    }
-    this.vals.events[type].push(fn);
-    const identifier = customID || this.#eventID;
-    const eventData = {
-      type: type,
-      fn: fn
-    };
-
-    if (customID) {
-      if (!Array.isArray(this.#eventList[identifier])) {
-        this.#eventList[identifier] = [];
-      }
-      (this.#eventList[identifier] as EventData.Base[]).push(eventData);
-    } else {
-      this.#eventList[identifier] = eventData;
-    }
-
-    return customID || this.#eventID++;
+    return this.#registerEvent(type, fn, customID);
   }
   removeEvent(key: EventListenerIdentifier): false | EventData.Fn[] {
     Base.selfCheckMethod('removeEvent', arguments);
@@ -115,21 +91,6 @@ export class Events extends Base {
       : this.#handleRemoveEvent([], eventData);
   }
 
-
-  // ---- Helper functions ----
-  #handleRemoveEvent(deleteCollection: EventData.Fn[], eventInfo: EventData.Base) {
-    const type = eventInfo.type;
-    const eventFns = this.vals.events[type];
-    const deletedFn = eventFns.splice(eventFns.indexOf(eventInfo.fn), 1)[0];
-
-    if (eventFns.length === 0) {
-      delete this.vals.events[type];
-    }
-    deleteCollection.push(deletedFn);
-
-    return deleteCollection;
-  }
-
   invokeEvent(type: EventType.Base, ...args: any[]) {
     args.unshift(this);
     if (this.vals.events !== false) {
@@ -139,6 +100,39 @@ export class Events extends Base {
         }
       }
     }
+  }
+
+
+  // ---- Helper functions ----
+  #registerEvent(type: EventType.Base, fn: EventData.Fn, customID: string) {
+    if (!Array.isArray(this.vals.events[type])) {
+      this.vals.events[type] = [];
+    }
+    this.vals.events[type].push(fn);
+
+    const eventData = { type, fn };
+    if (customID) {
+      if (!Array.isArray(this.#eventList[customID])) {
+        this.#eventList[customID] = [];
+      }
+      this.#eventList[customID].push(eventData);
+    } else {
+      this.#eventList[this.#eventID] = eventData;
+    }
+
+    return customID || this.#eventID++;
+  }
+
+  #handleRemoveEvent(removedCallbacks: EventData.Fn[], data: EventData.Base) {
+    const eventFns = this.vals.events[data.type];
+    const deletedFn = eventFns.splice(eventFns.indexOf(data.fn), 1)[0];
+
+    if (eventFns.length === 0) {
+      delete this.vals.events[data.type];
+    }
+    removedCallbacks.push(deletedFn);
+
+    return removedCallbacks;
   }
 
   checkEventType(type: EventType.Base) {
