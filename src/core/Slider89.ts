@@ -219,19 +219,14 @@ export class Slider89 extends Setup {
     events: {
       default: {},
       setter: (val) => {
-        if (val === false) {
-          this.vals.events = {};
-          return true;
-        } else {
-          const errTypes = [];
-          for (let eventType in val) {
-            if (!this.checkEventType(eventType as EventType.Base)) errTypes.push(eventType);
-          }
-          if (errTypes.length > 0) {
-            throw new Slider89.PropertyError(this, 'events',
-              'The given object contains items which are no valid event types:' + Slider89.arrayToListString(errTypes)
-              + 'Available event types are:' + Slider89.arrayToListString(Slider89.availableEventTypes));
-          }
+        const errTypes = [];
+        for (let eventType in val) {
+          if (!this.checkEventType(eventType as EventType.Base)) errTypes.push(eventType);
+        }
+        if (errTypes.length > 0) {
+          throw new Slider89.PropertyError(this, 'events',
+            'The given object contains items which are no valid event types:' + Slider89.arrayToListString(errTypes)
+            + 'Available event types are:' + Slider89.arrayToListString(Slider89.availableEventTypes));
         }
       },
       extendAssigner: Slider89.#arrayObjectAssigner.bind(Slider89, 'events')
@@ -351,12 +346,14 @@ export class Slider89 extends Setup {
    * { key: any[] }. Can easily be utilized with `bind()`.
    * @see {@link #mergeArrayObjects}.
    */
-  static #arrayObjectAssigner<P extends keyof Props.Config>(
+  static #arrayObjectAssigner<P extends keyof Props.Mergable>(
     propertyName: P,
     target: Props.Config,
-    value: Exclude<Props.Config[P], false>
+    value: Props.Mergable[P]
   ) {
+    // @ts-ignore
     target[propertyName] ||= {};
+    // @ts-ignore
     this.#mergeArrayObjects(target[propertyName], value);
   }
 

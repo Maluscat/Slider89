@@ -50,7 +50,6 @@ export class Setup extends DOM {
   }
 
   callPlugins(plugins: Props.Base['plugins']) {
-    if (plugins === false) return;
     for (const callback of plugins) {
       callback(this as unknown as Slider89);
     }
@@ -100,13 +99,14 @@ export class Setup extends DOM {
     for (const [ item, prop ] of Object.entries(properties)) {
       this.initializeProperty(item as keyof PropertiesOutline, prop);
 
-      if (item in config) {
+      // Skipping `false` for deeply mergable props (will be replaced with default value)
+      if (item in config && (!prop.extendAssigner || config[item] !== false)) {
         this[item] = config[item];
-        delete config[item];
       } else if ('default' in prop) {
         const def = prop.default;
         ((prop.getter || prop.keyGetter) ? this : this.vals)[item] = (typeof def === 'function' ? def() : def);
       }
+      delete config[item];
     }
 
     for (const item in config) {

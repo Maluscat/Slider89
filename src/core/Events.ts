@@ -93,11 +93,9 @@ export class Events extends Base {
 
   invokeEvent(type: EventType.Base, ...args: any[]) {
     args.unshift(this);
-    if (this.vals.events !== false) {
-      if (type in this.vals.events) {
-        for (const eventFunc of this.vals.events[type]) {
-          eventFunc(...args);
-        }
+    if (type in this.vals.events) {
+      for (const eventFunc of this.vals.events[type]) {
+        eventFunc(...args);
       }
     }
   }

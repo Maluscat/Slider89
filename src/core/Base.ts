@@ -39,18 +39,31 @@ export namespace Properties {
     node: PropertyNode.Single;
     nodes: PropertyNode.Mult;
   }
+  /**
+   * Represents all properties that will be merged in a special way when
+   * using {@link Slider89.extend}. Because of this, all of these properties
+   * may assume `false` in the config ({@link Config}), and ONLY there,
+   * which disables the merging for any values below.
+   *
+   * @privateRemarks
+   * Should a property overlaps with other categories in the future
+   * (such as {@link Deep}), this should be converted into a property
+   * name list with a generic that adds `false`.
+   */
+  export interface Mergable {
+    classList: Record<string, string[]>;
+    events: Partial<EventList>;
+    plugins: PluginCallback[];
+    extend: Properties.Config[];
+    data: object;
+  }
 
-  export type Base = Deep & Readonly & {
+  export type Base = Mergable & Deep & Readonly & {
     value: number;
     precision: number | false;
     step: number | number[] | false;
     structure: string | false;
     orientation: 'vertical' | 'horizontal';
-    classList: Record<string, string[]> | false;
-    events: Partial<EventList> | false;
-    plugins: PluginCallback[] | false;
-    extend: Properties.Config[] | false;
-    data: object | false;
   }
   export interface Vals extends WithCustom {
     readonly $: Base;
@@ -60,8 +73,17 @@ export namespace Properties {
 
   export type Custom = Record<CustomPropertyName, any>;
   export type WithCustom = Base & Custom;
+  export type WithFalseyMergable = {
+    [ Prop in keyof Base ]: Prop extends keyof Mergable ? (Base[Prop] | false) : Base[Prop];
+  }
 
-  export type ConfigFull = Omit<WithCustom, keyof Readonly>;
+  /**
+   * Non-partial interface of all properties allowed in the configuration.
+   * Unlike in the final slider object, properties of {@link Mergable}
+   * may also assume `false` here.
+   * @see {@link Config}
+   */
+  export type ConfigFull = WithFalseyMergable | WithCustom;
   export type Config = Partial<ConfigFull>;
   export type Writable = Omit<Base, keyof Readonly>;
 }

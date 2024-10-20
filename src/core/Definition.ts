@@ -59,6 +59,7 @@ export class Definition extends Events {
     Object.defineProperty(target, item, {
       set: (val: typeof target[I]) => {
         if (!this.initial) {
+          // @ts-ignore ???
           var prevVal: typeof val = (isDeepDefinedArray ? Array.from(this[item as keyof Props.Deep]) : this[item]);
         }
         endpoint[item] = val;
