@@ -1,6 +1,6 @@
 'use strict';
 import type { DeepReadonlyObject, Descriptor } from './type-check/RuntimeTypeCheck';
-import type { EventData, EventType } from './Events';
+import type { EventMap } from './Events';
 import type { DOMVariables } from './dom-handler/DOMVariables';
 import { SliderError } from './SliderError';
 import { RuntimeTypeCheck, TypeCheckError } from './type-check/RuntimeTypeCheck';
@@ -21,10 +21,9 @@ export namespace PropertyNode {
   export type Mult = KnownMult & Record<string, HTMLElement[]>;
 }
 
-type EventList = {
-  [ Type in EventType.Base ]: EventData.Fn[]
+export type EventList = {
+  [ T in keyof EventMap ]: EventMap[T][]
 }
-
 export type PluginCallback = (slider: Slider89) => void;
 
 // ---- Property types ----

@@ -331,7 +331,7 @@ export class DOM extends Definition {
     const prevValThis = this.values[index];
     this.values[index] = value;
     if (!Slider89.floatIsEqual(value, this.values[index])) {
-      this.invokeEvent('update', this.values[index], prevValThis, index, event);
+      this.invokeEvent('update', this.values[index], prevValThis, index, eventArg);
     }
   }
   /**
@@ -343,7 +343,7 @@ export class DOM extends Definition {
   setValueWithUpdateEventUnsafe(value: Props.Base['value'], index: number, eventArg: UIEvent) {
     const prevValThis = this.values[index];
     this.vals.values[index] = value;
-    this.invokeEvent('update', this.values[index], prevValThis, index, event);
+    this.invokeEvent('update', this.values[index], prevValThis, index, eventArg);
   }
 
   /**
@@ -482,7 +482,7 @@ export class DOM extends Definition {
   }
 
   // ---- General event handlers ----
-  slideStart(thumbNode: HTMLDivElement, e: ClientXY, eventArg: UIEvent) {
+  slideStart(thumbNode: HTMLDivElement, e: ClientXY, eventArg: MouseEvent | TouchEvent) {
     const thumbIndex = this.vals.nodes.thumb.indexOf(thumbNode);
     const distance = this.getThumbDistance(thumbNode);
 
@@ -500,7 +500,7 @@ export class DOM extends Definition {
     this.invokeEvent('start', thumbIndex, eventArg);
     thumbNode.style.removeProperty(posAnchor);
   }
-  slideMove(thumbNode: HTMLDivElement, e: ClientXY, eventArg: UIEvent) {
+  slideMove(thumbNode: HTMLDivElement, e: ClientXY, eventArg: MouseEvent | TouchEvent) {
     const thumbIndex = this.vals.nodes.thumb.indexOf(thumbNode);
     const absSize = this.getAbsoluteTrackSize(thumbNode);
     let distance = (this.vals.orientation === 'vertical' ? e.clientY : e.clientX) - this.mouseDownPos;
@@ -523,7 +523,7 @@ export class DOM extends Definition {
       this.invokeEvent('move', thumbIndex, eventArg);
     }
   }
-  slideEnd(thumbNode: HTMLDivElement, e: ClientXY, eventArg: UIEvent) {
+  slideEnd(thumbNode: HTMLDivElement, e: ClientXY, eventArg: MouseEvent | TouchEvent) {
     const thumbIndex = this.vals.nodes.thumb.indexOf(thumbNode);
 
     this.applyRelativeValue(thumbIndex);

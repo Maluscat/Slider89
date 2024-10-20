@@ -172,7 +172,7 @@ export class Definition extends Events {
     if (!this.initial && (typeof this[item] === 'object' || prevVal !== this[item])) {
       prevVal ??= this[item];
       this.domHandler.updatePotentialVariable(item);
-      this.invokeEvent(('change:' + item) as EventType.Base, this[item], prevVal);
+      this.invokeEvent(('change:' + item) as EventType.Special, this[item], prevVal);
     }
   }
   invokeInternalDeepArrayChange<I extends keyof Props.Deep>(
@@ -199,7 +199,7 @@ export class Definition extends Events {
     deepDefinedIndex: number
   ) {
     if (prevVal[deepDefinedIndex] !== this[item][deepDefinedIndex]) {
-      this.invokeEvent(('change:' + item) as EventType.Base, this[item], prevVal, deepDefinedIndex);
+      this.invokeEvent(('change:' + item) as EventType.Special, this[item], prevVal, deepDefinedIndex);
     }
   }
 }

@@ -1,35 +1,39 @@
 'use strict';
-import type { Properties } from './Base';
+import type { Properties as Props } from './Base';
 import { Base } from './Base';
 import { Slider89 } from './Slider89';
 
+type SpecialList = {
+  [ Key: string ]: {
+    prefix: string,
+    fn: (slider: Slider89, suffix: string, eventType: string) => void;
+  }
+}
+type EventData<T extends keyof EventMap> = {
+  type: T,
+  fn: EventMap[T]
+}
+
 export namespace EventType {
-  type NamesBasic = typeof Events.eventTypes[number];
-  type NamesSpecial = keyof typeof Events.eventTypesSpecial;
+  export type SpecialAbbr = keyof typeof Events.eventTypesSpecial;
+  export type Basic = typeof Events.eventTypes[number];
+  export type Special = `change:${keyof Props.WithCustom}`;
 
-  export type HumanList = Array<NamesBasic | NamesSpecial>;
-  export interface Special {
-    [ Key: string ]: {
-      prefix: string,
-      fn: (slider: Slider89, suffix: string, eventType: string) => void;
-    }
-  }
-
-  export type Base = NamesBasic | `change:${keyof Properties.WithCustom}`;
+  export type Base = Basic | Special;
 }
 
-
-export namespace EventData {
-  export type Fn = (...args: any[]) => any;
-  export type List = Record<EventListenerIdentifier, Base[] | Base>;
-
-  export interface Base {
-    type: EventType.Base,
-    fn: Fn
-  }
+export type EventMap = {
+  update: (value: number, prevValue: number, thumbIndex: number, evt?: UIEvent) => void
+  start: (thumbIndex: number, evt: TouchEvent | MouseEvent) => void
+  move: (thumbIndex: number, evt: TouchEvent | MouseEvent) => void
+  end: (thumbIndex: number, evt: TouchEvent | MouseEvent) => void
+} & {
+  [ T in keyof Props.WithCustom as `change:${T}` ]: T extends Props.Deep
+    ? (value: Props.WithCustom[T], prevVal: Props.WithCustom[T]) => void
+    : (value: Props.WithCustom[T], prevVal: Props.WithCustom[T], deepIndex?: number) => void
 }
 
-type EventListenerIdentifier = number | string;
+export type EventListenerID = number | string;
 
 
 export class Events extends Base {
@@ -52,20 +56,20 @@ export class Events extends Base {
         }
       }
     }
-  }) as const satisfies EventType.Special;
+  }) as const satisfies SpecialList;
 
-  /** List of all available event types. */
+  /** Human-readable and concise list of all available event types. */
   static availableEventTypes = (() => {
     // @ts-ignore
-    return this.eventTypes.concat(Object.keys(this.eventTypesSpecial)) as EventType.HumanList;
+    return this.eventTypes.concat(Object.keys(this.eventTypesSpecial)) as Array<EventType.Basic | EventType.SpecialAbbr>;
   })();
 
 
-  #eventList: EventData.List = {};
+  #eventList: Record<EventListenerID, EventData<keyof EventMap>[]> = {};
   #eventID = 0;
 
 
-  addEvent(type: EventType.Base, fn: EventData.Fn, customID?: string): EventListenerIdentifier {
+  addEvent<T extends keyof EventMap>(type: T, fn: EventMap[T], customID?: string): EventListenerID {
     Base.selfCheckMethod('addEvent', arguments);
 
     if (!this.checkEventType(type)) {
@@ -75,9 +79,11 @@ export class Events extends Base {
       throw new Slider89.Error(msg, 'addEvent');
     }
 
-    return this.#registerEvent(type, fn, customID);
+    const id = customID || this.#eventID++;
+    this.#registerEvent(type, fn, id);
+    return id;
   }
-  removeEvent(key: EventListenerIdentifier): false | EventData.Fn[] {
+  removeEvent(key: EventListenerID): false | EventMap[keyof EventMap][] {
     Base.selfCheckMethod('removeEvent', arguments);
 
     if (!(key in this.#eventList)) {
@@ -86,42 +92,36 @@ export class Events extends Base {
     const eventData = this.#eventList[key];
     delete this.#eventList[key];
 
-    return Array.isArray(eventData)
-      ? eventData.reduce(this.#handleRemoveEvent.bind(this), [])
-      : this.#handleRemoveEvent([], eventData);
+    return eventData.reduce(this.#handleRemoveEvent.bind(this), []);
   }
 
-  invokeEvent(type: EventType.Base, ...args: any[]) {
+  invokeEvent<T extends keyof EventMap>(type: T, ...args: Parameters<EventMap[T]>) {
+    // @ts-ignore TODO
     args.unshift(this);
     if (type in this.vals.events) {
-      for (const eventFunc of this.vals.events[type]) {
-        eventFunc(...args);
+      for (const callback of this.vals.events[type]) {
+        // @ts-ignore Spread/rest typing
+        callback(...args);
       }
     }
   }
 
 
   // ---- Helper functions ----
-  #registerEvent(type: EventType.Base, fn: EventData.Fn, customID: string) {
+  #registerEvent<T extends keyof EventMap>(type: T, fn: EventMap[T], id: EventListenerID) {
     if (!Array.isArray(this.vals.events[type])) {
       this.vals.events[type] = [];
     }
     this.vals.events[type].push(fn);
 
     const eventData = { type, fn };
-    if (customID) {
-      if (!Array.isArray(this.#eventList[customID])) {
-        this.#eventList[customID] = [];
-      }
-      this.#eventList[customID].push(eventData);
-    } else {
-      this.#eventList[this.#eventID] = eventData;
+    if (!Array.isArray(this.#eventList[id])) {
+      this.#eventList[id] = [];
     }
-
-    return customID || this.#eventID++;
+    this.#eventList[id].push(eventData);
   }
 
-  #handleRemoveEvent(removedCallbacks: EventData.Fn[], data: EventData.Base) {
+  #handleRemoveEvent<Fn extends keyof EventMap>(removedCallbacks: EventMap[Fn][], data: EventData<Fn>) {
     const eventFns = this.vals.events[data.type];
     const deletedFn = eventFns.splice(eventFns.indexOf(data.fn), 1)[0];
 
@@ -133,7 +133,7 @@ export class Events extends Base {
     return removedCallbacks;
   }
 
-  checkEventType(type: EventType.Base) {
+  checkEventType<T extends keyof EventMap>(type: T) {
     for (const eventTypeData of Object.values(Events.eventTypesSpecial)) {
       if (type.startsWith(eventTypeData.prefix)) {
         const suffix = type.slice(eventTypeData.prefix.length);
