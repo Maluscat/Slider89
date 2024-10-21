@@ -29,9 +29,9 @@ export type EventArgs = {
   move: { thumbIndex: number, event: TouchEvent | MouseEvent }
   end: { thumbIndex: number, event: TouchEvent | MouseEvent }
 } & {
-  [ T in keyof Props.WithCustom as `change:${T}` ]: T extends Props.Deep
-    ? { value: Props.WithCustom[T], prevVal: Props.WithCustom[T] }
-    : { value: Props.WithCustom[T], prevVal: Props.WithCustom[T], deepIndex?: number }
+  [ T in keyof Props.WithCustom as `change:${T}` ]: T extends keyof Props.Deep
+    ? { value: Props.Deep[T], prevVal: Props.Deep[T], keys: (string | number)[] }
+    : { value: Props.WithCustom[T], prevVal: Props.WithCustom[T] }
 }
 /** Map of available event types along with their accepted callbacks. */
 export type EventMap = {

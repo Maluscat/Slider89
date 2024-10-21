@@ -65,9 +65,9 @@ export class Definition extends Events {
         endpoint[item] = val;
         if (isDeepDefinedArray) {
           this.#defineDeepArray(item as keyof Props.Deep, val, prevVal, outline as Outline[keyof Props.Deep]);
-          this.invokeInternalDeepArrayChange(item as keyof Props.Deep, prevVal, val);
+          this.invokeInternalDeepPropertyChange(item as keyof Props.Deep, prevVal);
         } else {
-          this.invokeInternalPropertyChange(item, prevVal);
+          this.invokeInternalPropertyChange(item as keyof Omit<Props.WithCustom, keyof Props.Deep>, prevVal);
         }
         // @ts-ignore
         outline?.postSetter?.(val, prevVal);
@@ -134,7 +134,7 @@ export class Definition extends Events {
           if (!internalKeySetter || !internalKeySetter(val, key)) {
             endpoint[item][key] = val;
           }
-          this.invokeInternalDeepArrayChange(item, prevValFull, null, key);
+          this.invokeInternalDeepPropertyChange(item, prevValFull, key);
         }
       },
       get() {
@@ -164,7 +164,7 @@ export class Definition extends Events {
 
   // ---- Property change tracking ----
   // `this` items are compared to accomodate for getters (e.g. `value` (precision))
-  invokeInternalPropertyChange<I extends keyof Props.WithCustom>(
+  invokeInternalPropertyChange<I extends keyof Omit<Props.WithCustom, keyof Props.Deep>>(
     item: I, prevVal?: Props.WithCustom[I]
   ) {
     // Object types (arrays included) always invoke a variable update
@@ -172,37 +172,27 @@ export class Definition extends Events {
     if (!this.initial && (typeof this[item] === 'object' || prevVal !== this[item])) {
       prevVal ??= this[item];
       this.domHandler.updatePotentialVariable(item);
-      this.invokeEvent(('change:' + item) as EventType.Special, { value: this[item], prevVal });
+      // @ts-ignore ???
+      this.invokeEvent(`change:${item}`, { value: this[item], prevVal });
     }
   }
-  invokeInternalDeepArrayChange<I extends keyof Props.Deep>(
+  invokeInternalDeepPropertyChange<I extends keyof Props.Deep>(
     item: I,
     prevVal: Props.Deep[I],
-    val: Props.Deep[I],
-    deepDefinedIndex?: number
+    deepKey?: number | string
   ) {
-    if (!this.initial) {
-      this.domHandler.updatePotentialVariable(item);
-      if (deepDefinedIndex != null) {
-        this.invokeDeepArrayChangeEvent(item, prevVal, deepDefinedIndex);
-      } else {
-        for (let i = 0; i < val.length; i++) {
-          this.invokeDeepArrayChangeEvent(item, prevVal, i);
-        }
-      }
-    }
-  }
+    const value = this[item];
+    if (!this.initial && (deepKey == null || prevVal[deepKey] !== value[deepKey])) {
+      const changedKeys = (deepKey != null) ? [deepKey] : Array.isArray(value)
+        ? value.map((_, i) => i)
+        : Object.keys(value);
 
-  invokeDeepArrayChangeEvent<I extends keyof Props.Deep>(
-    item: I,
-    prevVal: Props.Deep[I],
-    deepIndex: number
-  ) {
-    if (prevVal[deepIndex] !== this[item][deepIndex]) {
-      this.invokeEvent(('change:' + item) as EventType.Special, {
-        value: this[item],
+      this.domHandler.updatePotentialVariable(item);
+      // @ts-ignore ???
+      this.invokeEvent(`change:${item}`, {
+        value,
         prevVal,
-        deepIndex
+        keys: changedKeys
       });
     }
   }
