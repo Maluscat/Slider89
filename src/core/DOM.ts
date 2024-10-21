@@ -331,7 +331,12 @@ export class DOM extends Definition {
     const prevValThis = this.values[index];
     this.values[index] = value;
     if (!Slider89.floatIsEqual(value, this.values[index])) {
-      this.invokeEvent('update', this.values[index], prevValThis, index, eventArg);
+      this.invokeEvent('update', {
+        value: this.values[index],
+        prevVal: prevValThis,
+        thumbIndex: index,
+        event: eventArg
+      });
     }
   }
   /**
@@ -343,7 +348,12 @@ export class DOM extends Definition {
   setValueWithUpdateEventUnsafe(value: Props.Base['value'], index: number, eventArg: UIEvent) {
     const prevValThis = this.values[index];
     this.vals.values[index] = value;
-    this.invokeEvent('update', this.values[index], prevValThis, index, eventArg);
+    this.invokeEvent('update', {
+      value: this.values[index],
+      prevVal: prevValThis,
+      thumbIndex: index,
+      event: eventArg
+    });
   }
 
   /**
@@ -497,7 +507,7 @@ export class DOM extends Definition {
     this.mouseDownPos = clientDim - distance;
     this.moveElementTranslate(thumbNode, distance);
 
-    this.invokeEvent('start', thumbIndex, eventArg);
+    this.invokeEvent('start', { thumbIndex, event: eventArg });
     thumbNode.style.removeProperty(posAnchor);
   }
   slideMove(thumbNode: HTMLDivElement, e: ClientXY, eventArg: MouseEvent | TouchEvent) {
@@ -520,7 +530,7 @@ export class DOM extends Definition {
     if (!Slider89.floatIsEqual(value, this.vals.values[thumbIndex])) {
       this.setValueWithUpdateEventUnsafe(value, thumbIndex, eventArg);
       this.moveElementTranslate(thumbNode, distance);
-      this.invokeEvent('move', thumbIndex, eventArg);
+      this.invokeEvent('move', { thumbIndex, event: eventArg });
     }
   }
   slideEnd(thumbNode: HTMLDivElement, e: ClientXY, eventArg: MouseEvent | TouchEvent) {
@@ -529,7 +539,7 @@ export class DOM extends Definition {
     this.applyRelativeValue(thumbIndex);
     thumbNode.style.removeProperty('transform');
 
-    this.invokeEvent('end', thumbIndex, eventArg);
+    this.invokeEvent('end', { thumbIndex, event: eventArg });
     thumbNode.classList.remove('active');
     document.body.classList.remove('sl89-noselect');
     this.mouseDownPos = null;

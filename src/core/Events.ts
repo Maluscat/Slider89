@@ -22,15 +22,20 @@ export namespace EventType {
   export type Base = Basic | Special;
 }
 
-export type EventMap = {
-  update: (value: number, prevValue: number, thumbIndex: number, evt?: UIEvent) => void
-  start: (thumbIndex: number, evt: TouchEvent | MouseEvent) => void
-  move: (thumbIndex: number, evt: TouchEvent | MouseEvent) => void
-  end: (thumbIndex: number, evt: TouchEvent | MouseEvent) => void
+export type Callback<Args> = (evt: Args & { slider: Slider89; }) => void;
+export type EventArgs = {
+  update: { value: number, prevVal: number, thumbIndex: number, event?: UIEvent }
+  start: { thumbIndex: number, event: TouchEvent | MouseEvent }
+  move: { thumbIndex: number, event: TouchEvent | MouseEvent }
+  end: { thumbIndex: number, event: TouchEvent | MouseEvent }
 } & {
   [ T in keyof Props.WithCustom as `change:${T}` ]: T extends Props.Deep
-    ? (value: Props.WithCustom[T], prevVal: Props.WithCustom[T]) => void
-    : (value: Props.WithCustom[T], prevVal: Props.WithCustom[T], deepIndex?: number) => void
+    ? { value: Props.WithCustom[T], prevVal: Props.WithCustom[T] }
+    : { value: Props.WithCustom[T], prevVal: Props.WithCustom[T], deepIndex?: number }
+}
+/** Map of available event types along with their accepted callbacks. */
+export type EventMap = {
+  [ E in keyof EventArgs ]: Callback<EventArgs[E]>
 }
 
 export type EventListenerID = number | string;
@@ -95,13 +100,13 @@ export class Events extends Base {
     return eventData.reduce(this.#handleRemoveEvent.bind(this), []);
   }
 
-  invokeEvent<T extends keyof EventMap>(type: T, ...args: Parameters<EventMap[T]>) {
-    // @ts-ignore TODO
-    args.unshift(this);
+  invokeEvent<T extends keyof EventMap>(type: T, arg: EventArgs[T]) {
+    // @ts-ignore Step in-between EventArg and EventMap
+    arg.slider = this;
     if (type in this.vals.events) {
       for (const callback of this.vals.events[type]) {
-        // @ts-ignore Spread/rest typing
-        callback(...args);
+        // @ts-ignore
+        callback(arg);
       }
     }
   }
