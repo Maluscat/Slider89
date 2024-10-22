@@ -22,8 +22,7 @@ export class Setup extends DOM {
       target.appendChild(this.vals.node.slider);
     }
 
-    Slider89.injectStyleSheetIfNeeded();
-
+    Slider89.StyleModule.mount(document, Slider89.BASE_STYLE);
     this.trackStyle = getComputedStyle(this.vals.node.track);
   }
 

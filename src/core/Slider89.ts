@@ -1,7 +1,4 @@
 'use strict';
-// @ts-ignore (Webpack import)
-import defaultStylesString from '../css/default-styles.css';
-
 import type { Properties as Props } from './Base';
 import type { Operation } from './Definition.ts';
 import type { EventType } from './Events';
@@ -42,34 +39,6 @@ namespace PropertyOutline {
 }
 
 export class Slider89 extends Setup {
-  /**
-   * Controls whether to inject the slider's style sheet into the current
-   * document. Is simply tested for truthyness when creating a new slider.
-   *
-   * The style sheet is only injected *once* per document upon creating the
-   * first slider with this flag present. It will not be removed again when
-   * setting this value to false.
-   *
-   * @remarks
-   * Because of this, you have to set this flag *before* creating your first slider.
-   * Setting it to falsey will throw a console warning when there is already
-   * a style sheet present.
-   *
-   * @see {@link injectedStyleSheet}
-   * @see {@link injectStyleSheetIfNeeded}
-   */
-  static injectCSS = true;
-  /**
-   * Contains the style sheet that has been injected into the document, if any.
-   *
-   * You can use this to insert custom styles for a slider or related elements,
-   * for example when creating a plugin.
-   * 
-   * @see {@link injectCSS}
-   * @see {@link injectStyleSheetIfNeeded}
-   */
-  static injectedStyleSheet: HTMLStyleElement | null;
-
   properties: PropertiesOutline = {
     range: {
       default: [0, 100],
@@ -297,47 +266,6 @@ export class Slider89 extends Setup {
         ? prev
         : current
     });
-  }
-
-  // ---- Style sheet helpers ----
-  /**
-   * Inject Slider89's style sheet into the document. This happens only once
-   * per document.
-   * @see {@link injectCSS} for a way to disable the automatic injection.
-   * @see {@link injectedStyleSheet} for the injected style sheet element.
-   *
-   * @privateRemarks
-   * I think that a global Object (like Slider89) cannot be in multiple
-   * documents at once. Thus, just setting a global flag to true should be
-   * sufficient to mark the current document as already injected.
-   */
-  static injectStyleSheetIfNeeded() {
-    if (this.injectCSS && this.injectedStyleSheet == null) {
-      const styleSheetElement = document.createElement('style');
-      const firstHeadChild = document.head.firstElementChild;
-
-      styleSheetElement.textContent = defaultStylesString;
-
-      // Ensure that it is the first style sheet in the document
-      if (firstHeadChild) {
-        document.head.insertBefore(styleSheetElement, firstHeadChild);
-      } else {
-        document.head.appendChild(styleSheetElement);
-      }
-
-      this.injectedStyleSheet = styleSheetElement;
-    }
-  }
-  /**
-   * Remove Slider89's style sheet again, if it has already been injected
-   * by {@link injectStyleSheetIfNeeded}.
-   * @see {@link injectedStyleSheet}.
-   */
-  static removeInjectedStyleSheet() {
-    if (this.injectedStyleSheet != null) {
-      document.head.removeChild(this.injectedStyleSheet);
-      this.injectedStyleSheet = null;
-    }
   }
 
   // ---- Internal helpers ----

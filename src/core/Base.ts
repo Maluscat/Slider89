@@ -1,4 +1,5 @@
 'use strict';
+import { StyleModule } from 'style-mod';
 import type { DeepReadonlyObject, Descriptor } from './type-check/RuntimeTypeCheck';
 import type { EventMap } from './Events';
 import type { DOMVariables } from './dom-handler/DOMVariables';
@@ -134,6 +135,35 @@ export class Base extends SliderError implements Properties.WithCustom {
   plugins: Properties.Base['plugins']
   extend: Properties.Base['extend']
   data: Properties.Base['data']
+
+  static BASE_STYLE = new StyleModule({
+    '.sl89-track': {
+      position: 'relative',
+      width: '200px',
+      height: '25px',
+      backgroundColor: 'hsl(0, 0%, 18%)',
+      '.slider89.vertical &': {
+        height: '200px',
+        width: '25px',
+      }
+    },
+    '.sl89-thumb': {
+      position: 'absolute',
+      width: '16px',
+      height: '100%',
+      backgroundColor: 'hsl(0, 0%, 28%)',
+      cursor: 'pointer',
+      '.slider89.vertical &': {
+        height: '16px',
+        width: '100%',
+      }
+    },
+    '.sl89-noselect': {
+      '-webkit-user-select': 'none',
+      userSelect: 'none',
+      pointerEvents: 'none',
+    }
+  });
 
   /**
    * @privateRemarks
@@ -343,7 +373,7 @@ export class Base extends SliderError implements Properties.WithCustom {
 
   domHandler: DOMVariables;
 
-  // @ts-ignore
+  // @ts-ignore Only setup
   vals: Properties.Vals = {}; // holding every class property
   initial = false;
 
