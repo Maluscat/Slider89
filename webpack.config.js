@@ -30,9 +30,6 @@ const commonConfig = {
   resolve: {
     extensions: [ '.ts', '.js' ],
   },
-  resolveLoader: {
-    modules: [ 'node_modules', path.resolve('./src/loaders') ],
-  },
   plugins: [ new ForkTsCheckerWebpackPlugin(tsCheckerConfig) ],
   module: {
     rules: [
@@ -41,10 +38,6 @@ const commonConfig = {
         loader: 'esbuild-loader',
         include: path.resolve('./src'),
         options: esbuildConfig
-      }, {
-        test: /\.css$/i,
-        use: 'css-rule-loader',
-        include: path.resolve('./src/css')
       }
     ]
   }
