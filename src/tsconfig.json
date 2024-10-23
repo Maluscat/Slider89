@@ -7,7 +7,7 @@
     "target": "es2022",
     "module": "nodenext",
     "moduleResolution": "bundler",
-    "lib": [ "es2022", "dom", "dom.iterable" ],
+    "lib": [ "esnext", "dom", "dom.iterable" ],
     "forceConsistentCasingInFileNames": true,
     "alwaysStrict": true,
     "strict": true,

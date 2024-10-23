@@ -30,6 +30,11 @@ export class DOM extends Definition {
 
   /** Live style of the slider track. */
   trackStyle: CSSStyleDeclaration;
+  /**
+   * Continuously advancing z-index that a thumb
+   * gets assigned when starting to drag it.
+   */
+  currentThumbZ = 1;
 
   constructor() {
     super();
@@ -176,7 +181,7 @@ export class DOM extends Definition {
    * has to be recomputed if the parent element's dimensions change.
    *
    * @remarks
-   * Moving an element  this way is extremely costly for the browser.
+   * Moving an element this way is extremely costly for the browser.
    * In Slider89, the thumb is moved using `translate` and only upon thumb
    * release the movement is converted into a relative position. **Please**
    * think twice before using this method in conjunction with a mouse event.
@@ -318,7 +323,7 @@ export class DOM extends Definition {
     }
   }
 
-  // ---- Helper functions ----
+  // ---- Value handling ----
   /**
    * Set a value at the specified (thumb) index and invoke an 'update' event
    * if the values are not equal. You can also pass an event object as
@@ -370,24 +375,6 @@ export class DOM extends Definition {
     return (value - range[0]) / (range[1] - range[0]);
   }
 
-  changeDOMOrientation(newOrientation: Props.Base['orientation']) {
-    if (newOrientation === 'vertical') {
-      this.#removeThumbsDOMProperty('left');
-      this.vals.node.slider.classList.add('vertical');
-    } else {
-      this.#removeThumbsDOMProperty('top');
-      this.vals.node.slider.classList.remove('vertical');
-    }
-    this.nodes.thumb.forEach(thumb => {
-      thumb.setAttribute('aria-orientation', newOrientation);
-    });
-  }
-  #removeThumbsDOMProperty(property: string) {
-    for (const thumb of this.vals.nodes.thumb) {
-      thumb.style.removeProperty(property);
-    }
-  }
-
   /**
    * Modify and return the passed value to match the confines
    * of the given step. Is always clamped to the given range.
@@ -423,6 +410,59 @@ export class DOM extends Definition {
       }
     }
     return value;
+  }
+
+  // ---- Z index helpers ----
+  /**
+   * As soon as the current z-index counter ({@link currentThumbZ})
+   * exceeds a certain threshold (currently, 10 times the amount of
+   * thumbs), reset the z-index counter back to 1 while preserving
+   * all thumb's z-index order.
+   *
+   * This is done so that a thumb's z-index does not interfere with
+   * other layouting when it gets too high.
+   */
+  capThumbZIndex() {
+    if (this.currentThumbZ >= (this.vals.values.length * 10) + 1) {
+      this.vals.nodes.thumb
+        .toSorted((a, b) => Number(a.style.zIndex) > Number(b.style.zIndex) ? 1 : -1)
+        .forEach((thumb, i) => {
+          // @ts-ignore Not wasting bytes
+          thumb.style.zIndex = i + 1;
+        });
+      this.currentThumbZ = this.vals.values.length;
+    }
+  }
+  /**
+   * Set a thumb's z-index style such that it appears
+   * on top of all other thumbs.
+   *
+   * Will only be invoked if more than one thumb is used.
+   */
+  setThumbZIndex(thumb: HTMLDivElement) {
+    if (this.vals.values.length > 1) {
+      // @ts-ignore I'm not wasting bytes with a useless toString
+      thumb.style.zIndex = this.currentThumbZ++;
+    }
+  }
+
+  // ---- DOM helpers ----
+  changeDOMOrientation(newOrientation: Props.Base['orientation']) {
+    if (newOrientation === 'vertical') {
+      this.#removeThumbsDOMProperty('left');
+      this.vals.node.slider.classList.add('vertical');
+    } else {
+      this.#removeThumbsDOMProperty('top');
+      this.vals.node.slider.classList.remove('vertical');
+    }
+    this.nodes.thumb.forEach(thumb => {
+      thumb.setAttribute('aria-orientation', newOrientation);
+    });
+  }
+  #removeThumbsDOMProperty(property: string) {
+    for (const thumb of this.vals.nodes.thumb) {
+      thumb.style.removeProperty(property);
+    }
   }
 
   // ---- Touch events ----
@@ -496,6 +536,7 @@ export class DOM extends Definition {
     const thumbIndex = this.vals.nodes.thumb.indexOf(thumbNode);
     const distance = this.getThumbDistance(thumbNode);
 
+    this.setThumbZIndex(thumbNode);
     thumbNode.classList.add('active');
     if (this.vals.orientation === 'vertical') {
       var posAnchor = 'top';
@@ -540,6 +581,8 @@ export class DOM extends Definition {
     thumbNode.style.removeProperty('transform');
 
     this.invokeEvent('end', { thumbIndex, event: eventArg });
+    this.capThumbZIndex();
+
     thumbNode.classList.remove('active');
     document.body.classList.remove('sl89-noselect');
     this.mouseDownPos = null;
