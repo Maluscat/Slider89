@@ -5,7 +5,25 @@ import { DOMBuilder } from './dom-handler/DOMBuilder';
 import { Slider89 } from './Slider89';
 import { DOM } from './DOM';
 
+/**
+ * This class handles everything related to the initial setup of the
+ * slider, including resolving and testing the config, registering
+ * properties and handling plugins, mixins and CSS.
+ */
 export class Setup extends DOM {
+  /**
+   * Contains a CSS class name that is added onto the slider wrapper
+   * and which is unique for this slider instance.
+   *
+   * It is used as a namespace for extended CSS.
+   */
+  uniqueWrapperClass: string;
+
+  constructor() {
+    super();
+    this.uniqueWrapperClass = Slider89.getUniqueClassName();
+  }
+
   // ---- DOM init ----
   buildSlider(target: HTMLElement, replace: boolean) {
     const wrapper = (replace ? target : document.createElement('div'));
@@ -73,7 +91,7 @@ export class Setup extends DOM {
 
   #addNodesAttributes() {
     this.vals.nodes.track[0].classList.add('sl89-track');
-    this.vals.nodes.slider[0].classList.add('slider89');
+    this.vals.nodes.slider[0].classList.add('slider89', this.uniqueWrapperClass);
     if (this.vals.orientation === 'vertical') {
       this.vals.nodes.slider[0].classList.add('sl89-vertical');
     }

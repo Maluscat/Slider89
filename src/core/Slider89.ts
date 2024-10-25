@@ -268,6 +268,12 @@ export class Slider89 extends Setup {
     });
   }
 
+  // ---- Style sheet helpers ----
+  static #uniqueClassNameCounter = 0;
+  static getUniqueClassName() {
+    return `sl89-${++this.#uniqueClassNameCounter}`;
+  }
+
   // ---- Internal helpers ----
   /**
    * General extend assigner that merges two "array objects" of the form
