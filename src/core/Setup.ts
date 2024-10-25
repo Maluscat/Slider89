@@ -75,7 +75,7 @@ export class Setup extends DOM {
     this.vals.nodes.track[0].classList.add('sl89-track');
     this.vals.nodes.slider[0].classList.add('slider89');
     if (this.vals.orientation === 'vertical') {
-      this.vals.nodes.slider[0].classList.add('vertical');
+      this.vals.nodes.slider[0].classList.add('sl89-vertical');
     }
     if (this.vals.classList) {
       this.addClassesToNodes(this.vals.classList);

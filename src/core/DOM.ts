@@ -450,10 +450,10 @@ export class DOM extends Definition {
   changeDOMOrientation(newOrientation: Props.Base['orientation']) {
     if (newOrientation === 'vertical') {
       this.#removeThumbsDOMProperty('left');
-      this.vals.node.slider.classList.add('vertical');
+      this.vals.node.slider.classList.add('sl89-vertical');
     } else {
       this.#removeThumbsDOMProperty('top');
-      this.vals.node.slider.classList.remove('vertical');
+      this.vals.node.slider.classList.remove('sl89-vertical');
     }
     this.nodes.thumb.forEach(thumb => {
       thumb.setAttribute('aria-orientation', newOrientation);
@@ -463,6 +463,11 @@ export class DOM extends Definition {
     for (const thumb of this.vals.nodes.thumb) {
       thumb.style.removeProperty(property);
     }
+  }
+  toggleActiveClasses(thumb: HTMLDivElement, operation: 'add' | 'remove') {
+    document.body.classList[operation]('sl89-noselect');
+    this.vals.node.track.classList[operation]('sl89-sliding');
+    thumb.classList[operation]('sl89-active');
   }
 
   // ---- Touch events ----
@@ -510,8 +515,6 @@ export class DOM extends Definition {
 
   // ---- Mouse events ----
   mouseStart(e: MouseEvent, thumbNode = e.currentTarget as HTMLDivElement) {
-    document.body.classList.add('sl89-noselect');
-
     this.slideStart(thumbNode, e, e);
 
     if (!this.activeThumb) {
@@ -537,7 +540,8 @@ export class DOM extends Definition {
     const distance = this.getThumbDistance(thumbNode);
 
     this.setThumbZIndex(thumbNode);
-    thumbNode.classList.add('active');
+    this.toggleActiveClasses(thumbNode, 'add');
+
     if (this.vals.orientation === 'vertical') {
       var posAnchor = 'top';
       var clientDim = e.clientY;
@@ -583,8 +587,7 @@ export class DOM extends Definition {
     this.invokeEvent('end', { thumbIndex, event: eventArg });
     this.capThumbZIndex();
 
-    thumbNode.classList.remove('active');
-    document.body.classList.remove('sl89-noselect');
+    this.toggleActiveClasses(thumbNode, 'remove');
     this.mouseDownPos = null;
   }
 

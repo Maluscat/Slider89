@@ -148,7 +148,7 @@ export class Base extends SliderError implements Properties.WithCustom {
       height: '25px',
       backgroundColor: 'hsl(0, 0%, 18%)',
       boxSizing: 'content-box',
-      '.slider89.vertical &': {
+      '.slider89.sl89-vertical &': {
         height: '200px',
         width: '25px',
       }
@@ -160,7 +160,7 @@ export class Base extends SliderError implements Properties.WithCustom {
       backgroundColor: 'hsl(0, 0%, 28%)',
       boxSizing: 'border-box',
       cursor: 'pointer',
-      '.slider89.vertical &': {
+      '.slider89.sl89-vertical &': {
         height: '16px',
         width: '100%',
       }
