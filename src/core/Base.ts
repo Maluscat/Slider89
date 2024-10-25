@@ -26,6 +26,7 @@ export type EventList = {
   [ T in keyof EventMap ]: EventMap[T][]
 }
 export type PluginCallback = (slider: Slider89) => void;
+export type PluginList = PluginList[] | PluginCallback;
 
 // ---- Property types ----
 export namespace Properties {
@@ -53,7 +54,7 @@ export namespace Properties {
   export interface Mergable {
     classList: Record<string, string[]>;
     events: Partial<EventList>;
-    plugins: PluginCallback[];
+    plugins: PluginList[];
     extend: Properties.Config[];
     data: object;
   }
@@ -347,9 +348,10 @@ export class Base extends SliderError implements Properties.WithCustom {
       descriptor: [
         {
           type: 'array',
-          descriptor: [{
-            type: 'function'
-          }]
+          descriptor: [
+            { type: 'function' },
+            { type: 'array' }
+          ]
         },
         { type: 'false' }
       ]

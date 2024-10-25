@@ -49,8 +49,13 @@ export class Setup extends DOM {
   }
 
   callPlugins(plugins: Props.Base['plugins']) {
-    for (const callback of plugins) {
-      callback(this as unknown as Slider89);
+    // TODO Type check
+    for (const item of plugins) {
+      if (typeof item === 'function') {
+        item(this as unknown as Slider89);
+      } else {
+        this.callPlugins(item);
+      }
     }
   }
 
@@ -77,7 +82,7 @@ export class Setup extends DOM {
     }
   }
   /**
-   * Iterate over a {@link Properties.Base.classList} and add
+   * Iterate over a {@link Props.Base.classList} and add
    * all of its class names to the current {@link nodes}.
    */
   addClassesToNodes(classList: Exclude<Props.Base['classList'], false>) {
