@@ -3,8 +3,9 @@ import { StyleModule } from 'style-mod';
 import type { DeepReadonlyObject, Descriptor } from './type-check/RuntimeTypeCheck';
 import type { EventMap } from './Events';
 import { DOMVariables } from './dom-handler/DOMVariables';
-import { SliderError } from './SliderError';
+import { Style } from './style/Style';
 import { RuntimeTypeCheck, TypeCheckError } from './type-check/RuntimeTypeCheck';
+import { SliderError } from './SliderError';
 import { Slider89 } from './Slider89';
 
 // ---- Misc types ----
@@ -118,6 +119,7 @@ export type TypedMethods = keyof typeof Base.methodData;
 
 export class Base extends SliderError implements Properties.WithCustom {
   static StyleModule = StyleModule;
+  static Style = Style;
   static DOMHandler = DOMVariables;
   static RuntimeTypeCheck = RuntimeTypeCheck;
 
@@ -350,7 +352,8 @@ export class Base extends SliderError implements Properties.WithCustom {
           type: 'array',
           descriptor: [
             { type: 'function' },
-            { type: 'array' }
+            { type: 'array' },
+            { type: 'object' }
           ]
         },
         { type: 'false' }

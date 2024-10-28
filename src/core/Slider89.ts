@@ -243,6 +243,7 @@ export class Slider89 extends Setup {
     this.initial = false;
 
     this.callPlugins(this.vals.plugins);
+    Slider89.StyleModule.mount(document, this.styleModules);
   }
 
   // ---- Static helpers ----

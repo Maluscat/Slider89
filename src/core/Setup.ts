@@ -1,5 +1,6 @@
 import type { Properties as Props } from './Base';
 import type { PropertiesOutline } from './Slider89';
+import type { StyleModule } from 'style-mod';
 import { RuntimeTypeCheck, TypeCheckError } from './type-check/RuntimeTypeCheck';
 import { DOMBuilder } from './dom-handler/DOMBuilder';
 import { Slider89 } from './Slider89';
@@ -12,12 +13,15 @@ import { DOM } from './DOM';
  */
 export class Setup extends DOM {
   /**
-   * Contains a CSS class name that is added onto the slider wrapper
-   * and which is unique for this slider instance.
-   *
-   * It is used as a namespace for extended CSS.
+   * Contains a unique CSS class name that is added onto the slider
+   * wrapper. All extended CSS is put behind that class.
    */
   uniqueWrapperClass: string;
+  /**
+   * Holds all {@link StyleModule}s converted from the {@link Style}s present
+   * in {@link plugins} in sequential order (from least to most important).
+   */
+  styleModules: StyleModule[] = [];
 
   constructor() {
     super();
@@ -40,6 +44,7 @@ export class Setup extends DOM {
       target.appendChild(this.vals.node.slider);
     }
 
+    // TODO This should be bundled with the plugin style mount
     Slider89.StyleModule.mount(document, Slider89.BASE_STYLE);
     this.trackStyle = getComputedStyle(this.vals.node.track);
   }
@@ -67,10 +72,12 @@ export class Setup extends DOM {
   }
 
   callPlugins(plugins: Props.Base['plugins']) {
-    // TODO Type check
+    // TODO Recursive type check
     for (const item of plugins) {
       if (typeof item === 'function') {
         item(this as unknown as Slider89);
+      } else if (item instanceof Slider89.Style) {
+        this.styleModules.push(item.getNewStyleModule(this.uniqueWrapperClass));
       } else {
         this.callPlugins(item);
       }
