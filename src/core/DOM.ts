@@ -34,7 +34,7 @@ export class DOM extends Definition {
    * Continuously advancing z-index that a thumb
    * gets assigned when starting to drag it.
    */
-  currentThumbZ = 1;
+  currentThumbZ = 2;
 
   constructor() {
     super();

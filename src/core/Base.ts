@@ -160,6 +160,7 @@ export class Base extends SliderError implements Properties.WithCustom {
       backgroundColor: 'hsl(0, 0%, 28%)',
       boxSizing: 'border-box',
       cursor: 'pointer',
+      zIndex: 1,
       '.slider89.sl89-vertical &': {
         height: '16px',
         width: '100%',
