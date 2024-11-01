@@ -174,7 +174,7 @@ export class Slider89 extends Setup {
       default: 'horizontal',
       setter: (val) => {
         if (!this.initial) {
-          this.changeDOMOrientation(val);
+          this.setDOMOrientation(val);
           this.vals.orientation = val;
           this.applyAllRelativeValues();
           return true;

@@ -450,16 +450,18 @@ export class DOM extends Definition {
   }
 
   // ---- DOM helpers ----
-  changeDOMOrientation(newOrientation: Props.Base['orientation']) {
-    if (newOrientation === 'vertical') {
+  setDOMOrientation(orientation: Props.Base['orientation']) {
+    if (orientation === 'vertical') {
       this.#removeThumbsDOMProperty('left');
+      this.vals.node.slider.classList.remove('sl89-horizontal');
       this.vals.node.slider.classList.add('sl89-vertical');
     } else {
       this.#removeThumbsDOMProperty('top');
+      this.vals.node.slider.classList.add('sl89-horizontal');
       this.vals.node.slider.classList.remove('sl89-vertical');
     }
     this.nodes.thumb.forEach(thumb => {
-      thumb.setAttribute('aria-orientation', newOrientation);
+      thumb.setAttribute('aria-orientation', orientation);
     });
   }
   #removeThumbsDOMProperty(property: string) {

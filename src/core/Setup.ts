@@ -111,9 +111,7 @@ export class Setup extends DOM {
   #addNodesAttributes() {
     this.vals.nodes.track[0].classList.add('sl89-track');
     this.vals.nodes.slider[0].classList.add('slider89', this.uniqueWrapperClass);
-    if (this.vals.orientation === 'vertical') {
-      this.vals.nodes.slider[0].classList.add('sl89-vertical');
-    }
+    this.setDOMOrientation(this.orientation);
     if (this.vals.classList) {
       this.addClassesToNodes(this.vals.classList);
     }
