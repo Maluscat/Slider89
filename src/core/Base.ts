@@ -27,7 +27,7 @@ export type EventList = {
   [ T in keyof EventMap ]: EventMap[T][]
 }
 export type PluginCallback = (slider: Slider89) => void;
-export type PluginList = PluginList[] | PluginCallback;
+export type ExtendList = ExtendList[] | PluginCallback | Properties.Config | Style;
 
 // ---- Property types ----
 export namespace Properties {
@@ -55,8 +55,7 @@ export namespace Properties {
   export interface Mergable {
     classList: Record<string, string[]>;
     events: Partial<EventList>;
-    plugins: PluginList[];
-    extend: Properties.Config[];
+    extend: ExtendList[];
     data: object;
   }
 
@@ -139,7 +138,6 @@ export class Base extends SliderError implements Properties.WithCustom {
   orientation: Properties.Base['orientation']
   classList: Properties.Base['classList']
   events: Properties.Base['events']
-  plugins: Properties.Base['plugins']
   extend: Properties.Base['extend']
   data: Properties.Base['data']
 
@@ -345,7 +343,7 @@ export class Base extends SliderError implements Properties.WithCustom {
         { type: 'false' }
       ]
     },
-    plugins: {
+    extend: {
       constructorOnly: true,
       descriptor: [
         {
@@ -355,18 +353,6 @@ export class Base extends SliderError implements Properties.WithCustom {
             { type: 'array' },
             { type: 'object' }
           ]
-        },
-        { type: 'false' }
-      ]
-    },
-    extend: {
-      constructorOnly: true,
-      descriptor: [
-        {
-          type: 'array',
-          descriptor: [{
-            type: 'object'
-          }]
         },
         { type: 'false' }
       ]

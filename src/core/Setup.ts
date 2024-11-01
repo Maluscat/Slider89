@@ -1,4 +1,4 @@
-import type { Properties as Props } from './Base';
+import type { PluginCallback, Properties as Props } from './Base';
 import type { PropertiesOutline } from './Slider89';
 import type { StyleModule } from 'style-mod';
 import { RuntimeTypeCheck, TypeCheckError } from './type-check/RuntimeTypeCheck';
@@ -18,10 +18,14 @@ export class Setup extends DOM {
    */
   uniqueWrapperClass: string;
   /**
-   * Holds all {@link StyleModule}s converted from the {@link Style}s present
-   * in {@link plugins} in sequential order (from least to most important).
+   * Holds all {@link StyleModule}s converted from the extended
+   * {@link Style}s in order of ascending priority.
    */
   styleModules: StyleModule[] = [];
+  /** Holds all extended plugin functions in order of ascending priority. */
+  pluginCallbacks: PluginCallback[] = [];
+  /** Holds all extended configuration objects in order of ascending priority. */
+  mixins: Props.Config[] = [];
 
   constructor() {
     super();
@@ -44,43 +48,51 @@ export class Setup extends DOM {
       target.appendChild(this.vals.node.slider);
     }
 
-    // TODO This should be bundled with the plugin style mount
-    Slider89.StyleModule.mount(document, Slider89.BASE_STYLE);
+    Slider89.StyleModule.mount(document, [ Slider89.BASE_STYLE, ...this.styleModules ]);
     this.trackStyle = getComputedStyle(this.vals.node.track);
   }
 
 
-  // ---- extend (mixins) & plugins ----
-  testAndExtendConfig(config: Readonly<Props.Config>, target: Props.Config = config) {
+  // ---- extend (mixins, style, plugins) ----
+  testAndExtendConfig(config: Readonly<Props.Config>, targetConf: Props.Config = config) {
     this.testConfig(config);
     if (config.extend) {
-      for (let i = config.extend.length - 1; i >= 0; i--) {
-        const mixin = config.extend[i];
+      this.resolveExtend(config.extend, config, targetConf);
+    }
+  }
 
-        for (const [ item, value ] of Object.entries(mixin)) {
-          if (this.properties[item]?.extendAssigner) {
-            if (value !== false && config[item] !== false) {
-              this.properties[item].extendAssigner(target, value, i);
-            }
-          } else if (!(item in target)) {
-            target[item] = value;
-          }
-        }
-        this.testAndExtendConfig(mixin, target);
+  resolveExtend(extend: Props.Base['extend'], parentConf: Readonly<Props.Config>, targetConf: Props.Config) {
+    // TODO Recursive type check
+    for (let i = extend.length - 1; i >= 0; i--) {
+      const entry = extend[i];
+      if (Array.isArray(entry)) {
+        this.resolveExtend(entry, parentConf, targetConf);
+      } else if (typeof entry === 'function') {
+        this.pluginCallbacks.unshift(entry);
+      } else if (entry instanceof Slider89.Style) {
+        this.styleModules.unshift(entry.getNewStyleModule(this.uniqueWrapperClass));
+      } else {
+        this.extendProperties(entry, parentConf, targetConf);
       }
     }
   }
 
-  callPlugins(plugins: Props.Base['plugins']) {
-    // TODO Recursive type check
-    for (const item of plugins) {
-      if (typeof item === 'function') {
-        item(this as unknown as Slider89);
-      } else if (item instanceof Slider89.Style) {
-        this.styleModules.push(item.getNewStyleModule(this.uniqueWrapperClass));
-      } else {
-        this.callPlugins(item);
+  extendProperties(mixin: Readonly<Props.Config>, parentConf: Readonly<Props.Config>, targetConf: Props.Config) {
+    for (const [ item, value ] of Object.entries(mixin)) {
+      if (this.properties[item]?.extendAssigner) {
+        if (value !== false && parentConf[item] !== false) {
+          this.properties[item].extendAssigner(targetConf, value);
+        }
+      } else if (!(item in targetConf)) {
+        targetConf[item] = value;
       }
+    }
+    this.testAndExtendConfig(mixin, targetConf);
+  }
+
+  callPlugins() {
+    for (const callback of this.pluginCallbacks) {
+      callback(this);
     }
   }
 

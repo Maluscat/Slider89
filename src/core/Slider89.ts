@@ -200,22 +200,8 @@ export class Slider89 extends Setup {
       },
       extendAssigner: Slider89.#arrayObjectAssigner.bind(Slider89, 'events')
     },
-    plugins: {
-      default: [],
-      extendAssigner: (target, value) => {
-        target.plugins ||= [];
-        target.plugins.unshift(
-          // @ts-ignore `target.plugins` is asserted not to be false.
-          ...value.filter(val => !target.plugins.includes(val)));
-      }
-    },
     extend: {
       default: [],
-      extendAssigner: (target, value, i) => {
-        // Special case: `target.extend` must be defined since
-        // only then an assigner can be reached
-        (target.extend as Props.Config[]).splice(i, 0, ...value);
-      }
     },
     data: {
       default: {},
@@ -242,8 +228,7 @@ export class Slider89 extends Setup {
 
     this.initial = false;
 
-    this.callPlugins(this.vals.plugins);
-    Slider89.StyleModule.mount(document, this.styleModules);
+    this.callPlugins();
   }
 
   // ---- Static helpers ----
