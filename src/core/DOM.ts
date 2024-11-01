@@ -452,11 +452,11 @@ export class DOM extends Definition {
   // ---- DOM helpers ----
   setDOMOrientation(orientation: Props.Base['orientation']) {
     if (orientation === 'vertical') {
-      this.#removeThumbsDOMProperty('left');
+      this.#nullifyThumbPositionProperty('left');
       this.vals.node.slider.classList.remove('sl89-horizontal');
       this.vals.node.slider.classList.add('sl89-vertical');
     } else {
-      this.#removeThumbsDOMProperty('top');
+      this.#nullifyThumbPositionProperty('top');
       this.vals.node.slider.classList.add('sl89-horizontal');
       this.vals.node.slider.classList.remove('sl89-vertical');
     }
@@ -464,9 +464,10 @@ export class DOM extends Definition {
       thumb.setAttribute('aria-orientation', orientation);
     });
   }
-  #removeThumbsDOMProperty(property: string) {
+  #nullifyThumbPositionProperty(property: StyleDirection) {
     for (const thumb of this.vals.nodes.thumb) {
-      thumb.style.removeProperty(property);
+      // @ts-ignore Not wasting bytes
+      thumb.style[property] = 0;
     }
   }
   toggleActiveClasses(thumb: HTMLDivElement, operation: 'add' | 'remove') {
