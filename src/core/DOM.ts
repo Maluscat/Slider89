@@ -188,16 +188,19 @@ export class DOM extends Definition {
    *
    * @param element The element to move
    * @param ratio The distance as percentage in the interval [0, 1]
-   * @param elementForDims A differing element that is used for the position offset.
+   * @param dimOffset A static offset that is added in relation to the total distance, OR
+   *                  a differing element, the size of which will be the offset.
    */
-  moveElementRelative(element: HTMLElement, ratio: number, elementForDims: HTMLElement = element) {
+  moveElementRelative(element: HTMLElement, ratio: number, dimOffset: number | HTMLElement = element) {
     const direction = this.getDirection();
     // Relative positioning starts at the padding, so looking at the border is not needed
     const offsetStart = this.getTrackPadding(direction.start);
     const offsetEnd = this.getTrackPadding(direction.end);
-    const elementDim = elementForDims.getBoundingClientRect()[direction.size];
+    if (dimOffset instanceof Element) {
+      dimOffset = dimOffset.getBoundingClientRect()[direction.size];
+    }
 
-    let subtract = (elementDim * ratio) + 'px';
+    let subtract = (dimOffset * ratio) + 'px';
     if (offsetEnd) subtract += ' - ' + (offsetEnd * ratio) + 'px';
     if (offsetStart) subtract += ' + ' + (offsetStart * (1 - ratio)) + 'px';
 
