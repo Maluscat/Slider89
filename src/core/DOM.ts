@@ -367,8 +367,8 @@ export class DOM extends Definition {
   /**
    * Get the ratio of the supplied value (or the slider's current value)
    * in relation to the supplied range (or the slider's current range).
-   * @param The value to get the ratio of.
-   * @param The range to test the value against.
+   * @param value The value to get the ratio of.
+   * @param range The range to test the value against.
    * @return The relation of `value` to `range` in a [0, 1] interval.
    *
    * @remarks

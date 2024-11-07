@@ -92,7 +92,7 @@ export class Setup extends DOM {
 
   callPlugins() {
     for (const callback of this.pluginCallbacks) {
-      callback(this);
+      callback(this as unknown as Slider89);
     }
   }
 
