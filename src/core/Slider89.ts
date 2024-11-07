@@ -231,6 +231,70 @@ export class Slider89 extends Setup {
     this.callPlugins();
   }
 
+  // ---- "End-user stable" helper methods ----
+  /**
+   * Add a new thumb to the slider with the specified value,
+   * optionally at the specified index (if omitted, push it to the end).
+   *
+   * @remarks
+   * This is syntactic sugar for adding a thumb by overwriting
+   * {@link values} with an extended array.
+   *
+   * @return The newly added thumb element.
+   */
+  addThumb(value: number, index = this.vals.nodes.thumb.length) {
+    // TODO arg validation
+    if (index < 0 || index > this.vals.nodes.thumb.length) {
+      throw new Slider89.Error(`The given index (${index}) is out of bounds`, 'addThumb');
+    }
+    const values = Array.from(this.vals.values);
+    values.splice(index, 0, value);
+    this.values = values;
+    return this.vals.nodes.thumb[index];
+  }
+  /**
+   * Add arbitrarily many thumbs to the slider with the specified values.
+   * They are always appended to the end of {@link values}.
+   *
+   * @remarks
+   * This is just syntactic sugar for adding values by overwriting
+   * {@link values} with an extended array.
+   *
+   * @return An array of all the newly added thumb elements in order.
+   */
+  addMultipleThumbs(...values: number[]) {
+    // TODO arg validation
+    this.values = [ ...this.values, ...values ];
+    return this.vals.nodes.thumb.slice(-values.length);
+  }
+  /**
+   * Remove a thumb by passing either the thumb element or the thumb/values
+   * index. If neither is passed, the last thumb is removed.
+   *
+   * @remarks
+   * This is just syntactic sugar for removing values by overwriting
+   * {@link values} with a subset of itself.
+   *
+   * @return The removed thumb element.
+   */
+  removeThumb(indexOrElement: number | HTMLDivElement = this.vals.nodes.thumb.length -1) {
+    // TODO arg validation
+    const thumbNodes = this.vals.nodes.thumb;
+    if (indexOrElement instanceof Element) {
+      if (!thumbNodes.includes(indexOrElement)) {
+        throw new Slider89.Error(`The given element is not one of the slider's thumbs`, 'removeThumb');
+      }
+      indexOrElement = thumbNodes.indexOf(indexOrElement);
+    } else if (indexOrElement < 0 || indexOrElement >= thumbNodes.length) {
+      throw new Slider89.Error(`The given index (${indexOrElement}) is out of bounds`, 'removeThumb');
+    }
+    const thumb = thumbNodes[indexOrElement];
+    const values = Array.from(this.vals.values);
+    values.splice(indexOrElement, 1);
+    this.values = values;
+    return thumb;
+  }
+
   // ---- Static helpers ----
   /**
    * Check for rough equality of two floats, with a

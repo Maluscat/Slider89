@@ -79,7 +79,7 @@ export class Events extends Base {
 
     if (!this.checkEventType(type)) {
       const msg =
-        'The specified event type ‘' + type + '’ is not valid. Available types are:'
+        'The given event type ‘' + type + '’ is not valid. Available types are:'
         + Slider89.arrayToListString(Events.availableEventTypes);
       throw new Slider89.Error(msg, 'addEvent');
     }
