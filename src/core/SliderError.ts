@@ -103,7 +103,7 @@ export class SliderError {
   }
 
   static getMethodArgInfo(methodName: string, index: number) {
-    return Slider89.methodData[methodName].args[index];
+    return Slider89.methodArgs[methodName][index];
   }
 
   static arrayToListString(arr: Array<any>) {

@@ -103,17 +103,15 @@ type PropertyData = {
 }
 
 // ---- Method types ----
-type MethodData = {
-  [ Key: string ]: {
-    args: Array<{
-      name: string;
-      optional?: boolean;
-      type: Descriptor;
-    }>
-  }
+type MethodArgs = {
+  [ Key: string ]: Array<{
+    name: string;
+    optional?: boolean;
+    type: Descriptor;
+  }>
 }
 
-export type TypedMethods = keyof typeof Base.methodData;
+export type TypedMethods = keyof typeof Base.methodArgs;
 
 
 export const ExtraCond = ({
@@ -197,34 +195,32 @@ export class Base extends SliderError implements Properties.WithCustom {
    * When adding a method here, remember that it must call
    * the {@link Base.selfCheckMethod} itself!
    */
-  static methodData = ({
-    addEvent: {
-      args: [
-        {
-          name: 'event type',
-          type: [ Cond.string ]
-        }, {
-          name: 'event function',
-          type: [ Cond.function ]
-        }, {
-          name: 'event namespace',
-          optional: true,
-          type: [
-            [ Cond.string, Cond.nonempty, ExtraCond.nonNumberString ]
-          ]
-        }
-      ]
-    },
-    removeEvent: {
-      args: [{
+  static methodArgs = ({
+    addEvent: [
+      {
+        name: 'event type',
+        type: [ Cond.string ]
+      }, {
+        name: 'event function',
+        type: [ Cond.function ]
+      }, {
+        name: 'event namespace',
+        optional: true,
+        type: [
+          [ Cond.string, Cond.nonempty, ExtraCond.nonNumberString ]
+        ]
+      }
+    ],
+    removeEvent: [
+      {
         name: 'event identifier/namespace',
         type: [
           [ Cond.integer, ExtraCond.nonnegative ],
           [ Cond.string, Cond.nonempty, ExtraCond.nonNumberString ]
         ]
-      }]
-    }
-  }) as const satisfies MethodData;
+      }
+    ],
+  }) as const satisfies MethodArgs;
   static propertyData = ({
     range: {
       isDeepDefined: true,
@@ -352,12 +348,12 @@ export class Base extends SliderError implements Properties.WithCustom {
    * Thus, it is loosely assumed that every type checkable method calls it.
    */
   static selfCheckMethod(methodName: TypedMethods, fullArgs: IArguments) {
-    const methodInfo = this.methodData[methodName];
-    const args = Array.prototype.slice.call(fullArgs, 0, methodInfo.args.length);
+    const argData = this.methodArgs[methodName];
+    const args = Array.prototype.slice.call(fullArgs, 0, argData.length);
 
     args.forEach((arg, i) => {
       try {
-        RuntimeTypeCheck.assertAndThrow(arg, ...methodInfo.args[i].type)
+        RuntimeTypeCheck.assertAndThrow(arg, ...argData[i].type)
       } catch (e) {
         if (e instanceof TypeCheckError) {
           throw new Slider89.MethodArgTypeError(methodName, i, e.message);
@@ -365,7 +361,7 @@ export class Base extends SliderError implements Properties.WithCustom {
       }
     });
     // If the next argument (length - 1 + 1), which is missing, is not optional
-    if (methodInfo.args[args.length] && !('optional' in methodInfo.args[args.length])) {
+    if (argData[args.length] && !('optional' in argData[args.length])) {
       throw new Slider89.MethodArgOmitError(methodName, args.length);
     }
   }
