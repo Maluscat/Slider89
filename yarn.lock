@@ -436,6 +436,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@maluscat/runtime-type-check@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "@maluscat/runtime-type-check@npm:1.1.1"
+  checksum: 10c0/b3194bca42696fab899448c6151089d1b56284e01bacf4762f9833460ca6b978b1391e9a05119848e0ecc1c7ef3fb6503b75c9790909310fc3f90fc7f63aa282
+  languageName: node
+  linkType: hard
+
 "@npmcli/agent@npm:^2.0.0":
   version: 2.2.2
   resolution: "@npmcli/agent@npm:2.2.2"
@@ -690,6 +697,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "Slider89@workspace:."
   dependencies:
+    "@maluscat/runtime-type-check": "npm:^1.1.1"
     esbuild: "npm:^0.24.0"
     esbuild-loader: "npm:^4.2.2"
     fork-ts-checker-webpack-plugin: "npm:^9.0.2"

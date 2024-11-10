@@ -25,6 +25,7 @@
   },
   "packageManager": "yarn@4.5.0",
   "dependencies": {
+    "@maluscat/runtime-type-check": "^1.1.1",
     "style-mod": "^4.1.2"
   }
 }
