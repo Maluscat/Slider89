@@ -55,7 +55,6 @@ export namespace Properties {
   export interface Mergable {
     classList: Record<string, string[]>;
     events: Partial<EventList>;
-    extend: ExtendList[];
     data: object;
   }
 
@@ -65,6 +64,7 @@ export namespace Properties {
     step: number | number[] | false;
     structure: string | false;
     orientation: 'vertical' | 'horizontal';
+    extend: ExtendList[];
   }
   export interface Vals extends WithCustom {
     readonly $: Base;
