@@ -1,7 +1,7 @@
+import { RuntimeTypeCheck, TypeCheckError } from '@maluscat/runtime-type-check';
 import type { PluginCallback, Properties as Props } from './Base';
 import type { PropertiesOutline } from './Slider89';
 import type { StyleModule } from 'style-mod';
-import { RuntimeTypeCheck, TypeCheckError } from './type-check/RuntimeTypeCheck';
 import { DOMBuilder } from './dom-handler/DOMBuilder';
 import { Slider89 } from './Slider89';
 import { DOM } from './DOM';
@@ -221,7 +221,7 @@ export class Setup extends DOM {
     }
 
     try {
-      RuntimeTypeCheck.checkType(val, propData.descriptor);
+      RuntimeTypeCheck.assertAndThrow(val, ...propData.descriptor);
     } catch (e) {
       if (e instanceof TypeCheckError) {
         throw new Slider89.PropertyTypeError(this as unknown as Slider89, prop as keyof Props.Writable, e.message);

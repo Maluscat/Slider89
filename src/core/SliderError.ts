@@ -1,6 +1,6 @@
 'use strict';
+import { RuntimeTypeCheck } from '@maluscat/runtime-type-check';
 import type { Properties } from './Base';
-import { RuntimeTypeCheck } from './type-check/RuntimeTypeCheck';
 import { Slider89 } from './Slider89';
 
 export class SliderError {
@@ -70,7 +70,7 @@ export class SliderError {
       const msg =
         'The ' + SliderError.getMethodArgMessage(argInfo, index)
         + ' has been omitted but it is required'
-        + ' (It must be of type ' + RuntimeTypeCheck.buildDescriptorTypeMessage(argInfo.descriptor) + ').';
+        + ' (It must be of type ' + RuntimeTypeCheck.getMessageExpected(...argInfo.descriptor) + ').';
 
       super(msg, methodName);
     }

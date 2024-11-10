@@ -1,10 +1,10 @@
 'use strict';
+import type { Descriptor, Condition } from '@maluscat/runtime-type-check';
+import { RuntimeTypeCheck, Cond, TypeCheckError } from '@maluscat/runtime-type-check';
 import { StyleModule } from 'style-mod';
-import type { DeepReadonlyObject, Descriptor } from './type-check/RuntimeTypeCheck';
 import type { EventMap } from './Events';
 import { DOMVariables } from './dom-handler/DOMVariables';
 import { Style } from './style/Style';
-import { RuntimeTypeCheck, TypeCheckError } from './type-check/RuntimeTypeCheck';
 import { SliderError } from './SliderError';
 import { Slider89 } from './Slider89';
 
@@ -95,32 +95,51 @@ export type PropertyInfo<Prop> = Prop extends keyof Properties.Readonly
   : {
       constructorOnly?: boolean;
       isDeepDefinedArray?: boolean;
-      descriptor: Descriptor.self;
+      descriptor: Descriptor;
     }
 
-type PropertyData = DeepReadonlyObject<{
+type PropertyData = {
   [ Prop in keyof Properties.Base ]: PropertyInfo<Prop>
-}>
+}
 
 // ---- Method types ----
-type MethodData = DeepReadonlyObject<{
+type MethodData = {
   [ Key: string ]: {
     args: Array<{
       name: string;
       optional?: boolean;
-      descriptor: Descriptor.self
+      descriptor: Descriptor;
     }>
   }
-}>
+}
 
 export type TypedMethods = keyof typeof Base.methodData;
 
+
+export const ExtraCond = ({
+  /** Assert a string that does not solely consist of/cast to a number. */
+  nonNumberString: {
+    conditions: [ Cond.string ],
+    assert: val => Number.isNaN(Number(val)),
+    shouldBe: { after: 'that does not cast to a number' },
+    is: 'a string that only consists of a number'
+  },
+
+  /** Assert a number that is not negative (0 or more). */
+  nonnegative: {
+    conditions: [ Cond.number ],
+    assert: val => val >= 0,
+    shouldBe: { before: 'non-negative' },
+    is: 'a negative number'
+  }
+} satisfies Record<string, Condition>) as Record<string, Condition>;
 
 export class Base extends SliderError implements Properties.WithCustom {
   static StyleModule = StyleModule;
   static Style = Style;
   static DOMHandler = DOMVariables;
   static RuntimeTypeCheck = RuntimeTypeCheck;
+  static ExtraCond = ExtraCond;
 
   // TypeScript does not allow custom properties in classes
   // because they are busy ignoring all open issues with good suggestions
@@ -183,24 +202,16 @@ export class Base extends SliderError implements Properties.WithCustom {
       args: [
         {
           name: 'event type',
-          descriptor: [{
-            type: 'string'
-          }]
+          descriptor: [Cond.string]
         }, {
           name: 'event function',
-          descriptor: [{
-            type: 'function'
-          }]
+          descriptor: [Cond.function]
         }, {
           name: 'event namespace',
           optional: true,
-          descriptor: [{
-            type: 'string',
-            conditions: {
-              filled: true,
-              wordChar: true
-            }
-          }]
+          descriptor: [
+            [ Cond.string, Cond.nonempty, ExtraCond.nonNumberString ]
+          ]
         }
       ]
     },
@@ -208,89 +219,44 @@ export class Base extends SliderError implements Properties.WithCustom {
       args: [{
         name: 'event identifier/namespace',
         descriptor: [
-          {
-            type: 'number',
-            conditions: {
-              nonnegative: true,
-              integer: true
-            }
-          }, {
-            type: 'string',
-            conditions: {
-              filled: true,
-              wordChar: true
-            }
-          }
+          [ Cond.integer, ExtraCond.nonnegative ],
+          [ Cond.string, Cond.nonempty, ExtraCond.nonNumberString ]
         ]
       }]
     }
   }) as const satisfies MethodData;
-  static propertyData: PropertyData = <const> ({
+  static propertyData = ({
     range: {
       isDeepDefinedArray: true,
       descriptor: [
-        {
-          type: 'array',
-          shape: '[startValue, endValue]',
-          conditions: {
-            length: 2
-          },
-          descriptor: [{
-            type: 'number'
-          }]
-        }
+        [ Cond.array(Cond.number), Cond.length(2) ]
       ]
     },
     values: {
       isDeepDefinedArray: true,
-      descriptor: [{
-        type: 'array',
-        descriptor: [{
-          type: 'number'
-        }]
-      }]
+      descriptor: [ Cond.array(Cond.number) ]
     },
     value: {
-      descriptor: [{
-        type: 'number'
-      }]
+      descriptor: [ Cond.number ]
     },
     precision: {
       descriptor: [
-        {
-          type: 'number',
-          conditions: {
-            nonnegative: true,
-            integer: true
-          }
-        },
-        { type: 'false' }
+        [ Cond.integer, ExtraCond.nonnegative ],
+        [ Cond.false ]
       ]
     },
     step: {
       descriptor: [
-        {
-          type: 'number',
-          conditions: {
-            positive: true
-          }
-        }, {
-          type: 'array',
-          conditions: {
-            nonempty: true
-          },
-          descriptor: [{
-            type: 'number'
-          }]
-        },
-        { type: 'false' }
+        [ Cond.number, Cond.positive ],
+        [ Cond.array(Cond.number), Cond.nonempty ],
+        [ Cond.false ]
       ]
     },
     structure: {
       constructorOnly: true,
       descriptor: [
-        { type: 'string' },
-        { type: 'false' }
+        Cond.string,
+        Cond.false
       ]
     },
     node: {
@@ -300,72 +266,36 @@ export class Base extends SliderError implements Properties.WithCustom {
       readOnly: true
     },
     orientation: {
-      descriptor: [{
-        type: 'string',
-        conditions: {
-          keywords: [
-            'horizontal',
-            'vertical'
-          ]
-        }
-      }]
+      descriptor: [ Cond.keywords('horizontal', 'vertical') ]
     },
     classList: {
       constructorOnly: true,
       descriptor: [
-        {
-          type: 'object',
-          shape: '{nodeName: [...classes]}',
-          keyName: 'nodeName',
-          descriptor: [{
-            type: 'array',
-            descriptor: [
-              { type: 'string' }
-            ]
-          }]
-        },
-        { type: 'false' }
+        Cond.object('NodeName', Cond.array(Cond.string)),
+        Cond.false
       ]
     },
     events: {
       constructorOnly: true,
       descriptor: [
-        {
-          type: 'object',
-          shape: '{eventName: [...functions]}',
-          keyName: 'eventName',
-          descriptor: [{
-            type: 'array',
-            descriptor: [{
-              type: 'function'
-            }]
-          }]
-        },
-        { type: 'false' }
+        Cond.object('EventType', Cond.array(Cond.function)),
+        Cond.false
       ]
     },
     extend: {
       constructorOnly: true,
       descriptor: [
-        {
-          type: 'array',
-          descriptor: [
-            { type: 'function' },
-            { type: 'array' },
-            { type: 'object' }
-          ]
-        },
-        { type: 'false' }
+        Cond.array(Cond.function, Cond.array, Cond.object)
       ]
     },
     data: {
       constructorOnly: true,
       descriptor: [
-        { type: 'object' },
-        { type: 'false' }
+        Cond.object,
+        Cond.false
       ]
     }
-  });
+  }) as const satisfies PropertyData;
 
   properties;
 
@@ -426,20 +356,17 @@ export class Base extends SliderError implements Properties.WithCustom {
     const args = Array.prototype.slice.call(fullArgs, 0, methodInfo.args.length);
 
     args.forEach((arg, i) => {
-      const argDescriptor = methodInfo.args[i].descriptor;
       try {
-        RuntimeTypeCheck.checkType(arg, argDescriptor)
+        RuntimeTypeCheck.assertAndThrow(arg, ...methodInfo.args[i].descriptor)
       } catch (e) {
         if (e instanceof TypeCheckError) {
-          throw new this.MethodArgTypeError(methodName, i, e.message);
-        } else {
-          throw e;
-        }
+          throw new Slider89.MethodArgTypeError(methodName, i, e.message);
+        } else throw e;
       }
     });
     // If the next argument (length - 1 + 1), which is missing, is not optional
     if (methodInfo.args[args.length] && !('optional' in methodInfo.args[args.length])) {
-      throw new this.MethodArgOmitError(methodName, args.length);
+      throw new Slider89.MethodArgOmitError(methodName, args.length);
     }
   }
 }

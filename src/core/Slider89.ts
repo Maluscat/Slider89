@@ -335,7 +335,6 @@ export class Slider89 extends Setup {
     target: Props.Config,
     value: Props.Mergable[P]
   ) {
-    // @ts-ignore
     target[propertyName] ||= {};
     // @ts-ignore
     this.#mergeArrayObjects(target[propertyName], value);
