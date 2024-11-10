@@ -57,7 +57,7 @@ export class SliderError {
   // ---- Method errors ----
   static MethodArgTypeError = class extends SliderError.Error {
     constructor(methodName: string, index: number, typeMsg: string) {
-      const argInfo = Slider89.getMethodArgInfo(methodName, index);
+      const argInfo = Slider89.methodArgs[methodName][index];
       const msg =
         `Type mismatch on the ${SliderError.getMethodArgMessage(argInfo, index)}. ${typeMsg}`;
 
@@ -66,7 +66,7 @@ export class SliderError {
   }
   static MethodArgOmitError = class extends SliderError.Error {
     constructor(methodName: string, index: number) {
-      const argInfo = Slider89.getMethodArgInfo(methodName, index);
+      const argInfo = Slider89.methodArgs[methodName][index];
       const msg =
         'The ' + SliderError.getMethodArgMessage(argInfo, index)
         + ' has been omitted but it is required'
@@ -98,12 +98,8 @@ export class SliderError {
     if (argInfo.optional) {
       msg += 'optional ';
     }
-    msg += Slider89.COUNTS[index] + ' argument (' + argInfo.name + ')';
+    msg += (argInfo.spread ? 'spread' : Slider89.COUNTS[index]) + ` argument (${argInfo.name})`;
     return msg;
-  }
-
-  static getMethodArgInfo(methodName: string, index: number) {
-    return Slider89.methodArgs[methodName][index];
   }
 
   static arrayToListString(arr: Array<any>) {

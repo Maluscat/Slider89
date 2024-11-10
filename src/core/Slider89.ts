@@ -243,7 +243,8 @@ export class Slider89 extends Setup {
    * @return The newly added thumb element.
    */
   addThumb(value: number, index = this.vals.nodes.thumb.length) {
-    // TODO arg validation
+    Slider89.selfCheckMethod('addThumb', arguments);
+
     if (index < 0 || index > this.vals.nodes.thumb.length) {
       throw new Slider89.Error(`The given index (${index}) is out of bounds`, 'addThumb');
     }
@@ -263,7 +264,8 @@ export class Slider89 extends Setup {
    * @return An array of all the newly added thumb elements in order.
    */
   addMultipleThumbs(...values: number[]) {
-    // TODO arg validation
+    Slider89.selfCheckMethod('addMultipleThumbs', arguments);
+
     this.values = [ ...this.values, ...values ];
     return this.vals.nodes.thumb.slice(-values.length);
   }
@@ -278,7 +280,8 @@ export class Slider89 extends Setup {
    * @return The removed thumb element.
    */
   removeThumb(indexOrElement: number | HTMLDivElement = this.vals.nodes.thumb.length -1) {
-    // TODO arg validation
+    Slider89.selfCheckMethod('removeThumb', arguments);
+
     const thumbNodes = this.vals.nodes.thumb;
     if (indexOrElement instanceof Element) {
       if (!thumbNodes.includes(indexOrElement)) {

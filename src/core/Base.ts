@@ -107,6 +107,7 @@ type MethodArgs = {
   [ Key: string ]: Array<{
     name: string;
     optional?: boolean;
+    spread?: boolean;
     type: Descriptor;
   }>
 }
@@ -114,14 +115,14 @@ type MethodArgs = {
 export type TypedMethods = keyof typeof Base.methodArgs;
 
 
-export const ExtraCond = ({
+export const ExtraCond = {
   /** Assert a string that does not solely consist of/cast to a number. */
   nonNumberString: {
     conditions: [ Cond.string ],
     assert: val => Number.isNaN(Number(val)),
     shouldBe: { after: 'that does not cast to a number' },
     is: 'a string that only consists of a number'
-  },
+  } satisfies Condition,
 
   /** Assert a number that is not negative (0 or more). */
   nonnegative: {
@@ -129,8 +130,18 @@ export const ExtraCond = ({
     assert: val => val >= 0,
     shouldBe: { before: 'non-negative' },
     is: 'a negative number'
-  }
-} satisfies Record<string, Condition>) as Record<string, Condition>;
+  } satisfies Condition,
+
+  /**
+   * Generate a condition that asserts a value to be
+   * an instance of the given item.
+   */
+  instanceof: item => ({
+    assert: val => val instanceof item,
+    shouldBe: { type: item.name ?? item },
+    is: 'a different type or instance'
+  } satisfies Condition),
+} as const;
 
 export class Base extends SliderError implements Properties.WithCustom {
   static StyleModule = StyleModule;
@@ -220,6 +231,26 @@ export class Base extends SliderError implements Properties.WithCustom {
         ]
       }
     ],
+    addThumb: [
+      {
+        name: 'value',
+        type: [ Cond.number ]
+      }, {
+        name: 'targetIndex',
+        type: [ Cond.number ],
+        optional: true
+      }
+    ],
+    addMultipleThumbs: [{
+      name: '...values',
+      type: [ Cond.number ],
+      spread: true,
+    }],
+    removeThumb: [{
+      name: 'index or element',
+      type: [ Cond.number, ExtraCond.instanceof(Element) ],
+      optional: true,
+    }],
   }) as const satisfies MethodArgs;
   static propertyData = ({
     range: {
@@ -349,19 +380,26 @@ export class Base extends SliderError implements Properties.WithCustom {
    */
   static selfCheckMethod(methodName: TypedMethods, fullArgs: IArguments) {
     const argData = this.methodArgs[methodName];
-    const args = Array.prototype.slice.call(fullArgs, 0, argData.length);
+    // @ts-ignore Shut up
+    const hasSpread = argData[argData.length - 1].spread;
+    const args = Array.prototype.slice.call(fullArgs, 0, hasSpread ? fullArgs.length : argData.length);
 
-    args.forEach((arg, i) => {
+    var n = 0;
+    for (var i = 0; i < args.length; i++) {
       try {
-        RuntimeTypeCheck.assertAndThrow(arg, ...argData[i].type)
+        RuntimeTypeCheck.assertAndThrow(args[i], ...argData[n].type);
       } catch (e) {
         if (e instanceof TypeCheckError) {
-          throw new Slider89.MethodArgTypeError(methodName, i, e.message);
+          throw new Slider89.MethodArgTypeError(methodName, n, e.message);
         } else throw e;
       }
-    });
+      // @ts-ignore Shut up
+      if (!argData[n].spread) n++;
+    }
+
     // If the next argument (length - 1 + 1), which is missing, is not optional
-    if (argData[args.length] && !('optional' in argData[args.length])) {
+    // @ts-ignore Shut up
+    if (argData[args.length] && !argData[args.length].optional) {
       throw new Slider89.MethodArgOmitError(methodName, args.length);
     }
   }
