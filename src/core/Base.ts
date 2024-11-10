@@ -94,8 +94,8 @@ export type PropertyInfo<Prop> = Prop extends keyof Properties.Readonly
   ? { readOnly: true; }
   : {
       constructorOnly?: boolean;
-      isDeepDefinedArray?: boolean;
-      descriptor: Descriptor;
+      isDeepDefined?: boolean;
+      type: Descriptor;
     }
 
 type PropertyData = {
@@ -108,7 +108,7 @@ type MethodData = {
     args: Array<{
       name: string;
       optional?: boolean;
-      descriptor: Descriptor;
+      type: Descriptor;
     }>
   }
 }
@@ -202,14 +202,14 @@ export class Base extends SliderError implements Properties.WithCustom {
       args: [
         {
           name: 'event type',
-          descriptor: [Cond.string]
+          type: [ Cond.string ]
         }, {
           name: 'event function',
-          descriptor: [Cond.function]
+          type: [ Cond.function ]
         }, {
           name: 'event namespace',
           optional: true,
-          descriptor: [
+          type: [
             [ Cond.string, Cond.nonempty, ExtraCond.nonNumberString ]
           ]
         }
@@ -218,7 +218,7 @@ export class Base extends SliderError implements Properties.WithCustom {
     removeEvent: {
       args: [{
         name: 'event identifier/namespace',
-        descriptor: [
+        type: [
           [ Cond.integer, ExtraCond.nonnegative ],
           [ Cond.string, Cond.nonempty, ExtraCond.nonNumberString ]
         ]
@@ -227,26 +227,26 @@ export class Base extends SliderError implements Properties.WithCustom {
   }) as const satisfies MethodData;
   static propertyData = ({
     range: {
-      isDeepDefinedArray: true,
-      descriptor: [
+      isDeepDefined: true,
+      type: [
         [ Cond.array(Cond.number), Cond.length(2) ]
       ]
     },
     values: {
-      isDeepDefinedArray: true,
-      descriptor: [ Cond.array(Cond.number) ]
+      isDeepDefined: true,
+      type: [ Cond.array(Cond.number) ]
     },
     value: {
-      descriptor: [ Cond.number ]
+      type: [ Cond.number ]
     },
     precision: {
-      descriptor: [
+      type: [
         [ Cond.integer, ExtraCond.nonnegative ],
         [ Cond.false ]
       ]
     },
     step: {
-      descriptor: [
+      type: [
         [ Cond.number, Cond.positive ],
         [ Cond.array(Cond.number), Cond.nonempty ],
         [ Cond.false ]
@@ -254,7 +254,7 @@ export class Base extends SliderError implements Properties.WithCustom {
     },
     structure: {
       constructorOnly: true,
-      descriptor: [
+      type: [
         Cond.string,
         Cond.false
       ]
@@ -266,31 +266,31 @@ export class Base extends SliderError implements Properties.WithCustom {
       readOnly: true
     },
     orientation: {
-      descriptor: [ Cond.keywords('horizontal', 'vertical') ]
+      type: [ Cond.keywords('horizontal', 'vertical') ]
     },
     classList: {
       constructorOnly: true,
-      descriptor: [
+      type: [
         Cond.object('NodeName', Cond.array(Cond.string)),
         Cond.false
       ]
     },
     events: {
       constructorOnly: true,
-      descriptor: [
+      type: [
         Cond.object('EventType', Cond.array(Cond.function)),
         Cond.false
       ]
     },
     extend: {
       constructorOnly: true,
-      descriptor: [
+      type: [
         Cond.array(Cond.function, Cond.array, Cond.object)
       ]
     },
     data: {
       constructorOnly: true,
-      descriptor: [
+      type: [
         Cond.object,
         Cond.false
       ]
@@ -357,7 +357,7 @@ export class Base extends SliderError implements Properties.WithCustom {
 
     args.forEach((arg, i) => {
       try {
-        RuntimeTypeCheck.assertAndThrow(arg, ...methodInfo.args[i].descriptor)
+        RuntimeTypeCheck.assertAndThrow(arg, ...methodInfo.args[i].type)
       } catch (e) {
         if (e instanceof TypeCheckError) {
           throw new Slider89.MethodArgTypeError(methodName, i, e.message);

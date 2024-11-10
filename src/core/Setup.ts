@@ -176,7 +176,7 @@ export class Setup extends DOM {
         }
       },
       get: () => {
-        const getterEndpoint = (propData as any).isDeepDefinedArray
+        const getterEndpoint = (propData as any).isDeepDefined
           ? this.vals.$intermediateThis
           : this.vals;
         // @ts-ignore `getterEndpoint` is safe here
@@ -221,7 +221,7 @@ export class Setup extends DOM {
     }
 
     try {
-      RuntimeTypeCheck.assertAndThrow(val, ...propData.descriptor);
+      RuntimeTypeCheck.assertAndThrow(val, ...propData.type);
     } catch (e) {
       if (e instanceof TypeCheckError) {
         throw new Slider89.PropertyTypeError(this as unknown as Slider89, prop as keyof Props.Writable, e.message);

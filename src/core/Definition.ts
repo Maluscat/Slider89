@@ -54,16 +54,16 @@ export class Definition extends Events {
     outline?: Outline[I extends keyof Outline ? I : never]
   ) {
     // @ts-ignore Shut up
-    const isDeepDefinedArray: boolean = Definition.propertyData[item]?.isDeepDefinedArray;
+    const isDeepDefined: boolean = Definition.propertyData[item]?.isDeepDefined;
 
     Object.defineProperty(target, item, {
       set: (val: typeof target[I]) => {
         if (!this.initial) {
           // @ts-ignore ???
-          var prevVal: typeof val = (isDeepDefinedArray ? Array.from(this[item as keyof Props.Deep]) : this[item]);
+          var prevVal: typeof val = (isDeepDefined ? Array.from(this[item as keyof Props.Deep]) : this[item]);
         }
         endpoint[item] = val;
-        if (isDeepDefinedArray) {
+        if (isDeepDefined) {
           this.#defineDeepArray(item as keyof Props.Deep, val, prevVal, outline as Outline[keyof Props.Deep]);
           this.invokeInternalDeepPropertyChange(item as keyof Props.Deep, prevVal);
         } else {
@@ -74,7 +74,7 @@ export class Definition extends Events {
       },
       get: () => {
         // @ts-ignore Shut up
-        return (isDeepDefinedArray ? this.vals.$intermediateVals : endpoint)[item];
+        return (isDeepDefined ? this.vals.$intermediateVals : endpoint)[item];
       },
       enumerable: true
     });

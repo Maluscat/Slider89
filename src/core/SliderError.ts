@@ -70,7 +70,7 @@ export class SliderError {
       const msg =
         'The ' + SliderError.getMethodArgMessage(argInfo, index)
         + ' has been omitted but it is required'
-        + ' (It must be of type ' + RuntimeTypeCheck.getMessageExpected(...argInfo.descriptor) + ').';
+        + ' (It must be of type ' + RuntimeTypeCheck.getMessageExpected(...argInfo.type) + ').';
 
       super(msg, methodName);
     }
