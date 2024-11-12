@@ -185,7 +185,7 @@ export class StructureParser {
       textNode.textContent = content;
       elem.appendChild(textNode);
 
-      if (StructureParser.stringHasVariable(content)) {
+      if (StructureParser.#stringHasVariable(content)) {
         this.#parseVariables(content, textNode, name, nameStack);
       }
     }
@@ -200,7 +200,7 @@ export class StructureParser {
         attribNode.textContent = attribValue;
         elem.setAttributeNode(attribNode);
 
-        if (StructureParser.stringHasVariable(attribValue)) {
+        if (StructureParser.#stringHasVariable(attribValue)) {
           this.#parseVariables(attribValue, attribNode, name, nameStack);
         }
       }
@@ -222,7 +222,7 @@ export class StructureParser {
 
       if (!propNameCache.hasOwnProperty(propName)) {
         if (!Object.prototype.hasOwnProperty.call(this.vals, propName)
-            && !StructureParser.checkForSpecialVariables(propName, tagName, tagNameStack)
+            && !StructureParser.#checkForSpecialVariables(propName, tagName, tagNameStack)
         ) {
           throw new Slider89.StructureError(
             "‘" + propName + "’ is not a recognized property and cannot be used as variable."
@@ -255,12 +255,12 @@ export class StructureParser {
 
 
   // ---- Static helpers ----
-  static stringHasVariable(str: string): boolean {
+  static #stringHasVariable(str: string): boolean {
     // Need to use a RegExp without /g/ because the internal `lastIndex` mustn't be advanced by a mere test
     return StructureParser.regex.variableNoFlag.test(str);
   }
 
-  static checkForSpecialVariables(varName: string, tagName: string, tagNameStack: string[]): boolean {
+  static #checkForSpecialVariables(varName: string, tagName: string, tagNameStack: string[]): boolean {
     if (Object.prototype.hasOwnProperty.call(StructureParser.specialVariables, varName)) {
       const varData = StructureParser.specialVariables[varName];
       if (varData.thumbOnly && tagName !== 'thumb' && !tagNameStack.includes('thumb')) {

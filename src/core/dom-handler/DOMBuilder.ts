@@ -39,8 +39,8 @@ export class DOMBuilder extends StructureParser {
     wrapper: HTMLElement
   ): PropertyNode.Mult {
     const nodes = !structureStr
-      ? this.createSliderManually(thumbCount, wrapper)
-      : this.createSliderFromStructure(thumbCount, structureStr, wrapper);
+      ? this.#createSliderManually(thumbCount, wrapper)
+      : this.#createSliderFromStructure(thumbCount, structureStr, wrapper);
 
     for (let i = 0; i < thumbCount; i++) {
       this.addThumbToNodes(nodes, Infinity);
@@ -50,7 +50,7 @@ export class DOMBuilder extends StructureParser {
 
 
   // In case no custom structure is defined, manually build the node to ensure best performance (parseStructure takes a while)
-  createSliderManually(thumbCount: number, wrapper: HTMLElement) {
+  #createSliderManually(thumbCount: number, wrapper: HTMLElement) {
     const track = document.createElement('div');
     const nodes: PropertyNode.KnownMult = {
       slider: [ wrapper ],
@@ -67,7 +67,7 @@ export class DOMBuilder extends StructureParser {
     return nodes;
   }
 
-  createSliderFromStructure(
+  #createSliderFromStructure(
     thumbCount: number,
     structureStr: string,
     wrapper: HTMLElement

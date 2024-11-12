@@ -57,11 +57,11 @@ export class Setup extends DOM {
   testAndExtendConfig(config: Readonly<Props.Config>, targetConf: Props.Config = config, inExtension = false) {
     this.testConfig(config, inExtension);
     if (config.extend) {
-      this.resolveExtend(config.extend, config, targetConf, inExtension);
+      this.#resolveExtend(config.extend, config, targetConf, inExtension);
     }
   }
 
-  resolveExtend(
+  #resolveExtend(
     extend: Props.Base['extend'],
     parentConf: Readonly<Props.Config>,
     targetConf: Props.Config,
@@ -71,7 +71,7 @@ export class Setup extends DOM {
     for (let i = extend.length - 1; i >= 0; i--) {
       const entry = extend[i];
       if (Array.isArray(entry)) {
-        this.resolveExtend(entry, parentConf, targetConf, true);
+        this.#resolveExtend(entry, parentConf, targetConf, true);
       } else if (typeof entry === 'function') {
         this.pluginCallbacks.unshift(entry);
       } else if (entry instanceof Slider89.Style) {
@@ -160,12 +160,12 @@ export class Setup extends DOM {
   }
 
   initializeProperty<I extends keyof PropertiesOutline>(item: I, outline: PropertiesOutline[I]) {
-    this.defineInternalBuiltinProperty(item, outline);
+    this.#defineInternalBuiltinProperty(item, outline);
     this.defineInternalProperty(this.vals, this.vals.$, item, outline);
   }
 
   // ---- Definition helpers ----
-  defineInternalBuiltinProperty<I extends keyof PropertiesOutline>(item: I, outline: PropertiesOutline[I]) {
+  #defineInternalBuiltinProperty<I extends keyof PropertiesOutline>(item: I, outline: PropertiesOutline[I]) {
     const propData = Slider89.propertyData[item];
     Object.defineProperty(this, item, {
       set: (val: Props.Base[I]) => {
