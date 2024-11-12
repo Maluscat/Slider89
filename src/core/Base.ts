@@ -312,7 +312,7 @@ export class Base extends SliderError implements Properties.WithCustom {
     extend: {
       constructorOnly: true,
       type: [
-        Cond.array(Cond.function, Cond.array, Cond.object)
+        Cond.array(Cond.function, ExtraCond.instanceof(Style), Cond.object, Cond.array)
       ]
     },
     data: {

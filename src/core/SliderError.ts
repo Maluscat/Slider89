@@ -7,9 +7,9 @@ export class SliderError {
   static COUNTS = <const> ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth'];
 
   static Error = class extends Error {
-    constructor(msg: string, target?: string, abort = false) {
+    constructor(msg: string, target?: string, abort = false, inExtension = false) {
       if (target) {
-        msg = '@ ' + target + ': ' + msg;
+        msg = `@ ${target}${inExtension ? ' inside extension' : ''}: ${msg}`;
       }
       if (msg[msg.length - 1] !== '\n' && msg[msg.length - 1] !== '.') {
         msg += '.';
@@ -25,14 +25,14 @@ export class SliderError {
 
   // ---- Constructor error ----
   static InitializationError = class extends SliderError.Error {
-    constructor(msg: string) {
-      super(msg, 'constructor', true);
+    constructor(msg: string, inExtension = false) {
+      super(msg, 'constructor', true, inExtension);
     }
   }
 
   // ---- Property errors ----
   static PropertyError = class extends SliderError.Error {
-    constructor(slider: Slider89, property: string, msg: string) {
+    constructor(slider: Slider89, property: string, msg: string, inExtension = false) {
       let prevVal = slider[property];
       if (prevVal !== undefined) {
         if (Array.isArray(prevVal)) {
@@ -41,16 +41,17 @@ export class SliderError {
         msg += '.\nContinuing with the previous value (' + prevVal + ').';
       }
 
-      super(msg, property, prevVal === undefined);
+      super(msg, property, prevVal === undefined, inExtension);
     }
   }
   static PropertyTypeError = class extends SliderError.PropertyError {
     constructor(
       slider: Slider89,
       propertyName: keyof Properties.Writable,
-      typeMsg: string
+      typeMsg: string,
+      inExtension = false
     ) {
-      super(slider, propertyName, 'Type mismatch. ' + typeMsg);
+      super(slider, propertyName, 'Type mismatch. ' + typeMsg, inExtension);
     }
   }
 

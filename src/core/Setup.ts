@@ -54,19 +54,24 @@ export class Setup extends DOM {
 
 
   // ---- extend (mixins, style, plugins) ----
-  testAndExtendConfig(config: Readonly<Props.Config>, targetConf: Props.Config = config) {
-    this.testConfig(config);
+  testAndExtendConfig(config: Readonly<Props.Config>, targetConf: Props.Config = config, inExtension = false) {
+    this.testConfig(config, inExtension);
     if (config.extend) {
-      this.resolveExtend(config.extend, config, targetConf);
+      this.resolveExtend(config.extend, config, targetConf, inExtension);
     }
   }
 
-  resolveExtend(extend: Props.Base['extend'], parentConf: Readonly<Props.Config>, targetConf: Props.Config) {
-    // TODO Recursive type check
+  resolveExtend(
+    extend: Props.Base['extend'],
+    parentConf: Readonly<Props.Config>,
+    targetConf: Props.Config,
+    inExtension: boolean
+  ) {
+    this.checkProp('extend', extend, true);
     for (let i = extend.length - 1; i >= 0; i--) {
       const entry = extend[i];
       if (Array.isArray(entry)) {
-        this.resolveExtend(entry, parentConf, targetConf);
+        this.resolveExtend(entry, parentConf, targetConf, true);
       } else if (typeof entry === 'function') {
         this.pluginCallbacks.unshift(entry);
       } else if (entry instanceof Slider89.Style) {
@@ -87,7 +92,7 @@ export class Setup extends DOM {
         targetConf[item] = value;
       }
     }
-    this.testAndExtendConfig(mixin, targetConf);
+    this.testAndExtendConfig(mixin, targetConf, true);
   }
 
   callPlugins() {
@@ -202,29 +207,32 @@ export class Setup extends DOM {
     }
   }
 
-  testConfig(config: Props.Config) {
+  testConfig(config: Props.Config, inExtension = false) {
     for (const [ item, value ] of Object.entries(config)) {
       if (item in this.properties) {
-        this.checkProp(item as keyof PropertiesOutline, value);
+        this.checkProp(item as keyof PropertiesOutline, value, inExtension);
       } else if (item[0] !== '_') {
         throw new Slider89.InitializationError(
-          '‘' + item + '’ is not a valid property name. Check its spelling or prefix it with an underscore to use it as custom property (‘_' + item + '’)');
+          '‘' + item + '’ is not a valid property name. Check its spelling or prefix it with an underscore to use it as custom property (‘_' + item + '’)',
+          inExtension);
       }
     }
   }
 
-  checkProp(prop: keyof Props.Base, val: any) {
+  checkProp(prop: keyof Props.Base, val: any, inExtension = false) {
     const propData = Slider89.propertyData[prop];
 
     if ('readOnly' in propData) {
-      throw new Slider89.Error('Property ‘' + prop + '’ is read-only (It was just set with the value ‘' + val + '’)');
+      throw new Slider89.Error(
+        'Property ‘' + prop + '’ is read-only (It was just set with the value ‘' + val + '’)', null, false, inExtension);
     }
 
     try {
       RuntimeTypeCheck.assertAndThrow(val, ...propData.type);
     } catch (e) {
       if (e instanceof TypeCheckError) {
-        throw new Slider89.PropertyTypeError(this as unknown as Slider89, prop as keyof Props.Writable, e.message);
+        throw new Slider89.PropertyTypeError(
+          this as unknown as Slider89, prop as keyof Props.Writable, e.message, inExtension);
       } else throw e;
     }
   }
