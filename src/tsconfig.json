@@ -5,7 +5,7 @@
     "outDir": "../dist/",
     "sourceMap": true,
     "target": "es2022",
-    "module": "nodenext",
+    "module": "esnext",
     "moduleResolution": "bundler",
     "lib": [ "esnext", "dom", "dom.iterable" ],
     "forceConsistentCasingInFileNames": true,
