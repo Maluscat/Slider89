@@ -152,8 +152,6 @@ export class Definition extends Events {
     // @ts-ignore (Only Setup)
     definitionPoint[parentItem] = [];
     for (let i = 0; i < parentValue.length; i++) {
-      const value = parentValue[i];
-
       const descriptor = descriptorFactory(i);
       Object.defineProperty(definitionPoint[parentItem], i, Object.assign(descriptor, {
         enumerable: true

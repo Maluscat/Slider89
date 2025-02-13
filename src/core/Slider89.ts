@@ -321,6 +321,48 @@ export class Slider89 extends Setup {
     });
   }
 
+  /**
+   * Create a DOM element with additional classes and/or general attributes.
+   * @param attributes Either a list of classes
+   *                   or an object of attributes that should be added.
+   */
+  static createElement<K extends keyof HTMLElementTagNameMap>(
+    tagName: K,
+    attributes?: string[] | Record<string, string | string[]>
+  ): HTMLElementTagNameMap[K] {
+    const element = document.createElement(tagName);
+    if (Array.isArray(attributes)) {
+      element.classList.add(...attributes);
+    } else {
+      for (const [ name, value ] of Object.entries(attributes)) {
+        if (Array.isArray(value)) {
+          for (const val of value) {
+            element.setAttribute(name, val);
+          }
+        } else {
+          element.setAttribute(name, value);
+        }
+      }
+    }
+    return element;
+  }
+  /**
+   * Create a DOM element with additional classes and/or general attributes
+   * that is registered as the child of a specified parent node.
+   *
+   * @param attributes Either a list of classes
+   *                   or an object of attributes that should be added.
+   */
+  static createChildElement<K extends keyof HTMLElementTagNameMap>(
+    tagName: K,
+    parent: Node,
+    attributes?: string[] | Record<string, string | string[]>
+  ): HTMLElementTagNameMap[K] {
+    const element = this.createElement(tagName, attributes);
+    parent.appendChild(element);
+    return element;
+  }
+
   // ---- Style sheet helpers ----
   static #uniqueClassNameCounter = 0;
   static getUniqueClassName() {
